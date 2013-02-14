@@ -98,20 +98,22 @@ var skin = spine_skeleton.skins[spine_skeleton.current_skin_i];
 
 // find all the files used by this skin
 var spine_skin_files = [];
-for (var skel_slot_i in spine_skeleton.skel_slots)
+for (var skin_slot_i in skin.skin_slots)
 {
-	var skel_slot = spine_skeleton.skel_slots[skel_slot_i];
-	var skin_slot = skin.skin_slots[skel_slot_i];
+	var skin_slot = skin.skin_slots[skin_slot_i];
 	if (skin_slot)
 	{
-		var skin_attachment = skin_slot.skin_attachments[skel_slot.attachment];
-		if (skin_attachment)
+		for (var skin_attachment_i in skin_slot.skin_attachments)
 		{
-			var spine_skin_file = {};
-			spine_skin_file.name = skin_attachment.name || skel_slot.attachment;
-			spine_skin_file.width = skin_attachment.width;
-			spine_skin_file.height = skin_attachment.height;
-			spine_skin_files.push(spine_skin_file);
+			var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
+			if (skin_attachment)
+			{
+				var spine_skin_file = {};
+				spine_skin_file.name = skin_attachment.name || skin_attachment_i;
+				spine_skin_file.width = skin_attachment.width;
+				spine_skin_file.height = skin_attachment.height;
+				spine_skin_files.push(spine_skin_file);
+			}
 		}
 	}
 }
@@ -257,8 +259,14 @@ var add_animation = function (spine_pose, spine_anim_i)
 			for (var key_i = 0; key_i < keys.length; ++key_i)
 			{
 				var key = keys[key_i];
-				var time = Math.round(key.time);
+				var time = key.time;
 				time_array.push(time);
+
+				// for attachments or stepped animation, add key 1ms before switch
+				if ((!key.curve) || (key.curve(1) == 0))
+				{
+					if (time > 0) { time_array.push(time - 1); }
+				}
 			}
 		}
 
@@ -273,9 +281,6 @@ var add_animation = function (spine_pose, spine_anim_i)
 		for (var anim_slot_i in spine_animation.anim_slots)
 		{
 			var anim_slot = spine_animation.anim_slots[anim_slot_i];
-			add_times(anim_slot.translate_keys);
-			add_times(anim_slot.rotate_keys);
-			add_times(anim_slot.scale_keys);
 			add_times(anim_slot.color_keys);
 			add_times(anim_slot.attachment_keys);
 		}
@@ -332,9 +337,10 @@ var add_animation = function (spine_pose, spine_anim_i)
 	// sample each time step
 	for (var time_i = 0; time_i < time_array.length; ++time_i)
 	{
-		var key_time = time_array[time_i];
+		var time = time_array[time_i];
+		var key_time = Math.round(time);//time_array[time_i];
 
-		spine_pose.setTime(key_time);
+		spine_pose.setTime(time);
 		spine_pose.strike();
 
 		// add a key to the mainline
@@ -388,8 +394,7 @@ var add_animation = function (spine_pose, spine_anim_i)
 
 		for (var skel_slot_i in spine_skeleton.skel_slots)
 		{
-			var skel_slot = spine_skeleton.skel_slots[skel_slot_i];
-			var tween_skel_slot = spine_pose.m_tweened_skel_slots[skel_slot_i];
+			var skel_slot = spine_pose.m_tweened_skel_slots[skel_slot_i];
 
 			var skin_slot = skin.skin_slots[skel_slot_i];
 			if (skin_slot)
@@ -430,10 +435,10 @@ var add_animation = function (spine_pose, spine_anim_i)
 					var spriter_object_angle = parseFloat(skin_attachment.rotation.toFixed(6));
 					var spriter_object_scale_x = parseFloat(skin_attachment.scaleX.toFixed(6));
 					var spriter_object_scale_y = parseFloat(skin_attachment.scaleY.toFixed(6));
-					var spriter_object_r = parseFloat(tween_skel_slot.r.toFixed(6));
-					var spriter_object_g = parseFloat(tween_skel_slot.g.toFixed(6));
-					var spriter_object_b = parseFloat(tween_skel_slot.b.toFixed(6));
-					var spriter_object_a = parseFloat(tween_skel_slot.a.toFixed(6));
+					var spriter_object_r = parseFloat(skel_slot.r.toFixed(6));
+					var spriter_object_g = parseFloat(skel_slot.g.toFixed(6));
+					var spriter_object_b = parseFloat(skel_slot.b.toFixed(6));
+					var spriter_object_a = parseFloat(skel_slot.a.toFixed(6));
 
 					var spriter_object = {};
 					spriter_object['@folder'] = spine_folder_object.id;

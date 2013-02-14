@@ -468,7 +468,7 @@ spine.skin_attachment = function ()
  */
 spine.skin_attachment.prototype.load = function (json)
 {
-	this.name = json.name;
+	this.name = json.name || null;
 	this.type = spine.toString(json.type, "region");
 	switch (this.type)
 	{
@@ -648,36 +648,87 @@ spine.anim_bone.prototype.load = function (json)
 
 	if (json.translate)
 	{
-		for (var translate_i in json.translate)
+		if (json.translate instanceof Array)
 		{
-			var time = 1000*parseFloat(translate_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			this.translate_keys.push(new spine.translate_key(time).load(json.translate[translate_i]));
+			// version >= spine-1.0.9
+			for (var translate_i = 0; translate_i < json.translate.length; ++translate_i)
+			{
+				var translate = json.translate[translate_i];
+				var time = 1000 * spine.toFloat(translate.time, 0);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				this.translate_keys.push(new spine.translate_key(time).load(translate));
+			}
+		}
+		else
+		{
+			// version < spine-1.0.9
+			for (var translate_i in json.translate)
+			{
+				var translate = json.translate[translate_i];
+				var time = 1000 * parseFloat(translate_i);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				this.translate_keys.push(new spine.translate_key(time).load(translate));
+			}
 		}
 		this.translate_keys.sort(function (a, b) { return a.time - b.time; });
 	}
 
 	if (json.rotate)
 	{
-		for (var rotate_i in json.rotate)
+		if (json.rotate instanceof Array)
 		{
-			var time = 1000*parseFloat(rotate_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			this.rotate_keys.push(new spine.rotate_key(time).load(json.rotate[rotate_i]));
+			// version >= spine-1.0.9
+			for (var rotate_i = 0; rotate_i < json.rotate.length; ++rotate_i)
+			{
+				var rotate = json.rotate[rotate_i];
+				var time = 1000 * spine.toFloat(rotate.time, 0);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				this.rotate_keys.push(new spine.rotate_key(time).load(rotate));
+			}
+		}
+		else
+		{
+			// version < spine-1.0.9
+			for (var rotate_i in json.rotate)
+			{
+				var rotate = json.rotate[rotate_i];
+				var time = 1000 * parseFloat(rotate_i);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				this.rotate_keys.push(new spine.rotate_key(time).load(rotate));
+			}
 		}
 		this.rotate_keys.sort(function (a, b) { return a.time - b.time; });
 	}
 
 	if (json.scale)
 	{
-		for (var scale_i in json.scale)
+		if (json.scale instanceof Array)
 		{
-			var time = 1000*parseFloat(scale_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			this.scale_keys.push(new spine.scale_key(time).load(json.scale[scale_i]));
+			// version >= spine-1.0.9
+			for (var scale_i = 0; scale_i < json.scale.length; ++scale_i)
+			{
+				var scale = json.scale[scale_i];
+				var time = 1000 * spine.toFloat(scale.time, 0);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				this.scale_keys.push(new spine.scale_key(time).load(scale));
+			}
+		}
+		else
+		{
+			// version < spine-1.0.9
+			for (var scale_i in json.scale)
+			{
+				var scale = json.scale[scale_i];
+				var time = 1000 * parseFloat(scale_i);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				this.scale_keys.push(new spine.scale_key(time).load(scale));
+			}
 		}
 		this.scale_keys.sort(function (a, b) { return a.time - b.time; });
 	}
@@ -694,12 +745,6 @@ spine.anim_slot = function ()
 	this.min_time = 0;
 	/** @type {number} */
 	this.max_time = 0;
-	/** @type {Array.<spine.translate_key>} */
-	this.translate_keys = [];
-	/** @type {Array.<spine.rotate_key>} */
-	this.rotate_keys = [];
-	/** @type {Array.<spine.scale_key>} */
-	this.scale_keys = [];
 	/** @type {Array.<Object>} */
 	this.color_keys = [];
 	/** @type {Array.<Object>} */
@@ -714,78 +759,79 @@ spine.anim_slot.prototype.load = function (json)
 {
 	this.min_time = 0;
 	this.max_time = 0;
-	this.translate_keys = [];
-	this.rotate_keys = [];
-	this.scale_keys = [];
 	this.color_keys = [];
 	this.attachment_keys = [];
 
-	if (json.translate)
-	{
-		for (var translate_i in json.translate)
-		{
-			var time = 1000*parseFloat(translate_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			this.translate_keys.push(new spine.translate_key(time).load(json.translate[translate_i]));
-		}
-		this.translate_keys.sort(function (a, b) { return a.time - b.time; });
-	}
-
-	if (json.rotate)
-	{
-		for (var rotate_i in json.rotate)
-		{
-			var time = 1000*parseFloat(rotate_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			this.rotate_keys.push(new spine.rotate_key(time).load(json.rotate[rotate_i]));
-		}
-		this.rotate_keys.sort(function (a, b) { return a.time - b.time; });
-	}
-
-	if (json.scale)
-	{
-		for (var scale_i in json.scale)
-		{
-			var time = 1000*parseFloat(scale_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			this.scale_keys.push(new spine.scale_key(time).load(json.scale[scale_i]));
-		}
-		this.scale_keys.sort(function (a, b) { return a.time - b.time; });
-	}
-
 	if (json.color)
 	{
-		for (var color_i in json.color)
+		if (json.color instanceof Array)
 		{
-			var time = 1000*parseFloat(color_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			// TODO: this.color_keys.push(new spine.color_key(time).load(json.color[color_i]));
-			var color = json.color[color_i];
-			var rgba = parseInt(color.color, 16);
-			var r = ((rgba >> 24) & 0xff) / 255;
-			var g = ((rgba >> 16) & 0xff) / 255;
-			var b = ((rgba >> 8) & 0xff) / 255;
-			var a = (rgba & 0xff) / 255;
-			var curve = spine.toCurve(color.curve);
-			this.color_keys.push({ time:time, rgba:rgba, r:r, g:g, b:b, a:a, curve:curve });
+			// version >= spine-1.0.9
+			for (var color_i = 0; color_i < json.color.length; ++color_i)
+			{
+				var color = json.color[color_i];
+				var time = 1000 * spine.toFloat(color.time, 0);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				var rgba = parseInt(color.color, 16);
+				var r = ((rgba >> 24) & 0xff) / 255;
+				var g = ((rgba >> 16) & 0xff) / 255;
+				var b = ((rgba >> 8) & 0xff) / 255;
+				var a = (rgba & 0xff) / 255;
+				var curve = spine.toCurve(color.curve);
+				this.color_keys.push({ time:time, rgba:rgba, r:r, g:g, b:b, a:a, curve:curve });
+			}
+		}
+		else
+		{
+			// version < spine-1.0.9
+			for (var color_i in json.color)
+			{
+				var color = json.color[color_i];
+				var time = 1000 * parseFloat(color_i);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				var rgba = parseInt(color.color, 16);
+				var r = ((rgba >> 24) & 0xff) / 255;
+				var g = ((rgba >> 16) & 0xff) / 255;
+				var b = ((rgba >> 8) & 0xff) / 255;
+				var a = (rgba & 0xff) / 255;
+				var curve = spine.toCurve(color.curve);
+				this.color_keys.push({ time:time, rgba:rgba, r:r, g:g, b:b, a:a, curve:curve });
+			}
 		}
 		this.color_keys.sort(function (a, b) { return a.time - b.time; });
 	}
 
 	if (json.attachment)
 	{
-		for (var attachment_i in json.attachment)
+		if (json.attachment instanceof Array)
 		{
-			var time = 1000*parseFloat(attachment_i);
-			this.min_time = Math.min(this.min_time, time);
-			this.max_time = Math.max(this.max_time, time);
-			// TODO: this.attachment_keys.push(new spine.attachment_key(time).load(json.attachment[attachment_i]));
-			var attachment = json.attachment[attachment_i];
-			this.attachment_keys.push({ time:time, attachment:attachment });
+			// version >= spine-1.0.9
+			// json.attachment is an array of objects with time:number and name:string
+			for (var attachment_i = 0; attachment_i < json.attachment.length; ++attachment_i)
+			{
+				var attachment = json.attachment[attachment_i];
+				var time = 1000 * spine.toFloat(attachment.time, 0);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				var name = attachment.name;
+				this.attachment_keys.push({ time:time, attachment:name });
+			}
+		}
+		else
+		{
+			// version < spine-1.0.9
+			// json.attachment is an object with name strings keyed to time
+			for (var attachment_i in json.attachment)
+			{
+				var attachment = json.attachment[attachment_i];
+				var time = 1000 * parseFloat(attachment_i);
+				this.min_time = Math.min(this.min_time, time);
+				this.max_time = Math.max(this.max_time, time);
+				var name = attachment;
+				this.attachment_keys.push({ time:time, attachment:name });
+			}
 		}
 		this.attachment_keys.sort(function (a, b) { return a.time - b.time; });
 	}
@@ -913,14 +959,44 @@ spine.skeleton.prototype.load = function (json)
 	this.skel_slots = {};
 	this.skins = {};
 
-	if (json.bones) for (var bone_i in json.bones)
+	if (json.bones)
 	{
-		this.skel_bones[bone_i] = new spine.skel_bone().load(json.bones[bone_i]);
+		if (json.bones instanceof Array)
+		{
+			// version >= spine-1.0.9
+			for (var i = 0; i < json.bones.length; ++i)
+			{
+				this.skel_bones[json.bones[i].name] = new spine.skel_bone().load(json.bones[i]);
+			}
+		}
+		else
+		{
+			// version < spine-1.0.9
+			for (var bone_i in json.bones)
+			{
+				this.skel_bones[bone_i] = new spine.skel_bone().load(json.bones[bone_i]);
+			}
+		}
 	}
 
-	if (json.slots) for (var slot_i in json.slots)
+	if (json.slots)
 	{
-		this.skel_slots[slot_i] = new spine.skel_slot().load(json.slots[slot_i]);
+		if (json.slots instanceof Array)
+		{
+			// version >= spine-1.0.9
+			for (var i = 0; i < json.slots.length; ++i)
+			{
+				this.skel_slots[json.slots[i].name] = new spine.skel_slot().load(json.slots[i]);
+			}
+		}
+		else
+		{
+			// version < spine-1.0.9
+			for (var slot_i in json.slots)
+			{
+				this.skel_slots[slot_i] = new spine.skel_slot().load(json.slots[slot_i]);
+			}
+		}
 	}
 
 	if (json.skins) for (var skin_i in json.skins)
@@ -1265,76 +1341,6 @@ spine.pose.prototype.strike = function ()
 		var anim_slot = animation && animation.anim_slots && animation.anim_slots[slot_i];
 		if (anim_slot)
 		{
-			var keys = anim_slot.translate_keys;
-			if (keys)
-			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
-				{
-					var key0 = keys[key0_i];
-					var key1_i = key0_i + 1;
-					if (key1_i < keys.length)
-					{
-						var key1 = keys[key1_i];
-						var pct = (time - key0.time) / (key1.time - key0.time);
-						pct = key0.curve(pct);
-						tweened_skel_slot.x += spine.tween(key0.x, key1.x, pct);
-						tweened_skel_slot.y += spine.tween(key0.y, key1.y, pct);
-					}
-					else
-					{
-						tweened_skel_slot.x += key0.x;
-						tweened_skel_slot.y += key0.y;
-					}
-				}
-			}
-
-			var keys = anim_slot.rotate_keys;
-			if (keys)
-			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
-				{
-					var key0 = keys[key0_i];
-					var key1_i = key0_i + 1;
-					if (key1_i < keys.length)
-					{
-						var key1 = keys[key1_i];
-						var pct = (time - key0.time) / (key1.time - key0.time);
-						pct = key0.curve(pct);
-						tweened_skel_slot.rotation += spine.tweenAngle(key0.angle, key1.angle, pct);
-					}
-					else
-					{
-						tweened_skel_slot.rotation += key0.angle;
-					}
-				}
-			}
-
-			var keys = anim_slot.scale_keys;
-			if (keys)
-			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
-				{
-					var key0 = keys[key0_i];
-					var key1_i = key0_i + 1;
-					if (key1_i < keys.length)
-					{
-						var key1 = keys[key1_i];
-						var pct = (time - key0.time) / (key1.time - key0.time);
-						pct = key0.curve(pct);
-						tweened_skel_slot.scaleX += spine.tween(key0.scaleX, key1.scaleX, pct) - 1;
-						tweened_skel_slot.scaleY += spine.tween(key0.scaleY, key1.scaleY, pct) - 1;
-					}
-					else
-					{
-						tweened_skel_slot.scaleX += key0.scaleX - 1;
-						tweened_skel_slot.scaleY += key0.scaleY - 1;
-					}
-				}
-			}
-
 			var keys = anim_slot.color_keys;
 			if (keys)
 			{

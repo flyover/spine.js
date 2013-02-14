@@ -89,11 +89,17 @@ main.start = function ()
 //	var skeleton_url = "data/examples/example-skeleton.json";
 //	var animation_urls = [ "data/examples/example-animation.json" ];
 
-	var skeleton_url  = "data/examples/spineboy/skeleton-skeleton.json";
+	var skeleton_url  = "data/examples/spineboy/spineboy-skeleton.json";
 	var animation_urls = 
 	[
-		"data/examples/spineboy/skeleton-walk.json",
-		"data/examples/spineboy/skeleton-jump.json"
+		"data/examples/spineboy/spineboy-walk.json",
+		"data/examples/spineboy/spineboy-jump.json"
+	];
+
+	var skeleton_url  = "data/examples/dragon/dragon-skeleton.json";
+	var animation_urls = 
+	[
+		"data/examples/dragon/dragon-flying.json"
 	];
 
 //	var skeleton_url = "data/examples/goblins/goblins-skeleton.json";
