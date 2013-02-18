@@ -435,10 +435,10 @@ var add_animation = function (spine_pose, spine_anim_i)
 					var spriter_object_angle = parseFloat(skin_attachment.rotation.toFixed(6));
 					var spriter_object_scale_x = parseFloat(skin_attachment.scaleX.toFixed(6));
 					var spriter_object_scale_y = parseFloat(skin_attachment.scaleY.toFixed(6));
-					var spriter_object_r = parseFloat(skel_slot.r.toFixed(6));
-					var spriter_object_g = parseFloat(skel_slot.g.toFixed(6));
-					var spriter_object_b = parseFloat(skel_slot.b.toFixed(6));
-					var spriter_object_a = parseFloat(skel_slot.a.toFixed(6));
+					var spriter_object_r = parseFloat(skel_slot.color.r.toFixed(6));
+					var spriter_object_g = parseFloat(skel_slot.color.g.toFixed(6));
+					var spriter_object_b = parseFloat(skel_slot.color.b.toFixed(6));
+					var spriter_object_a = parseFloat(skel_slot.color.a.toFixed(6));
 
 					var spriter_object = {};
 					spriter_object['@folder'] = spine_folder_object.id;

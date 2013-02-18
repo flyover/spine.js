@@ -107,6 +107,58 @@ spine.toArray = function (value, def)
 	return def || [];
 }
 
+/**
+ * @constructor
+ */
+spine.color = function ()
+{
+	/** @type {number} */
+	this.rgba = 0xffffffff;
+	/** @type {number} */
+	this.r = 1;
+	/** @type {number} */
+	this.g = 1;
+	/** @type {number} */
+	this.b = 1;
+	/** @type {number} */
+	this.a = 1;
+}
+
+/**
+ * @return {spine.color} 
+ * @param {spine.color} other 
+ */
+spine.color.prototype.copy = function (other)
+{
+	this.rgba = other.rgba;
+	this.r = other.r;
+	this.g = other.g;
+	this.b = other.b;
+	this.a = other.a;
+	return this;
+}
+
+/**
+ * @return {spine.color} 
+ * @param {Object} json 
+ */
+spine.color.prototype.load = function (json)
+{
+	if (json !== undefined)
+	{
+		this.rgba = parseInt(json, 16);
+	}
+	else
+	{
+		this.rgba = 0xffffffff;
+	}
+	this.r = ((this.rgba >> 24) & 0xff) / 255;
+	this.g = ((this.rgba >> 16) & 0xff) / 255;
+	this.b = ((this.rgba >> 8) & 0xff) / 255;
+	this.a = (this.rgba & 0xff) / 255;
+	return this;
+}
+
 // from: http://github.com/arian/cubic-bezier
 /**
  * @return {function(number):number} 
@@ -176,7 +228,7 @@ spine.bezier_curve = function (x1, y1, x2, y2, epsilon)
 		var x = percent, t0, t1, t2, x2, d2, i;
 
 		// First try a few iterations of Newton's method -- normally very fast.
-		for (t2 = x, i = 0; i < 8; i++)
+		for (t2 = x, i = 0; i < 8; ++i)
 		{
 			x2 = curveX(t2) - x;
 			if (Math.abs(x2) < epsilon) return curveY(t2);
@@ -384,16 +436,8 @@ spine.skel_slot = function ()
 {
 	/** @type {string} */
 	this.bone = "";
-	/** @type {number} */
-	this.rgba = 0xffffffff;
-	/** @type {number} */
-	this.r = 1;
-	/** @type {number} */
-	this.g = 1;
-	/** @type {number} */
-	this.b = 1;
-	/** @type {number} */
-	this.a = 1;
+	/** @type {spine.color} */
+	this.color = new spine.color();
 	/** @type {?string} */
 	this.attachment = null;
 }
@@ -405,11 +449,7 @@ spine.skel_slot = function ()
 spine.skel_slot.prototype.copy = function (other)
 {
 	this.bone = other.bone;
-	this.rgba = other.rgba;
-	this.r = other.r;
-	this.g = other.g;
-	this.b = other.b;
-	this.a = other.a;
+	this.color.copy(other.color);
 	this.attachment = other.attachment;
 	return this;
 }
@@ -421,18 +461,7 @@ spine.skel_slot.prototype.copy = function (other)
 spine.skel_slot.prototype.load = function (json)
 {
 	this.bone = spine.toString(json.bone, null) || "";
-	if (json.color !== undefined)
-	{
-		this.rgba = parseInt(json.color, 16);
-	}
-	else
-	{
-		this.rgba = 0xffffffff;
-	}
-	this.r = ((this.rgba >> 24) & 0xff) / 255;
-	this.g = ((this.rgba >> 16) & 0xff) / 255;
-	this.b = ((this.rgba >> 8) & 0xff) / 255;
-	this.a = (this.rgba & 0xff) / 255;
+	this.color.load(json.color);
 	this.attachment = spine.toString(json.attachment, null);
 	return this;
 }
@@ -738,6 +767,53 @@ spine.anim_bone.prototype.load = function (json)
 
 /**
  * @constructor 
+ * @param {number=} time 
+ */
+spine.color_key = function (time)
+{
+	/** @type {number} */
+	this.time = time || 0;
+	/** @type {spine.color} */
+	this.color = new spine.color();
+	/** @type {?function(number):number} */
+	this.curve = null;
+}
+
+/**
+ * @return {spine.color_key} 
+ * @param {Object} json 
+ */
+spine.color_key.prototype.load = function (json)
+{
+	this.color.load(json.color);
+	this.curve = spine.toCurve(json.curve);
+	return this;
+}
+
+/**
+ * @constructor 
+ * @param {number=} time 
+ */
+spine.attachment_key = function (time)
+{
+	/** @type {number} */
+	this.time = time || 0;
+	/** @type {?string} */
+	this.attachment = null;
+}
+
+/**
+ * @return {spine.attachment_key} 
+ * @param {Object} json 
+ */
+spine.attachment_key.prototype.load = function (json)
+{
+	this.attachment = spine.toString(json.name, null);
+	return this;
+}
+
+/**
+ * @constructor 
  */
 spine.anim_slot = function ()
 {
@@ -745,9 +821,9 @@ spine.anim_slot = function ()
 	this.min_time = 0;
 	/** @type {number} */
 	this.max_time = 0;
-	/** @type {Array.<Object>} */
+	/** @type {Array.<spine.color_key>} */
 	this.color_keys = [];
-	/** @type {Array.<Object>} */
+	/** @type {Array.<spine.attachment_key>} */
 	this.attachment_keys = [];
 }
 
@@ -773,13 +849,7 @@ spine.anim_slot.prototype.load = function (json)
 				var time = 1000 * spine.toFloat(color.time, 0);
 				this.min_time = Math.min(this.min_time, time);
 				this.max_time = Math.max(this.max_time, time);
-				var rgba = parseInt(color.color, 16);
-				var r = ((rgba >> 24) & 0xff) / 255;
-				var g = ((rgba >> 16) & 0xff) / 255;
-				var b = ((rgba >> 8) & 0xff) / 255;
-				var a = (rgba & 0xff) / 255;
-				var curve = spine.toCurve(color.curve);
-				this.color_keys.push({ time:time, rgba:rgba, r:r, g:g, b:b, a:a, curve:curve });
+				this.color_keys.push(new spine.color_key(time).load(color));
 			}
 		}
 		else
@@ -791,13 +861,7 @@ spine.anim_slot.prototype.load = function (json)
 				var time = 1000 * parseFloat(color_i);
 				this.min_time = Math.min(this.min_time, time);
 				this.max_time = Math.max(this.max_time, time);
-				var rgba = parseInt(color.color, 16);
-				var r = ((rgba >> 24) & 0xff) / 255;
-				var g = ((rgba >> 16) & 0xff) / 255;
-				var b = ((rgba >> 8) & 0xff) / 255;
-				var a = (rgba & 0xff) / 255;
-				var curve = spine.toCurve(color.curve);
-				this.color_keys.push({ time:time, rgba:rgba, r:r, g:g, b:b, a:a, curve:curve });
+				this.color_keys.push(new spine.color_key(time).load(color));
 			}
 		}
 		this.color_keys.sort(function (a, b) { return a.time - b.time; });
@@ -815,8 +879,7 @@ spine.anim_slot.prototype.load = function (json)
 				var time = 1000 * spine.toFloat(attachment.time, 0);
 				this.min_time = Math.min(this.min_time, time);
 				this.max_time = Math.max(this.max_time, time);
-				var name = attachment.name;
-				this.attachment_keys.push({ time:time, attachment:name });
+				this.attachment_keys.push(new spine.attachment_key(time).load(attachment));
 			}
 		}
 		else
@@ -829,8 +892,7 @@ spine.anim_slot.prototype.load = function (json)
 				var time = 1000 * parseFloat(attachment_i);
 				this.min_time = Math.min(this.min_time, time);
 				this.max_time = Math.max(this.max_time, time);
-				var name = attachment;
-				this.attachment_keys.push({ time:time, attachment:name });
+				this.attachment_keys.push(new spine.attachment_key(time).load({ name:attachment }));
 			}
 		}
 		this.attachment_keys.sort(function (a, b) { return a.time - b.time; });
@@ -1257,72 +1319,72 @@ spine.pose.prototype.strike = function ()
 		var anim_bone = animation && animation.anim_bones && animation.anim_bones[bone_i];
 		if (anim_bone)
 		{
-			var keys = anim_bone.translate_keys;
-			if (keys)
+			var translate_keys = anim_bone.translate_keys;
+			if (translate_keys)
 			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
+				var translate_key0_i = spine.animation.find_key(translate_keys, time);
+				if (translate_key0_i != -1)
 				{
-					var key0 = keys[key0_i];
-					var key1_i = key0_i + 1;
-					if (key1_i < keys.length)
+					var translate_key0 = translate_keys[translate_key0_i];
+					var translate_key1_i = translate_key0_i + 1;
+					if (translate_key1_i < translate_keys.length)
 					{
-						var key1 = keys[key1_i];
-						var pct = (time - key0.time) / (key1.time - key0.time);
-						pct = key0.curve(pct);
-						tweened_skel_bone.x += spine.tween(key0.x, key1.x, pct);
-						tweened_skel_bone.y += spine.tween(key0.y, key1.y, pct);
+						var translate_key1 = translate_keys[translate_key1_i];
+						var pct = (time - translate_key0.time) / (translate_key1.time - translate_key0.time);
+						pct = translate_key0.curve(pct);
+						tweened_skel_bone.x += spine.tween(translate_key0.x, translate_key1.x, pct);
+						tweened_skel_bone.y += spine.tween(translate_key0.y, translate_key1.y, pct);
 					}
 					else
 					{
-						tweened_skel_bone.x += key0.x;
-						tweened_skel_bone.y += key0.y;
+						tweened_skel_bone.x += translate_key0.x;
+						tweened_skel_bone.y += translate_key0.y;
 					}
 				}
 			}
 
-			var keys = anim_bone.rotate_keys;
-			if (keys)
+			var rotate_keys = anim_bone.rotate_keys;
+			if (rotate_keys)
 			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
+				var rotate_key0_i = spine.animation.find_key(rotate_keys, time);
+				if (rotate_key0_i != -1)
 				{
-					var key0 = keys[key0_i];
-					var key1_i = key0_i + 1;
-					if (key1_i < keys.length)
+					var rotate_key0 = rotate_keys[rotate_key0_i];
+					var rotate_key1_i = rotate_key0_i + 1;
+					if (rotate_key1_i < rotate_keys.length)
 					{
-						var key1 = keys[key1_i];
-						var pct = (time - key0.time) / (key1.time - key0.time);
-						pct = key0.curve(pct);
-						tweened_skel_bone.rotation += spine.tweenAngle(key0.angle, key1.angle, pct);
+						var rotate_key1 = rotate_keys[rotate_key1_i];
+						var pct = (time - rotate_key0.time) / (rotate_key1.time - rotate_key0.time);
+						pct = rotate_key0.curve(pct);
+						tweened_skel_bone.rotation += spine.tweenAngle(rotate_key0.angle, rotate_key1.angle, pct);
 					}
 					else
 					{
-						tweened_skel_bone.rotation += key0.angle;
+						tweened_skel_bone.rotation += rotate_key0.angle;
 					}
 				}
 			}
 
-			var keys = anim_bone.scale_keys;
-			if (keys)
+			var scale_keys = anim_bone.scale_keys;
+			if (scale_keys)
 			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
+				var scale_key0_i = spine.animation.find_key(scale_keys, time);
+				if (scale_key0_i != -1)
 				{
-					var key0 = keys[key0_i];
-					var key1_i = key0_i + 1;
-					if (key1_i < keys.length)
+					var scale_key0 = scale_keys[scale_key0_i];
+					var scale_key1_i = scale_key0_i + 1;
+					if (scale_key1_i < scale_keys.length)
 					{
-						var key1 = keys[key1_i];
-						var pct = (time - key0.time) / (key1.time - key0.time);
-						pct = key0.curve(pct);
-						tweened_skel_bone.scaleX += spine.tween(key0.scaleX, key1.scaleX, pct) - 1;
-						tweened_skel_bone.scaleY += spine.tween(key0.scaleY, key1.scaleY, pct) - 1;
+						var scale_key1 = scale_keys[scale_key1_i];
+						var pct = (time - scale_key0.time) / (scale_key1.time - scale_key0.time);
+						pct = scale_key0.curve(pct);
+						tweened_skel_bone.scaleX += spine.tween(scale_key0.scaleX, scale_key1.scaleX, pct) - 1;
+						tweened_skel_bone.scaleY += spine.tween(scale_key0.scaleY, scale_key1.scaleY, pct) - 1;
 					}
 					else
 					{
-						tweened_skel_bone.scaleX += key0.scaleX - 1;
-						tweened_skel_bone.scaleY += key0.scaleY - 1;
+						tweened_skel_bone.scaleX += scale_key0.scaleX - 1;
+						tweened_skel_bone.scaleY += scale_key0.scaleY - 1;
 					}
 				}
 			}
@@ -1341,45 +1403,45 @@ spine.pose.prototype.strike = function ()
 		var anim_slot = animation && animation.anim_slots && animation.anim_slots[slot_i];
 		if (anim_slot)
 		{
-			var keys = anim_slot.color_keys;
-			if (keys)
+			var color_keys = anim_slot.color_keys;
+			if (color_keys)
 			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
+				var color_key0_i = spine.animation.find_key(color_keys, time);
+				if (color_key0_i != -1)
 				{
-					var key0 = keys[key0_i];
-					var key1_i = key0_i + 1;
-					if (key1_i < keys.length)
+					var color_key0 = color_keys[color_key0_i];
+					var color_key1_i = color_key0_i + 1;
+					if (color_key1_i < color_keys.length)
 					{
-						var key1 = keys[key1_i];
-						var pct = (time - key0.time) / (key1.time - key0.time);
-						pct = key0.curve(pct);
-						tweened_skel_slot.r = spine.tween(key0.r, key1.r, pct);
-						tweened_skel_slot.g = spine.tween(key0.g, key1.g, pct);
-						tweened_skel_slot.b = spine.tween(key0.b, key1.b, pct);
-						tweened_skel_slot.a = spine.tween(key0.a, key1.a, pct);
+						var color_key1 = color_keys[color_key1_i];
+						var pct = (time - color_key0.time) / (color_key1.time - color_key0.time);
+						pct = color_key0.curve(pct);
+						tweened_skel_slot.color.r = spine.tween(color_key0.color.r, color_key1.color.r, pct);
+						tweened_skel_slot.color.g = spine.tween(color_key0.color.g, color_key1.color.g, pct);
+						tweened_skel_slot.color.b = spine.tween(color_key0.color.b, color_key1.color.b, pct);
+						tweened_skel_slot.color.a = spine.tween(color_key0.color.a, color_key1.color.a, pct);
 					}
 					else
 					{
-						tweened_skel_slot.r = key0.r;
-						tweened_skel_slot.g = key0.g;
-						tweened_skel_slot.b = key0.b;
-						tweened_skel_slot.a = key0.a;
+						tweened_skel_slot.color.r = color_key0.color.r;
+						tweened_skel_slot.color.g = color_key0.color.g;
+						tweened_skel_slot.color.b = color_key0.color.b;
+						tweened_skel_slot.color.a = color_key0.color.a;
 					}
 				}
 			}
 
-			var keys = anim_slot.attachment_keys;
-			if (keys)
+			var attachment_keys = anim_slot.attachment_keys;
+			if (attachment_keys)
 			{
-				var key0_i = spine.animation.find_key(keys, time);
-				if (key0_i != -1)
+				var attachment_key0_i = spine.animation.find_key(attachment_keys, time);
+				if (attachment_key0_i != -1)
 				{
-					var key0 = keys[key0_i];
+					var attachment_key0 = attachment_keys[attachment_key0_i];
 					// no tweening attachments
-					if (key0.attachment)
+					if (attachment_key0.attachment)
 					{
-						tweened_skel_slot.attachment = key0.attachment;
+						tweened_skel_slot.attachment = attachment_key0.attachment;
 					}
 				}
 			}

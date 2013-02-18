@@ -845,7 +845,7 @@ main.view_2d.prototype.draw_skeleton_2d = function (pose)
 		ctx_2d.rotate(skin_attachment.rotation * Math.PI / 180);
 		ctx_2d.scale(skin_attachment.scaleX, skin_attachment.scaleY);
 
-		ctx_2d.globalAlpha = skel_slot.a;
+		ctx_2d.globalAlpha = skel_slot.color.a;
 
 		var name = skin_attachment.name || skin_attachment_i;
 
@@ -981,7 +981,7 @@ main.view_2d.prototype.draw_pose_2d = function (pose)
 		ctx_2d.rotate(skin_attachment.rotation * Math.PI / 180);
 		ctx_2d.scale(skin_attachment.scaleX, skin_attachment.scaleY);
 
-		ctx_2d.globalAlpha = skel_slot.a;
+		ctx_2d.globalAlpha = skel_slot.color.a;
 
 		var name = skin_attachment.name || skin_attachment_i;
 
@@ -1308,7 +1308,7 @@ main.view_gl.prototype.draw_pose_gl = function (pose)
 
 		this.load_modelview_mtx(mtx);
 
-		this.uGlobalAlpha[0] = skel_slot.a;
+		this.uGlobalAlpha[0] = skel_slot.color.a;
 
 		if (file && !file.texture && file.image && !file.image.hidden)
 		{
