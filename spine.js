@@ -569,10 +569,21 @@ spine.skin.prototype.load = function (json)
  * @constructor 
  * @param {number=} time 
  */
-spine.translate_key = function (time)
+spine.key = function (time)
 {
 	/** @type {number} */
 	this.time = time || 0;
+}
+
+/**
+ * @constructor 
+ * @extends {spine.key} 
+ * @param {number=} time 
+ */
+spine.translate_key = function (time)
+{
+	goog.base(this, time);
+
 	/** @type {number} */
 	this.x = 0;
 	/** @type {number} */
@@ -580,6 +591,8 @@ spine.translate_key = function (time)
 	/** @type {?function(number):number} */
 	this.curve = null;
 }
+
+goog.inherits(spine.translate_key, spine.key);
 
 /**
  * @return {spine.translate_key} 
@@ -595,17 +608,20 @@ spine.translate_key.prototype.load = function (json)
 
 /**
  * @constructor 
+ * @extends {spine.key} 
  * @param {number=} time 
  */
 spine.rotate_key = function (time)
 {
-	/** @type {number} */
-	this.time = time || 0;
+	goog.base(this, time);
+
 	/** @type {number} */
 	this.angle = 0;
 	/** @type {?function(number):number} */
 	this.curve = null;
 }
+
+goog.inherits(spine.rotate_key, spine.key);
 
 /**
  * @return {spine.rotate_key} 
@@ -620,12 +636,13 @@ spine.rotate_key.prototype.load = function (json)
 
 /**
  * @constructor 
+ * @extends {spine.key} 
  * @param {number=} time 
  */
 spine.scale_key = function (time)
 {
-	/** @type {number} */
-	this.time = time || 0;
+	goog.base(this, time);
+
 	/** @type {number} */
 	this.scaleX = 0;
 	/** @type {number} */
@@ -633,6 +650,8 @@ spine.scale_key = function (time)
 	/** @type {?function(number):number} */
 	this.curve = null;
 }
+
+goog.inherits(spine.scale_key, spine.key);
 
 /**
  * @return {spine.scale_key} 
@@ -767,17 +786,20 @@ spine.anim_bone.prototype.load = function (json)
 
 /**
  * @constructor 
+ * @extends {spine.key} 
  * @param {number=} time 
  */
 spine.color_key = function (time)
 {
-	/** @type {number} */
-	this.time = time || 0;
+	goog.base(this, time);
+
 	/** @type {spine.color} */
 	this.color = new spine.color();
 	/** @type {?function(number):number} */
 	this.curve = null;
 }
+
+goog.inherits(spine.color_key, spine.key);
 
 /**
  * @return {spine.color_key} 
@@ -792,15 +814,18 @@ spine.color_key.prototype.load = function (json)
 
 /**
  * @constructor 
+ * @extends {spine.key} 
  * @param {number=} time 
  */
 spine.attachment_key = function (time)
 {
-	/** @type {number} */
-	this.time = time || 0;
+	goog.base(this, time);
+
 	/** @type {?string} */
 	this.attachment = null;
 }
+
+goog.inherits(spine.attachment_key, spine.key);
 
 /**
  * @return {spine.attachment_key} 
@@ -957,9 +982,7 @@ spine.animation.prototype.load = function (json)
 
 /**
  * @return {number} 
- * @param 
- *  	  {Array.<spine.translate_key|spine.rotate_key|spine.scale_key>}
- *  	  keys
+ * @param {Array.<spine.key>} keys 
  * @param {number} time 
  */
 spine.animation.find_key = function (keys, time)
