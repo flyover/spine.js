@@ -53,50 +53,83 @@ function main(argv)
 		console.log("Spine skeleton/animation JSON to Spriter SCML converter");
 		console.log("");
 		console.log("Usage: ");
+		console.log("$ node spine2spriter.js path/to/spine.json");
 		console.log("$ node spine2spriter.js path/to/spine-skeleton.json");
-		console.log(" or");
-		console.log("$ ./spine2spriter path/to/spine-skeleton.json");
 		console.log("");
+		console.log("For path/to/spine.json");
+		console.log("Loads Spine data \"path/to/spine.json\" file.");
+		console.log("Saves Spriter \"path/to/spine.scml\" file.");
+		console.log("");
+		console.log("For path/to/spine-skeleton.json");
 		console.log("Loads Spine skeleton \"path/to/spine-skeleton.json\" file.");
 		console.log("Searches for and loads all Spine animation \"path/to/spine-*.json\" files.");
 		console.log("Saves Spriter \"path/to/spine.scml\" file.");
 		return 1;
 	}
 
-	var spine_skeleton_json_filename = argv[2];
-	console.log("spine skeleton json: " + spine_skeleton_json_filename);
+	var spine_data = new spine.data();
+	var spine_skeleton = spine_data.m_skeleton;
 
-	var spine_skeleton_json_string = fs.readFileSync(spine_skeleton_json_filename, "UTF-8");
-	var spine_skeleton_json = JSON.parse(spine_skeleton_json_string);
-	var spine_skeleton = new spine.skeleton().load(spine_skeleton_json);
-	var match = path.basename(spine_skeleton_json_filename).match(new RegExp("^(\\w*)-skeleton.json$", "i"));
+	var spine_json_filename = argv[2];
+	var spine_json_dirname = path.dirname(spine_json_filename);
+	var spine_json_basename = path.basename(spine_json_filename);
+
+	var match = path.basename(spine_json_filename).match(new RegExp("^(\\w*)-skeleton.json$", "i"));
 	//console.log(match);
-	spine_skeleton.name = (match && match[1]) || "skeleton";
-	console.log("spine skeleton name: " + spine_skeleton.name);
 
-	// search the spine skeleton json directory for spine animation json files
-	var spine_skeleton_json_dirname = path.dirname(spine_skeleton_json_filename);
-	var filelist = fs.readdirSync(spine_skeleton_json_dirname);
-	for (var i = 0; i < filelist.length; ++i)
+	if (match && match[1])
 	{
-		var filename = filelist[i];
-		var match = filename.match(new RegExp("^" + spine_skeleton.name + "-(.*).json$", "i"));
-		//console.log(match);
-		if (match && (match[1] != "skeleton"))
+		// multiple file version
+		var spine_skeleton_json_filename = spine_json_filename;
+		console.log("spine skeleton json: " + spine_skeleton_json_filename);
+
+		var spine_skeleton_json_string = fs.readFileSync(spine_skeleton_json_filename, "UTF-8");
+		var spine_skeleton_json = JSON.parse(spine_skeleton_json_string);
+		spine_data.loadSkeleton(spine_skeleton_json);
+		spine_skeleton.name = match[1];
+		console.log("spine skeleton name: " + spine_skeleton.name);
+
+		// search the spine skeleton json directory for spine animation json files
+		var filelist = fs.readdirSync(spine_json_dirname);
+		for (var i = 0; i < filelist.length; ++i)
 		{
-			var spine_animation_json_filename = spine_skeleton_json_dirname + "/" + filename;
-			console.log("spine animation json: " + spine_animation_json_filename);
-			var spine_animation_json_string = fs.readFileSync(spine_animation_json_filename, "UTF-8");
-			var spine_animation_json = JSON.parse(spine_animation_json_string);
-			var spine_animation = new spine.animation().load(spine_animation_json);
-			spine_animation.name = (match && match[1]) || "default";
-			console.log("spine animation name: " + spine_animation.name);
-			spine_skeleton.m_animations.push(spine_animation);
+			var filename = filelist[i];
+			var match = filename.match(new RegExp("^" + spine_skeleton.name + "-(.*).json$", "i"));
+			//console.log(match);
+			if (match && (match[1] != "skeleton"))
+			{
+				var spine_animation_json_filename = spine_json_dirname + "/" + filename;
+				console.log("spine animation json: " + spine_animation_json_filename);
+				var spine_animation_json_string = fs.readFileSync(spine_animation_json_filename, "UTF-8");
+				var spine_animation_json = JSON.parse(spine_animation_json_string);
+				var spine_animation_name = (match && match[1]) || "default";
+				console.log("spine animation name: " + spine_animation_name);
+				spine_data.loadAnimation(spine_animation_name, spine_animation_json);
+			}
+		}
+	}
+	else
+	{
+		// single file version
+		var spine_data_json_filename = spine_json_filename;
+		console.log("spine data json: " + spine_data_json_filename);
+
+		var spine_data_json_string = fs.readFileSync(spine_data_json_filename, "UTF-8");
+		var spine_data_json = JSON.parse(spine_data_json_string);
+		spine_data.load(spine_data_json);
+		var match = path.basename(spine_data_json_filename).match(new RegExp("^(\\w*).json$", "i"));
+		//console.log(match);
+		spine_skeleton.name = (match && match[1]) || "skeleton";
+		console.log("spine skeleton name: " + spine_skeleton.name);
+
+		for (var i in spine_data.m_animations)
+		{
+			console.log("spine animation name: " + i);
 		}
 	}
 
 	// use spine skeleton json base name for output spriter scml name
-	var spriter_scml_filename = spine_skeleton_json_dirname + "/" + spine_skeleton.name + ".scml";
+	var spriter_scml_filename = spine_json_dirname + "/" + spine_skeleton.name + ".scml";
 	console.log("spriter scml: " + spriter_scml_filename);
 
 	// TODO: multiple skin support
@@ -246,16 +279,16 @@ function main(argv)
 	{
 		spine_pose.setAnim(spine_anim_i);
 
-		var spine_skeleton = spine_pose.m_skeleton;
+		var spine_skeleton = spine_pose.m_data.m_skeleton;
 
 		var animation_name = "default";
 		var animation_length = 0;
 		var time_array = [ 0 ];
 
-		if (spine_pose.m_anim_index != -1)
+		if (spine_pose.m_anim_name)
 		{
-			var spine_animation = spine_skeleton.m_animations[spine_pose.m_anim_index];
-			animation_name = spine_animation.name;
+			var spine_animation = spine_data.m_animations[spine_pose.m_anim_name];
+			animation_name = spine_pose.m_anim_name;
 			animation_length = spine_pose.getAnimLength();
 
 			time_array.push(Math.round(animation_length));
@@ -558,13 +591,13 @@ function main(argv)
 		}
 	}
 
-	var spine_pose = new spine.pose(spine_skeleton);
+	var spine_pose = new spine.pose(spine_data);
 
 	// add spine skeleton
-	add_animation(spine_pose, -1);
+	add_animation(spine_pose);
 
 	// add each spine animation
-	for (var spine_anim_i = 0; spine_anim_i < spine_pose.getNumAnims(); ++spine_anim_i)
+	for (var spine_anim_i in spine_data.m_animations)
 	{
 		add_animation(spine_pose, spine_anim_i);
 	}

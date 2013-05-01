@@ -39,6 +39,7 @@ main.start = function ()
 	var directions_div = document.body.appendChild(document.createElement('div'));
 	var file_input_div = document.body.appendChild(document.createElement('div'));
 	var canvas_div = document.body.appendChild(document.createElement('div'));
+	var data_info_div = document.body.appendChild(document.createElement('div'));
 	var skeleton_info_div = document.body.appendChild(document.createElement('div'));
 	var animation_info_div = document.body.appendChild(document.createElement('div'));
 	var control_div = document.body.appendChild(document.createElement('div'));
@@ -86,59 +87,90 @@ main.start = function ()
 		camera_scale *= 1.1;
 	}
 
-//	var skeleton_url = "data/examples/example-skeleton.json";
-//	var animation_urls = [ "data/examples/example-animation.json" ];
-
-//	var skeleton_url  = "data/examples/spineboy/spineboy-skeleton.json";
-//	var animation_urls = 
-//	[
-//		"data/examples/spineboy/spineboy-walk.json",
-//		"data/examples/spineboy/spineboy-jump.json"
-//	];
-
-	var skeleton_url  = "data/examples/dragon/dragon-skeleton.json";
-	var animation_urls = 
-	[
-		"data/examples/dragon/dragon-flying.json"
-	];
-
-//	var skeleton_url = "data/examples/goblins/goblins-skeleton.json";
-//	var animation_urls = [ "data/examples/goblins/goblins-walk.json" ];
-
-//	var skeleton_url = "data/examples/powerup/skeleton-skeleton.json";
-//	var animation_urls = [ "data/examples/powerup/skeleton-animation.json" ];
-
-//	var skeleton_url = "data/examples/spinosaurus/skeleton-skeleton.json";
-//	var animation_urls = [ "data/examples/spinosaurus/skeleton-animation.json" ];
+	var single_file = true;
 
 	var pose = new spine.pose();
+	var data = new spine.data();
 
-	var skeleton = new spine.skeleton();
-	skeleton_info_div.innerHTML = "Loading...";
-	main.load_skeleton_from_url(skeleton, skeleton_url, (function (skeleton) { return function ()
+	if (single_file)
 	{
-		skeleton_info_div.innerHTML = "Skeleton Name: " + skeleton_url;
+		//var url = "data/examples/example.json";
+		//var url  = "data/examples/spineboy/spineboy.json";
+		var url  = "data/examples/dragon/dragon.json";
+		//var url = "data/examples/goblins/goblins.json";
+		//var url = "data/examples/powerup/skeleton.json";
+		//var url = "data/examples/spinosaurus/skeleton.json";
 
-		pose = new spine.pose(skeleton);
-		set_camera(pose);
-
-		for (var anim_url_idx = 0; anim_url_idx < animation_urls.length; ++anim_url_idx)
+		data_info_div.innerHTML = "Loading...";
+		main.load_data_from_url(data, url, (function (skeleton) { return function ()
 		{
-			var animation_url = animation_urls[anim_url_idx];
-			var animation = new spine.animation();
-			animation.name = animation_url;
-			animation_info_div.innerHTML = "Loading...";
-			main.load_animation_from_url(animation, animation_url, (function (animation) { return function ()
-			{
-				animation_info_div.innerHTML = "Animation Name: " + animation_url;
+			data_info_div.innerHTML = "Name: " + url;
 
-				skeleton.m_animations.push(animation); // hack
-				set_camera(pose);
-			}
-			})(animation));
+			pose = new spine.pose(data);
+
+			for (var i in data.m_animations) { pose.setAnim(i); break; }
+
+			set_camera(pose);
 		}
+		})(data));
 	}
-	})(skeleton));
+	else
+	{
+		//var skeleton_url = "data/examples/example-skeleton.json";
+		//var animation_urls = [ "data/examples/example-animation.json" ];
+
+		//var skeleton_url  = "data/examples/spineboy/spineboy-skeleton.json";
+		//var animation_urls = 
+		//[
+		//	"data/examples/spineboy/spineboy-walk.json",
+		//	"data/examples/spineboy/spineboy-jump.json"
+		//];
+
+		var skeleton_url  = "data/examples/dragon/dragon-skeleton.json";
+		var animation_urls = 
+		[
+			"data/examples/dragon/dragon-flying.json"
+		];
+
+		//var skeleton_url = "data/examples/goblins/goblins-skeleton.json";
+		//var animation_urls = [ "data/examples/goblins/goblins-walk.json" ];
+
+		//var skeleton_url = "data/examples/powerup/skeleton-skeleton.json";
+		//var animation_urls = [ "data/examples/powerup/skeleton-animation.json" ];
+
+		//var skeleton_url = "data/examples/spinosaurus/skeleton-skeleton.json";
+		//var animation_urls = [ "data/examples/spinosaurus/skeleton-animation.json" ];
+
+		var skeleton = data.m_skeleton;
+		skeleton_info_div.innerHTML = "Loading...";
+		main.load_skeleton_from_url(skeleton, skeleton_url, (function (skeleton) { return function ()
+		{
+			skeleton_info_div.innerHTML = "Skeleton Name: " + skeleton_url;
+
+			pose = new spine.pose(data);
+			set_camera(pose);
+
+			for (var anim_url_idx = 0; anim_url_idx < animation_urls.length; ++anim_url_idx)
+			{
+				var animation_url = animation_urls[anim_url_idx];
+				var animation = new spine.animation();
+				animation.name = animation_url;
+				if (anim_url_idx == 0) { pose.setAnim(animation.name); }
+				animation_info_div.innerHTML = "Loading...";
+				main.load_animation_from_url(animation, animation_url, (function (animation) { return function ()
+				{
+					animation_info_div.innerHTML = "Animation Name: " + animation_url;
+					if (animation.name)
+					{
+						data.m_animations[animation.name] = animation;
+					}
+					set_camera(pose);
+				}
+				})(animation));
+			}
+		}
+		})(skeleton));
+	}
 
 	var file_input = file_input_div.appendChild(document.createElement('input'));
 	file_input.type = 'file';
@@ -202,14 +234,15 @@ main.start = function ()
 				}
 			}
 
-			var skeleton = new spine.skeleton();
+			var data = new spine.data();
+			var skeleton = data.m_skeleton;
 
 			skeleton_info_div.innerHTML = "Loading...";
 			main.load_skeleton_from_input_file(skeleton, skeleton_file, input_files, (function (skeleton) { return function ()
 			{
 				skeleton_info_div.innerHTML = "Skeleton Name: " + skeleton_file.relativePath;
 
-				pose = new spine.pose(skeleton);
+				pose = new spine.pose(data);
 				set_camera(pose);
 
 				// load all animations
@@ -220,12 +253,17 @@ main.start = function ()
 					var animation = new spine.animation();
 					animation.name = animation_file.relativePath;
 
+					if (animation_file_idx == 0) { pose.setAnim(animation.name); }
+
 					animation_info_div.innerHTML = "Loading...";
 					main.load_animation_from_input_file(animation, animation_file, input_files, (function (animation) { return function ()
 					{
 						animation_info_div.innerHTML = "Animation Name: " + animation_file.relativePath;
 
-						skeleton.m_animations.push(animation); // hack
+						if (animation.name)
+						{
+							data.m_animations[animation.name] = animation;
+						}
 						set_camera(pose);
 					}
 					})(animation));
@@ -464,6 +502,68 @@ main.start = function ()
 	loop(tick.time_last);
 }
 
+main.load_data_from_url = function (data, url, callback)
+{
+	var skeleton = data.m_skeleton;
+
+	skeleton.files = {};
+
+	var req = new XMLHttpRequest();
+	req.open("GET", url, true);
+	req.addEventListener('readystatechange', function (e)
+	{
+		if (req.readyState != 4) return;
+		if (req.status != 200 && req.status != 304)
+		{
+			return;
+		}
+
+		data.load(goog.global.JSON.parse(e.target.responseText));
+
+		callback();
+
+		var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
+		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
+		{
+			var skin_slot = skel_skin.skin_slots[slot_i];
+			if (!skin_slot) { continue; }
+			for (var skin_attachment_i in skin_slot.skin_attachments)
+			{
+				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
+
+				var name = skin_attachment.name || skin_attachment_i;
+
+				var file = skeleton.files && skeleton.files[name];
+				if (!file)
+				{
+					var base_path = url.slice(0, url.lastIndexOf('/'));
+
+					//window.console.log("load image: " + base_path + "/" + name + ".png");
+					file = skeleton.files[name] = {};
+					file.width = skin_attachment.width || 0;
+					file.height = skin_attachment.height || 0;
+					var image = file.image = new Image();
+					image.hidden = true;
+					image.addEventListener('load', (function (file) { return function (e)
+					{
+						file.width = file.width || e.target.width;
+						file.height = file.height || e.target.height;
+						e.target.hidden = false;
+					}
+					})(file), false);
+					image.addEventListener('error', function (e) {}, false);
+					image.addEventListener('abort', function (e) {}, false);
+					image.src = base_path + "/" + name + ".png";
+				}
+			}
+		}
+	}, 
+	false);
+	req.send();
+
+	return skeleton;
+}
+
 main.load_skeleton_from_url = function (skeleton, url, callback)
 {
 	skeleton.files = {};
@@ -638,7 +738,9 @@ main.get_pose_extent = function (pose, extent)
 {
 	extent = extent || { min: { x: 1, y: 1 }, max: { x: -1, y: -1 } };
 
-	var skeleton = pose.m_skeleton;
+	var data = pose.m_data;
+	if (!data) { return extent; }
+	var skeleton = data.m_skeleton;
 	if (!skeleton) { return extent; }
 
 	var bound = function (v)
@@ -746,7 +848,9 @@ main.view_2d.prototype.debug_draw_skeleton_2d = function (pose)
 {
 	this.draw_skeleton_2d(pose);
 
-	var skeleton = pose.m_skeleton;
+	var data = pose.m_data;
+	if (!data) { return; }
+	var skeleton = data.m_skeleton;
 	if (!skeleton) { return; }
 
 	var ctx_2d = this.ctx_2d;
@@ -805,7 +909,9 @@ main.view_2d.prototype.debug_draw_skeleton_2d = function (pose)
  */
 main.view_2d.prototype.draw_skeleton_2d = function (pose)
 {
-	var skeleton = pose.m_skeleton;
+	var data = pose.m_data;
+	if (!data) { return; }
+	var skeleton = data.m_skeleton;
 	if (!skeleton) { return; }
 
 	var ctx_2d = this.ctx_2d;
@@ -876,7 +982,9 @@ main.view_2d.prototype.draw_skeleton_2d = function (pose)
  */
 main.view_2d.prototype.debug_draw_pose_2d = function (pose)
 {
-	var skeleton = pose.m_skeleton;
+	var data = pose.m_data;
+	if (!data) { return; }
+	var skeleton = data.m_skeleton;
 	if (!skeleton) { return; }
 
 	pose.strike();
@@ -939,7 +1047,9 @@ main.view_2d.prototype.debug_draw_pose_2d = function (pose)
  */
 main.view_2d.prototype.draw_pose_2d = function (pose)
 {
-	var skeleton = pose.m_skeleton;
+	var data = pose.m_data;
+	if (!data) { return; }
+	var skeleton = data.m_skeleton;
 	if (!skeleton) { return; }
 
 	pose.strike();
@@ -1245,7 +1355,9 @@ main.view_gl.prototype.load_modelview_mtx = function (mtx)
  */
 main.view_gl.prototype.draw_pose_gl = function (pose)
 {
-	var skeleton = pose.m_skeleton;
+	var data = pose.m_data;
+	if (!data) { return; }
+	var skeleton = data.m_skeleton;
 	if (!skeleton) { return; }
 
 	pose.strike();

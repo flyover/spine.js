@@ -140,7 +140,7 @@ spine.color.prototype.copy = function (other)
 
 /**
  * @return {spine.color} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.color.prototype.load = function (json)
 {
@@ -172,6 +172,7 @@ spine.bezier_curve = function (x1, y1, x2, y2, epsilon)
 {
 	epsilon = epsilon || 1e-6;
 
+	/*
 	var orig_curveX = function(t){
 		var v = 1 - t;
 		return 3 * v * v * t * x1 + 3 * v * t * t * x2 + t * t * t;
@@ -186,6 +187,7 @@ spine.bezier_curve = function (x1, y1, x2, y2, epsilon)
 		var v = 1 - t;
 		return 3 * (2 * (t - 1) * t + v * v) * x1 + 3 * (- t * t * t + 2 * v * t) * x2;
 	};
+	*/
 
 	/*
 	 
@@ -415,7 +417,7 @@ spine.skel_bone.prototype.copy = function (other)
 
 /**
  * @return {spine.skel_bone} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.skel_bone.prototype.load = function (json)
 {
@@ -456,7 +458,7 @@ spine.skel_slot.prototype.copy = function (other)
 
 /**
  * @return {spine.skel_slot} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.skel_slot.prototype.load = function (json)
 {
@@ -493,7 +495,7 @@ spine.skin_attachment = function ()
 
 /**
  * @return {spine.skin_attachment} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.skin_attachment.prototype.load = function (json)
 {
@@ -506,7 +508,6 @@ spine.skin_attachment.prototype.load = function (json)
 	case "animatedRegion":
 		var fps = json.fps && spine.toFloat(json.fps, 0);
 		var playMode = json.playMode && spine.toString(json.playMode, "forward");
-		window.console.log("TODO: animatedRegion({ fps:" + fps + ", playMode:" + playMode + " })");
 		break;
 	default:
 		break;
@@ -532,7 +533,7 @@ spine.skin_slot = function ()
 
 /**
  * @return {spine.skin_slot} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.skin_slot.prototype.load = function (json)
 {
@@ -554,7 +555,7 @@ spine.skin = function ()
 
 /**
  * @return {spine.skin} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.skin.prototype.load = function (json)
 {
@@ -596,7 +597,7 @@ goog.inherits(spine.translate_key, spine.key);
 
 /**
  * @return {spine.translate_key} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.translate_key.prototype.load = function (json)
 {
@@ -625,7 +626,7 @@ goog.inherits(spine.rotate_key, spine.key);
 
 /**
  * @return {spine.rotate_key} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.rotate_key.prototype.load = function (json)
 {
@@ -655,7 +656,7 @@ goog.inherits(spine.scale_key, spine.key);
 
 /**
  * @return {spine.scale_key} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.scale_key.prototype.load = function (json)
 {
@@ -684,7 +685,7 @@ spine.anim_bone = function ()
 
 /**
  * @return {spine.anim_bone} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.anim_bone.prototype.load = function (json)
 {
@@ -803,7 +804,7 @@ goog.inherits(spine.color_key, spine.key);
 
 /**
  * @return {spine.color_key} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.color_key.prototype.load = function (json)
 {
@@ -829,7 +830,7 @@ goog.inherits(spine.attachment_key, spine.key);
 
 /**
  * @return {spine.attachment_key} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.attachment_key.prototype.load = function (json)
 {
@@ -854,7 +855,7 @@ spine.anim_slot = function ()
 
 /**
  * @return {spine.anim_slot} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.anim_slot.prototype.load = function (json)
 {
@@ -949,7 +950,7 @@ spine.animation = function ()
 
 /**
  * @return {spine.animation} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.animation.prototype.load = function (json)
 {
@@ -1020,14 +1021,11 @@ spine.skeleton = function ()
 	this.skel_slots = {};
 	/** @type {Object.<string,spine.skin>} */
 	this.skins = {};
-
-	/** @type Array.<spine.animation> */
-	this.m_animations = [];
 }
 
 /**
  * @return {spine.skeleton} 
- * @param {Object} json 
+ * @param {*} json 
  */
 spine.skeleton.prototype.load = function (json)
 {
@@ -1093,24 +1091,77 @@ spine.skeleton.prototype.load = function (json)
 }
 
 /**
+ * @constructor 
+ */
+spine.data = function ()
+{
+	/** @type {spine.skeleton} */
+	this.m_skeleton = new spine.skeleton();
+	/** @type {Object.<string,spine.animation>} */
+	this.m_animations = {};
+}
+
+/**
+ * @return {spine.data} 
+ * @param {*} json 
+ */
+spine.data.prototype.load = function (json)
+{
+	this.loadSkeleton(json);
+
+	this.m_animations = {};
+
+	if (json.animations) for (var animation_i in json.animations)
+	{
+		this.loadAnimation(animation_i, json.animations[animation_i]);
+	}
+
+	return this;
+}
+
+/**
+ * @return {spine.data} 
+ * @param {*} json 
+ */
+spine.data.prototype.loadSkeleton = function (json)
+{
+	this.m_skeleton.load(json);
+
+	return this;
+}
+
+/**
+ * @return {spine.data} 
+ * @param {*} json 
+ */
+spine.data.prototype.loadAnimation = function (name, json)
+{
+	this.m_animations[name] = new spine.animation().load(json);
+
+	return this;
+}
+
+/**
  * @return {number} 
  */
-spine.skeleton.prototype.getNumAnims = function ()
+spine.data.prototype.getNumAnims = function ()
 {
-	return this.m_animations.length;
+	return 0; //return this.m_animations.length;
 }
 
 /**
  * @return {?string} 
  * @param {number=} anim_index 
  */
-spine.skeleton.prototype.getAnimName = function (anim_index)
+spine.data.prototype.getAnimName = function (anim_index)
 {
+	/*
 	if ((anim_index >= 0) && (anim_index < this.getNumAnims()))
 	{
 		var anim = this.m_animations[anim_index];
 		return anim.name;
 	}
+	*/
 	return null;
 }
 
@@ -1118,27 +1169,29 @@ spine.skeleton.prototype.getAnimName = function (anim_index)
  * @return {number} 
  * @param {number} anim_index 
  */
-spine.skeleton.prototype.getAnimLength = function (anim_index)
+spine.data.prototype.getAnimLength = function (anim_index)
 {
+	/*
 	if ((anim_index >= 0) && (anim_index < this.getNumAnims()))
 	{
 		var anim = this.m_animations[anim_index];
 		return anim.length;
 	}
+	*/
 	return -1;
 }
 
 /**
  * @constructor 
- * @param {spine.skeleton=} skeleton 
+ * @param {spine.data=} data 
  */
-spine.pose = function (skeleton)
+spine.pose = function (data)
 {
-	/** @type {spine.skeleton} */
-	this.m_skeleton = skeleton || null;
+	/** @type {spine.data} */
+	this.m_data = data || null;
 
-	/** @type {number} */
-	this.m_anim_index = -1;
+	/** @type {string} */
+	this.m_anim_name = "";
 	/** @type {number} */
 	this.m_time = 0;
 
@@ -1165,11 +1218,11 @@ spine.pose.prototype.getNumAnims = function ()
 }
 
 /**
- * @return {number}
+ * @return {string}
  */
 spine.pose.prototype.getAnim = function ()
 {
-	return this.m_anim_index;
+	return this.m_anim_name;
 }
 
 /**
@@ -1181,31 +1234,27 @@ spine.pose.prototype.setAnim = function (anim_id)
 	if (isFinite(anim_id))
 	{
 		// set animation by index
-		if ((0 <= anim_id) && (anim_id < this.getNumAnims()))
-		{
-			this.m_anim_index = /** @type {number} */ (anim_id);
-			this.m_time = 0;
-			this.m_dirty = true;
-		}
-		else
-		{
-			this.m_anim_index = -1;
-			this.m_time = 0;
-			this.m_dirty = true;
-		}
+//		if ((0 <= anim_id) && (anim_id < this.getNumAnims()))
+//		{
+//			this.m_anim_index = /** @type {number} */ (anim_id);
+//			this.m_time = 0;
+//			this.m_dirty = true;
+//		}
+//		else
+//		{
+//			this.m_anim_index = -1;
+//			this.m_time = 0;
+//			this.m_dirty = true;
+//		}
 	}
 	else
 	{
 		// set animation by name
-		for (var anim_idx = 0, anim_len = this.getNumAnims(); anim_idx < anim_len; ++anim_idx)
+		if (this.m_anim_name != anim_id)
 		{
-			if (anim_id == this.getAnimName(anim_idx))
-			{
-				this.m_anim_index = anim_idx;
-				this.m_time = 0;
-				this.m_dirty = true;
-				break;
-			}
+			this.m_anim_name = /** @type {string} */ (anim_id);
+			this.m_time = 0;
+			this.m_dirty = true;
 		}
 	}
 }
@@ -1215,11 +1264,13 @@ spine.pose.prototype.setAnim = function (anim_id)
  */
 spine.pose.prototype.setNextAnim = function ()
 {
+	/*
 	var num_anims = this.getNumAnims();
 	if (num_anims > 1)
 	{
 		this.setAnim((this.getAnim() + 1) % num_anims);
 	}
+	*/
 }
 
 /**
@@ -1227,11 +1278,13 @@ spine.pose.prototype.setNextAnim = function ()
  */
 spine.pose.prototype.setPrevAnim = function ()
 {
+	/*
 	var num_anims = this.getNumAnims();
 	if (num_anims > 1)
 	{
 		this.setAnim((this.getAnim() + num_anims - 1) % num_anims);
 	}
+	*/
 }
 
 /**
@@ -1240,26 +1293,29 @@ spine.pose.prototype.setPrevAnim = function ()
  */
 spine.pose.prototype.getAnimName = function (anim_index)
 {
+	/*
 	anim_index = (anim_index !== undefined)?(anim_index):(this.m_anim_index);
 	if (this.m_skeleton)
 	{
 		return this.m_skeleton.getAnimName(anim_index);
 	}
+	*/
 	return null;
 }
 
 /**
- * @return {number} 
- * @param {number=} anim_index 
+ * @return {number}
+ * @param {string=} anim_name 
  */
-spine.pose.prototype.getAnimLength = function (anim_index)
+spine.pose.prototype.getAnimLength = function (anim_name)
 {
-	anim_index = (anim_index !== undefined)?(anim_index):(this.m_anim_index);
-	if (this.m_skeleton)
-	{
-		return this.m_skeleton.getAnimLength(anim_index);
-	}
-	return -1;
+	anim_name = (anim_name !== undefined)?(anim_name):(this.m_anim_name);
+	var data = this.m_data;
+	if (!data) { return 0; }
+	var animation = data.m_animations[anim_name];
+	if (!animation) { return 0; }
+	var anim_length = animation.length;
+	return anim_length;
 }
 
 /**
@@ -1316,14 +1372,11 @@ spine.pose.prototype.update = function (elapsed_time)
  */
 spine.pose.prototype.strike = function ()
 {
-	var skeleton = this.m_skeleton;
-	if (!skeleton) { return; }
+	var data = this.m_data;
+	if (!data) { return; }
 
-	var animation = null;
-	if ((this.m_anim_index >= 0) && (this.m_anim_index < skeleton.m_animations.length))
-	{
-		animation = skeleton.m_animations[this.m_anim_index];
-	}
+	var skeleton = data.m_skeleton;
+	var animation = data.m_animations[this.m_anim_name];
 
 	var time = this.getTime();
 
