@@ -22,7 +22,7 @@ jsonxml.json2xml = function (o, tab) {
          xml += ind + "<" + name;
          for (var m in v) {
             if (m.charAt(0) == "@")
-               xml += " " + m.substr(1) + "=\"" + v[m].toString() + "\"";
+               xml += " " + m.substr(1) + "=\"" + String(v[m]) + "\"";
             else
                hasChild = true;
          }
@@ -42,7 +42,7 @@ jsonxml.json2xml = function (o, tab) {
          }
       }
       else {
-         xml += ind + "<" + name + ">" + v.toString() +  "</" + name + ">";
+         xml += ind + "<" + name + ">" + String(v) +  "</" + name + ">";
       }
       return xml;
    }, xml="";
