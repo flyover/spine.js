@@ -109,11 +109,11 @@ sync-closure-compiler:
 
 SYNC_CLOSURE_COMPILER_COMMAND += mkdir -p $(CLOSURE_COMPILER_PATH) ;
 SYNC_CLOSURE_COMPILER_COMMAND += if [ -e $(CLOSURE_COMPILER_PATH)/compiler-latest.tar.gz ] ; then
-SYNC_CLOSURE_COMPILER_COMMAND +=  curl http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz 
+SYNC_CLOSURE_COMPILER_COMMAND +=  curl http://dl.google.com/closure-compiler/compiler-latest.tar.gz
 SYNC_CLOSURE_COMPILER_COMMAND +=   -o $(CLOSURE_COMPILER_PATH)/compiler-latest.tar.gz
 SYNC_CLOSURE_COMPILER_COMMAND +=   -z $(CLOSURE_COMPILER_PATH)/compiler-latest.tar.gz ;
 SYNC_CLOSURE_COMPILER_COMMAND += else
-SYNC_CLOSURE_COMPILER_COMMAND +=  curl http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz 
+SYNC_CLOSURE_COMPILER_COMMAND +=  curl http://dl.google.com/closure-compiler/compiler-latest.tar.gz
 SYNC_CLOSURE_COMPILER_COMMAND +=   -o $(CLOSURE_COMPILER_PATH)/compiler-latest.tar.gz ;
 SYNC_CLOSURE_COMPILER_COMMAND += fi ;
 SYNC_CLOSURE_COMPILER_COMMAND += tar -zxvf $(CLOSURE_COMPILER_PATH)/compiler-latest.tar.gz -C $(CLOSURE_COMPILER_PATH)/ ;
