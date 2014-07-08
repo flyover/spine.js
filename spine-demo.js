@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Flyover Games, LLC 
+ * Copyright (c) Flyover Games, LLC 
  *  
  * Isaac Burns isaacburns@gmail.com 
  *  
@@ -48,8 +48,8 @@ main.start = function ()
 
 	canvas_div.style.display = 'inline-block';
 
-	var canvas_w = 640;
-	var canvas_h = 480;
+	var canvas_w = 320;
+	var canvas_h = 240;
 
 	var camera_x = 0;
 	var camera_y = 0;
@@ -59,12 +59,14 @@ main.start = function ()
 	var set_camera = function (pose)
 	{
 		var extent = main.get_pose_extent(pose);
-		for (var i = 0, ict = pose.getNumAnims(); i < ict; ++i)
+		var anims = pose.getAnims();
+		for (var anim_key in anims)
 		{
-			pose.setAnim(i);
+			pose.setAnim(anim_key);
+			var anim = pose.curAnim();
 			// get extent for each step milliseconds
 			var step = 100;
-			for (var t = 0, tct = pose.getAnimLength(); t < tct; t += step)
+			for (var t = anim.min_time, tct = anim.max_time; t < tct; t += step)
 			{
 				pose.setTime(t);
 				extent = main.get_pose_extent(pose, extent);
@@ -78,7 +80,7 @@ main.start = function ()
 			}
 			*/
 		}
-		pose.setAnim(0);
+		//pose.setAnim(0);
 		camera_x = (extent.max.x + extent.min.x) / 2;
 		camera_y = (extent.max.y + extent.min.y) / 2;
 		var scale_x = canvas_w / (extent.max.x - extent.min.x);
@@ -87,192 +89,168 @@ main.start = function ()
 		camera_scale *= 1.1;
 	}
 
-	var single_file = true;
-
 	var pose = new spine.pose();
 	var data = new spine.data();
 
-	if (single_file)
+	//var url = "data/examples/example.json";
+	//var url  = "data/examples/spineboy/spineboy.json";
+	var url  = "data/examples/dragon/dragon.json";
+	//var url = "data/examples/goblins/goblins.json";
+	//var url = "data/examples/powerup/skeleton.json";
+	//var url = "data/examples/spinosaurus/skeleton.json";
+
+	data_info_div.innerHTML = "Loading...";
+	main.load_data_from_url(data, url, (function (data) { return function ()
 	{
-		//var url = "data/examples/example.json";
-		//var url  = "data/examples/spineboy/spineboy.json";
-		var url  = "data/examples/dragon/dragon.json";
-		//var url = "data/examples/goblins/goblins.json";
-		//var url = "data/examples/powerup/skeleton.json";
-		//var url = "data/examples/spinosaurus/skeleton.json";
+		data_info_div.innerHTML = "Name: " + url;
 
-		data_info_div.innerHTML = "Loading...";
-		main.load_data_from_url(data, url, (function (skeleton) { return function ()
+		pose = new spine.pose(data);
+
+		for (var skin_key in data.getSkins()) { pose.setSkin(skin_key); break; }
+		for (var anim_key in data.getAnims()) { pose.setAnim(anim_key); break; }
+
+		set_camera(pose);
+
+		var skeleton = data.skeleton;
+		var skel_skin = pose.curSkin();//(pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
+		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
 		{
-			data_info_div.innerHTML = "Name: " + url;
-
-			pose = new spine.pose(data);
-
-			for (var i in data.m_animations) { pose.setAnim(i); break; }
-
-			set_camera(pose);
-		}
-		})(data));
-	}
-	else
-	{
-		//var skeleton_url = "data/examples/example-skeleton.json";
-		//var animation_urls = [ "data/examples/example-animation.json" ];
-
-		//var skeleton_url  = "data/examples/spineboy/spineboy-skeleton.json";
-		//var animation_urls = 
-		//[
-		//	"data/examples/spineboy/spineboy-walk.json",
-		//	"data/examples/spineboy/spineboy-jump.json"
-		//];
-
-		var skeleton_url  = "data/examples/dragon/dragon-skeleton.json";
-		var animation_urls = 
-		[
-			"data/examples/dragon/dragon-flying.json"
-		];
-
-		//var skeleton_url = "data/examples/goblins/goblins-skeleton.json";
-		//var animation_urls = [ "data/examples/goblins/goblins-walk.json" ];
-
-		//var skeleton_url = "data/examples/powerup/skeleton-skeleton.json";
-		//var animation_urls = [ "data/examples/powerup/skeleton-animation.json" ];
-
-		//var skeleton_url = "data/examples/spinosaurus/skeleton-skeleton.json";
-		//var animation_urls = [ "data/examples/spinosaurus/skeleton-animation.json" ];
-
-		var skeleton = data.m_skeleton;
-		skeleton_info_div.innerHTML = "Loading...";
-		main.load_skeleton_from_url(skeleton, skeleton_url, (function (skeleton) { return function ()
-		{
-			skeleton_info_div.innerHTML = "Skeleton Name: " + skeleton_url;
-
-			pose = new spine.pose(data);
-			set_camera(pose);
-
-			for (var anim_url_idx = 0; anim_url_idx < animation_urls.length; ++anim_url_idx)
+			var skin_slot = skel_skin.skin_slots[slot_i];
+			if (!skin_slot) { continue; }
+			for (var skin_attachment_i in skin_slot.skin_attachments)
 			{
-				var animation_url = animation_urls[anim_url_idx];
-				var animation = new spine.animation();
-				animation.name = animation_url;
-				if (anim_url_idx == 0) { pose.setAnim(animation.name); }
-				animation_info_div.innerHTML = "Loading...";
-				main.load_animation_from_url(animation, animation_url, (function (animation) { return function ()
+				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
+
+				var name = skin_attachment.name || skin_attachment_i;
+
+				var file = skeleton.files && skeleton.files[name];
+				if (!file)
 				{
-					animation_info_div.innerHTML = "Animation Name: " + animation_url;
-					if (animation.name)
+					var base_path = url.slice(0, url.lastIndexOf('/'));
+
+					//window.console.log("load image: " + base_path + "/" + name + ".png");
+					file = skeleton.files[name] = {};
+					file.width = skin_attachment.width || 0;
+					file.height = skin_attachment.height || 0;
+					var image = file.image = new Image();
+					image.hidden = true;
+					image.addEventListener('load', (function (file) { return function (e)
 					{
-						data.m_animations[animation.name] = animation;
+						file.width = file.width || e.target.width;
+						file.height = file.height || e.target.height;
+						e.target.hidden = false;
 					}
-					set_camera(pose);
+					})(file), false);
+					image.addEventListener('error', function (e) {}, false);
+					image.addEventListener('abort', function (e) {}, false);
+					image.src = base_path + "/" + name + ".png";
 				}
-				})(animation));
 			}
 		}
-		})(skeleton));
 	}
+	})(data));
 
-	var file_input = file_input_div.appendChild(document.createElement('input'));
-	file_input.type = 'file';
-	file_input.multiple = 'multiple';
-	file_input.directory = file_input.webkitdirectory = file_input.mozdirectory = "directory";
-	var file_label = file_input_div.appendChild(document.createElement('span'));
-	file_label.innerHTML = "Drag the parent directory of a Spine skeleton JSON file to the file input.";
-	file_input.addEventListener('change', function (e)
-	{
-		var input_files = e.target.files;
-
-		// shim the relativePath
-		for (var idx = 0, len = input_files.length; idx < len; ++idx)
-		{
-			var input_file = input_files[idx];
-			input_file.webkitRelativePath = input_file.webkitRelativePath || null;
-			input_file.mozRelativePath = input_file.mozRelativePath || null;
-			input_file.relativePath = input_file.relativePath || input_file.webkitRelativePath || input_file.mozRelativePath || input_file.name;
-		}
-
-		var skeleton_files = [];
-
-		// look for Spine skeleton JSON files
-		// match: ".*-skeleton.json$"
-		for (var input_file_idx = 0, input_files_len = input_files.length; input_file_idx < input_files_len; ++input_file_idx)
-		{
-			var input_file = input_files[input_file_idx];
-
-			if (input_file.name.toLowerCase().match("^.*-skeleton.json$"))
-			{
-				skeleton_files.push(input_file);
-			}
-		}
-
-		// load first skeleton
-		// TODO: load all skeletons
-		//for (var skeleton_file_idx = 0, skeleton_files_len = skeleton_files.length; skeleton_file_idx < skeleton_files_len; ++skeleton_file_idx)
-		if (skeleton_files.length > 0)
-		{
-			//var skeleton_file = skeleton_files[skeleton_file_idx];
-			var skeleton_file = skeleton_files[0];
-
-			// look for Spine animation JSON files for this Spine skeleton
-			// get basename: basename-skeleton.json
-			// match: "^basename-*.json$"
-
-			var match = skeleton_file.name.match(/^(\w*)-skeleton.json$/i);
-			var basename = match && match[1];
-
-			var animation_files = [];
-
-			for (var input_file_idx = 0, input_files_len = input_files.length; input_file_idx < input_files_len; ++input_file_idx)
-			{
-				var input_file = input_files[input_file_idx];
-
-				if (input_file == skeleton_file) { continue; }
-
-				if (input_file.name.toLowerCase().match("^" + basename + "-.*.json$"))
-				{
-					animation_files.push(input_file);
-				}
-			}
-
-			var data = new spine.data();
-			var skeleton = data.m_skeleton;
-
-			skeleton_info_div.innerHTML = "Loading...";
-			main.load_skeleton_from_input_file(skeleton, skeleton_file, input_files, (function (skeleton) { return function ()
-			{
-				skeleton_info_div.innerHTML = "Skeleton Name: " + skeleton_file.relativePath;
-
-				pose = new spine.pose(data);
-				set_camera(pose);
-
-				// load all animations
-				for (var animation_file_idx = 0, animation_files_len = animation_files.length; animation_file_idx < animation_files_len; ++animation_file_idx)
-				{
-					var animation_file = animation_files[animation_file_idx];
-
-					var animation = new spine.animation();
-					animation.name = animation_file.relativePath;
-
-					if (animation_file_idx == 0) { pose.setAnim(animation.name); }
-
-					animation_info_div.innerHTML = "Loading...";
-					main.load_animation_from_input_file(animation, animation_file, input_files, (function (animation) { return function ()
-					{
-						animation_info_div.innerHTML = "Animation Name: " + animation_file.relativePath;
-
-						if (animation.name)
-						{
-							data.m_animations[animation.name] = animation;
-						}
-						set_camera(pose);
-					}
-					})(animation));
-				}
-			}
-			})(skeleton));
-		}
-	}, 
-	false);
+//	var file_input = file_input_div.appendChild(document.createElement('input'));
+//	file_input.type = 'file';
+//	file_input.multiple = 'multiple';
+//	file_input.directory = file_input.webkitdirectory = file_input.mozdirectory = "directory";
+//	var file_label = file_input_div.appendChild(document.createElement('span'));
+//	file_label.innerHTML = "Drag the parent directory of a Spine skeleton JSON file to the file input.";
+//	file_input.addEventListener('change', function (e)
+//	{
+//		var input_files = e.target.files;
+//
+//		// shim the relativePath
+//		for (var idx = 0, len = input_files.length; idx < len; ++idx)
+//		{
+//			var input_file = input_files[idx];
+//			input_file.webkitRelativePath = input_file.webkitRelativePath || null;
+//			input_file.mozRelativePath = input_file.mozRelativePath || null;
+//			input_file.relativePath = input_file.relativePath || input_file.webkitRelativePath || input_file.mozRelativePath || input_file.name;
+//		}
+//
+//		var skeleton_files = [];
+//
+//		// look for Spine skeleton JSON files
+//		// match: ".*-skeleton.json$"
+//		for (var input_file_idx = 0, input_files_len = input_files.length; input_file_idx < input_files_len; ++input_file_idx)
+//		{
+//			var input_file = input_files[input_file_idx];
+//
+//			if (input_file.name.toLowerCase().match("^.*-skeleton.json$"))
+//			{
+//				skeleton_files.push(input_file);
+//			}
+//		}
+//
+//		// load first skeleton
+//		// TODO: load all skeletons
+//		//for (var skeleton_file_idx = 0, skeleton_files_len = skeleton_files.length; skeleton_file_idx < skeleton_files_len; ++skeleton_file_idx)
+//		if (skeleton_files.length > 0)
+//		{
+//			//var skeleton_file = skeleton_files[skeleton_file_idx];
+//			var skeleton_file = skeleton_files[0];
+//
+//			// look for Spine animation JSON files for this Spine skeleton
+//			// get basename: basename-skeleton.json
+//			// match: "^basename-*.json$"
+//
+//			var match = skeleton_file.name.match(/^(\w*)-skeleton.json$/i);
+//			var basename = match && match[1];
+//
+//			var animation_files = [];
+//
+//			for (var input_file_idx = 0, input_files_len = input_files.length; input_file_idx < input_files_len; ++input_file_idx)
+//			{
+//				var input_file = input_files[input_file_idx];
+//
+//				if (input_file == skeleton_file) { continue; }
+//
+//				if (input_file.name.toLowerCase().match("^" + basename + "-.*.json$"))
+//				{
+//					animation_files.push(input_file);
+//				}
+//			}
+//
+//			var data = new spine.data();
+//			var skeleton = data.skeleton;
+//
+//			skeleton_info_div.innerHTML = "Loading...";
+//			main.load_skeleton_from_input_file(skeleton, skeleton_file, input_files, (function (skeleton) { return function ()
+//			{
+//				skeleton_info_div.innerHTML = "Skeleton Name: " + skeleton_file.relativePath;
+//
+//				pose = new spine.pose(data);
+//				set_camera(pose);
+//
+//				// load all animations
+//				for (var animation_file_idx = 0, animation_files_len = animation_files.length; animation_file_idx < animation_files_len; ++animation_file_idx)
+//				{
+//					var animation_file = animation_files[animation_file_idx];
+//
+//					var animation = new spine.animation();
+//					animation.name = animation_file.relativePath;
+//
+//					if (animation_file_idx == 0) { pose.setAnim(animation.name); }
+//
+//					animation_info_div.innerHTML = "Loading...";
+//					main.load_animation_from_input_file(animation, animation_file, input_files, (function (animation) { return function ()
+//					{
+//						animation_info_div.innerHTML = "Animation Name: " + animation_file.relativePath;
+//
+//						if (animation.name)
+//						{
+//							data.animations[animation.name] = animation;
+//						}
+//						set_camera(pose);
+//					}
+//					})(animation));
+//				}
+//			}
+//			})(skeleton));
+//		}
+//	}, 
+//	false);
 
 	var cursor_x = 0;
 	var cursor_y = 0;
@@ -394,19 +372,19 @@ main.start = function ()
 	{
 		var anim_time = tick.elapsed_time * time_scale;
 
-		if (pose.getNumAnims() > 1)
-		{
-			if ((pose.getTime() + anim_time) < 0)
-			{
-				pose.setPrevAnim();
-				animation_info_div.innerHTML = "Animation Name: " + pose.getAnimName();
-			}
-			if ((pose.getTime() + anim_time) >= pose.getAnimLength())
-			{
-				pose.setNextAnim();
-				animation_info_div.innerHTML = "Animation Name: " + pose.getAnimName();
-			}
-		}
+//		if (pose.getNumAnims() > 1)
+//		{
+//			if ((pose.getTime() + anim_time) < 0)
+//			{
+//				pose.setPrevAnim();
+//				animation_info_div.innerHTML = "Animation Name: " + pose.getAnimName();
+//			}
+//			if ((pose.getTime() + anim_time) >= pose.getAnimLength())
+//			{
+//				pose.setNextAnim();
+//				animation_info_div.innerHTML = "Animation Name: " + pose.getAnimName();
+//			}
+//		}
 
 		pose.update(anim_time);
 	}
@@ -504,7 +482,7 @@ main.start = function ()
 
 main.load_data_from_url = function (data, url, callback)
 {
-	var skeleton = data.m_skeleton;
+	var skeleton = data.skeleton;
 
 	skeleton.files = {};
 
@@ -522,41 +500,41 @@ main.load_data_from_url = function (data, url, callback)
 
 		callback();
 
-		var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
-		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
-		{
-			var skin_slot = skel_skin.skin_slots[slot_i];
-			if (!skin_slot) { continue; }
-			for (var skin_attachment_i in skin_slot.skin_attachments)
-			{
-				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
-
-				var name = skin_attachment.name || skin_attachment_i;
-
-				var file = skeleton.files && skeleton.files[name];
-				if (!file)
-				{
-					var base_path = url.slice(0, url.lastIndexOf('/'));
-
-					//window.console.log("load image: " + base_path + "/" + name + ".png");
-					file = skeleton.files[name] = {};
-					file.width = skin_attachment.width || 0;
-					file.height = skin_attachment.height || 0;
-					var image = file.image = new Image();
-					image.hidden = true;
-					image.addEventListener('load', (function (file) { return function (e)
-					{
-						file.width = file.width || e.target.width;
-						file.height = file.height || e.target.height;
-						e.target.hidden = false;
-					}
-					})(file), false);
-					image.addEventListener('error', function (e) {}, false);
-					image.addEventListener('abort', function (e) {}, false);
-					image.src = base_path + "/" + name + ".png";
-				}
-			}
-		}
+//		var skel_skin = (pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
+//		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
+//		{
+//			var skin_slot = skel_skin.skin_slots[slot_i];
+//			if (!skin_slot) { continue; }
+//			for (var skin_attachment_i in skin_slot.skin_attachments)
+//			{
+//				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
+//
+//				var name = skin_attachment.name || skin_attachment_i;
+//
+//				var file = skeleton.files && skeleton.files[name];
+//				if (!file)
+//				{
+//					var base_path = url.slice(0, url.lastIndexOf('/'));
+//
+//					//window.console.log("load image: " + base_path + "/" + name + ".png");
+//					file = skeleton.files[name] = {};
+//					file.width = skin_attachment.width || 0;
+//					file.height = skin_attachment.height || 0;
+//					var image = file.image = new Image();
+//					image.hidden = true;
+//					image.addEventListener('load', (function (file) { return function (e)
+//					{
+//						file.width = file.width || e.target.width;
+//						file.height = file.height || e.target.height;
+//						e.target.hidden = false;
+//					}
+//					})(file), false);
+//					image.addEventListener('error', function (e) {}, false);
+//					image.addEventListener('abort', function (e) {}, false);
+//					image.src = base_path + "/" + name + ".png";
+//				}
+//			}
+//		}
 	}, 
 	false);
 	req.send();
@@ -564,170 +542,170 @@ main.load_data_from_url = function (data, url, callback)
 	return skeleton;
 }
 
-main.load_skeleton_from_url = function (skeleton, url, callback)
-{
-	skeleton.files = {};
+//main.load_skeleton_from_url = function (skeleton, url, callback)
+//{
+//	skeleton.files = {};
+//
+//	var req = new XMLHttpRequest();
+//	req.open("GET", url, true);
+//	req.addEventListener('readystatechange', function (e)
+//	{
+//		if (req.readyState != 4) return;
+//		if (req.status != 200 && req.status != 304)
+//		{
+//			return;
+//		}
+//
+//		skeleton.load(goog.global.JSON.parse(e.target.responseText));
+//
+//		callback();
+//
+//		var skel_skin = (pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
+//		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
+//		{
+//			var skin_slot = skel_skin.skin_slots[slot_i];
+//			if (!skin_slot) { continue; }
+//			for (var skin_attachment_i in skin_slot.skin_attachments)
+//			{
+//				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
+//
+//				var name = skin_attachment.name || skin_attachment_i;
+//
+//				var file = skeleton.files && skeleton.files[name];
+//				if (!file)
+//				{
+//					var base_path = url.slice(0, url.lastIndexOf('/'));
+//
+//					//window.console.log("load image: " + base_path + "/" + name + ".png");
+//					file = skeleton.files[name] = {};
+//					file.width = skin_attachment.width || 0;
+//					file.height = skin_attachment.height || 0;
+//					var image = file.image = new Image();
+//					image.hidden = true;
+//					image.addEventListener('load', (function (file) { return function (e)
+//					{
+//						file.width = file.width || e.target.width;
+//						file.height = file.height || e.target.height;
+//						e.target.hidden = false;
+//					}
+//					})(file), false);
+//					image.addEventListener('error', function (e) {}, false);
+//					image.addEventListener('abort', function (e) {}, false);
+//					image.src = base_path + "/" + name + ".png";
+//				}
+//			}
+//		}
+//	}, 
+//	false);
+//	req.send();
+//
+//	return skeleton;
+//}
 
-	var req = new XMLHttpRequest();
-	req.open("GET", url, true);
-	req.addEventListener('readystatechange', function (e)
-	{
-		if (req.readyState != 4) return;
-		if (req.status != 200 && req.status != 304)
-		{
-			return;
-		}
+//main.load_animation_from_url = function (animation, url, callback)
+//{
+//	var req = new XMLHttpRequest();
+//	req.open("GET", url, true);
+//	req.addEventListener('readystatechange', function (e)
+//	{
+//		if (req.readyState != 4) return;
+//		if (req.status != 200 && req.status != 304)
+//		{
+//			return;
+//		}
+//
+//		animation.load(goog.global.JSON.parse(e.target.responseText));
+//
+//		callback();
+//	}, 
+//	false);
+//	req.send();
+//
+//	return animation;
+//}
 
-		skeleton.load(goog.global.JSON.parse(e.target.responseText));
+//main.load_skeleton_from_input_file = function (skeleton, skeleton_file, input_files, callback)
+//{
+//	skeleton.files = {};
+//
+//	var skeleton_file_reader = new FileReader();
+//	skeleton_file_reader.addEventListener('load', function (e)
+//	{
+//		// load Spine skeleton JSON file
+//		skeleton.load(goog.global.JSON.parse(e.target.result));
+//
+//		callback();
+//
+//		// load images
+//		var find_file = function (name)
+//		{
+//			var name = name.toLowerCase() + '$'; // match at end of line only
+//			for (var idx = 0, len = input_files.length; idx < len; ++idx)
+//			{
+//				var input_file = input_files[idx];
+//				if (input_file.relativePath.toLowerCase().match(name))
+//				{
+//					return input_file;
+//				}
+//			}
+//			return null;
+//		}
+//
+//		var skel_skin = (pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
+//		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
+//		{
+//			var skin_slot = skel_skin.skin_slots[slot_i];
+//			if (!skin_slot) { continue; }
+//			for (var skin_attachment_i in skin_slot.skin_attachments)
+//			{
+//				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
+//				var name = skin_attachment.name || skin_attachment_i;
+//				var file = skeleton.files && skeleton.files[name];
+//				if (!file)
+//				{
+//					var image_file = find_file(name + ".png");
+//					if (image_file)
+//					{
+//						file = skeleton.files[name] = {};
+//						var image_file_reader = new FileReader();
+//						image_file_reader.addEventListener('load', (function (file) { return function (e)
+//						{
+//							var image = file.image = new Image();
+//							image.hidden = true;
+//							image.addEventListener('load', function (e)
+//							{
+//								file.width = file.width || e.target.width;
+//								file.height = file.height || e.target.height;
+//								e.target.hidden = false;
+//							},
+//							false);
+//							image.addEventListener('error', function (e) {}, false);
+//							image.addEventListener('abort', function (e) {}, false);
+//							image.src = e.target.result;
+//						}
+//						})(file), false);
+//						image_file_reader.readAsDataURL(image_file);
+//					}
+//				}
+//			}
+//		}
+//	}, 
+//	false);
+//	skeleton_file_reader.readAsText(skeleton_file);
+//}
 
-		callback();
-
-		var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
-		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
-		{
-			var skin_slot = skel_skin.skin_slots[slot_i];
-			if (!skin_slot) { continue; }
-			for (var skin_attachment_i in skin_slot.skin_attachments)
-			{
-				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
-
-				var name = skin_attachment.name || skin_attachment_i;
-
-				var file = skeleton.files && skeleton.files[name];
-				if (!file)
-				{
-					var base_path = url.slice(0, url.lastIndexOf('/'));
-
-					//window.console.log("load image: " + base_path + "/" + name + ".png");
-					file = skeleton.files[name] = {};
-					file.width = skin_attachment.width || 0;
-					file.height = skin_attachment.height || 0;
-					var image = file.image = new Image();
-					image.hidden = true;
-					image.addEventListener('load', (function (file) { return function (e)
-					{
-						file.width = file.width || e.target.width;
-						file.height = file.height || e.target.height;
-						e.target.hidden = false;
-					}
-					})(file), false);
-					image.addEventListener('error', function (e) {}, false);
-					image.addEventListener('abort', function (e) {}, false);
-					image.src = base_path + "/" + name + ".png";
-				}
-			}
-		}
-	}, 
-	false);
-	req.send();
-
-	return skeleton;
-}
-
-main.load_animation_from_url = function (animation, url, callback)
-{
-	var req = new XMLHttpRequest();
-	req.open("GET", url, true);
-	req.addEventListener('readystatechange', function (e)
-	{
-		if (req.readyState != 4) return;
-		if (req.status != 200 && req.status != 304)
-		{
-			return;
-		}
-
-		animation.load(goog.global.JSON.parse(e.target.responseText));
-
-		callback();
-	}, 
-	false);
-	req.send();
-
-	return animation;
-}
-
-main.load_skeleton_from_input_file = function (skeleton, skeleton_file, input_files, callback)
-{
-	skeleton.files = {};
-
-	var skeleton_file_reader = new FileReader();
-	skeleton_file_reader.addEventListener('load', function (e)
-	{
-		// load Spine skeleton JSON file
-		skeleton.load(goog.global.JSON.parse(e.target.result));
-
-		callback();
-
-		// load images
-		var find_file = function (name)
-		{
-			var name = name.toLowerCase() + '$'; // match at end of line only
-			for (var idx = 0, len = input_files.length; idx < len; ++idx)
-			{
-				var input_file = input_files[idx];
-				if (input_file.relativePath.toLowerCase().match(name))
-				{
-					return input_file;
-				}
-			}
-			return null;
-		}
-
-		var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
-		if (skel_skin) for (var slot_i in skel_skin.skin_slots)
-		{
-			var skin_slot = skel_skin.skin_slots[slot_i];
-			if (!skin_slot) { continue; }
-			for (var skin_attachment_i in skin_slot.skin_attachments)
-			{
-				var skin_attachment = skin_slot.skin_attachments[skin_attachment_i];
-				var name = skin_attachment.name || skin_attachment_i;
-				var file = skeleton.files && skeleton.files[name];
-				if (!file)
-				{
-					var image_file = find_file(name + ".png");
-					if (image_file)
-					{
-						file = skeleton.files[name] = {};
-						var image_file_reader = new FileReader();
-						image_file_reader.addEventListener('load', (function (file) { return function (e)
-						{
-							var image = file.image = new Image();
-							image.hidden = true;
-							image.addEventListener('load', function (e)
-							{
-								file.width = file.width || e.target.width;
-								file.height = file.height || e.target.height;
-								e.target.hidden = false;
-							},
-							false);
-							image.addEventListener('error', function (e) {}, false);
-							image.addEventListener('abort', function (e) {}, false);
-							image.src = e.target.result;
-						}
-						})(file), false);
-						image_file_reader.readAsDataURL(image_file);
-					}
-				}
-			}
-		}
-	}, 
-	false);
-	skeleton_file_reader.readAsText(skeleton_file);
-}
-
-main.load_animation_from_input_file = function (animation, animation_file, input_files, callback)
-{
-	var animation_file_reader = new FileReader();
-	animation_file_reader.addEventListener('load', function (e)
-	{
-		animation.load(goog.global.JSON.parse(e.target.result));
-
-		callback();
-	}, 
-	false);
-	animation_file_reader.readAsText(animation_file);
-}
+//main.load_animation_from_input_file = function (animation, animation_file, input_files, callback)
+//{
+//	var animation_file_reader = new FileReader();
+//	animation_file_reader.addEventListener('load', function (e)
+//	{
+//		animation.load(goog.global.JSON.parse(e.target.result));
+//
+//		callback();
+//	}, 
+//	false);
+//	animation_file_reader.readAsText(animation_file);
+//}
 
 /**
  * @return {Object} 
@@ -738,9 +716,9 @@ main.get_pose_extent = function (pose, extent)
 {
 	extent = extent || { min: { x: 1, y: 1 }, max: { x: -1, y: -1 } };
 
-	var data = pose.m_data;
+	var data = pose.data;
 	if (!data) { return extent; }
-	var skeleton = data.m_skeleton;
+	var skeleton = data.skeleton;
 	if (!skeleton) { return extent; }
 
 	var bound = function (v)
@@ -768,8 +746,8 @@ main.get_pose_extent = function (pose, extent)
 
 	pose.strike();
 
-	var skel_bones = pose.m_tweened_skel_bones;
-	var skel_slots = pose.m_tweened_skel_slots;
+	var skel_bones = pose.tweened_skel_bones;
+	var skel_slots = pose.tweened_skel_slots;
 
 	var mtx = new fo.m3x2();
 
@@ -784,7 +762,7 @@ main.get_pose_extent = function (pose, extent)
 		mtx.selfScale(skel_bone.scaleY, skel_bone.scaleY);
 	}
 
-	var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
+	var skel_skin = pose.curSkin();//(pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
 
 	if (skel_skin) for (var slot_i in skel_slots)
 	{
@@ -848,9 +826,9 @@ main.view_2d.prototype.debug_draw_skeleton_2d = function (pose)
 {
 	this.draw_skeleton_2d(pose);
 
-	var data = pose.m_data;
+	var data = pose.data;
 	if (!data) { return; }
-	var skeleton = data.m_skeleton;
+	var skeleton = data.skeleton;
 	if (!skeleton) { return; }
 
 	var ctx_2d = this.ctx_2d;
@@ -909,9 +887,9 @@ main.view_2d.prototype.debug_draw_skeleton_2d = function (pose)
  */
 main.view_2d.prototype.draw_skeleton_2d = function (pose)
 {
-	var data = pose.m_data;
+	var data = pose.data;
 	if (!data) { return; }
-	var skeleton = data.m_skeleton;
+	var skeleton = data.skeleton;
 	if (!skeleton) { return; }
 
 	var ctx_2d = this.ctx_2d;
@@ -930,7 +908,7 @@ main.view_2d.prototype.draw_skeleton_2d = function (pose)
 		ctx_2d.scale(skel_bone.scaleX, skel_bone.scaleY);
 	}
 
-	var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
+	var skel_skin = pose.curSkin();//(pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
 
 	if (skel_skin) for (var slot_i in skel_slots)
 	{
@@ -982,9 +960,9 @@ main.view_2d.prototype.draw_skeleton_2d = function (pose)
  */
 main.view_2d.prototype.debug_draw_pose_2d = function (pose)
 {
-	var data = pose.m_data;
+	var data = pose.data;
 	if (!data) { return; }
-	var skeleton = data.m_skeleton;
+	var skeleton = data.skeleton;
 	if (!skeleton) { return; }
 
 	pose.strike();
@@ -993,8 +971,8 @@ main.view_2d.prototype.debug_draw_pose_2d = function (pose)
 
 	var ctx_2d = this.ctx_2d;
 
-	var skel_bones = pose.m_tweened_skel_bones;
-	var skel_slots = pose.m_tweened_skel_slots;
+	var skel_bones = pose.tweened_skel_bones;
+	var skel_slots = pose.tweened_skel_slots;
 
 	var apply_skel_bone_transform = function (skel_bone)
 	{
@@ -1047,17 +1025,17 @@ main.view_2d.prototype.debug_draw_pose_2d = function (pose)
  */
 main.view_2d.prototype.draw_pose_2d = function (pose)
 {
-	var data = pose.m_data;
+	var data = pose.data;
 	if (!data) { return; }
-	var skeleton = data.m_skeleton;
+	var skeleton = data.skeleton;
 	if (!skeleton) { return; }
 
 	pose.strike();
 
 	var ctx_2d = this.ctx_2d;
 
-	var skel_bones = pose.m_tweened_skel_bones;
-	var skel_slots = pose.m_tweened_skel_slots;
+	var skel_bones = pose.tweened_skel_bones;
+	var skel_slots = pose.tweened_skel_slots;
 
 	var apply_skel_bone_transform = function (skel_bone)
 	{
@@ -1070,7 +1048,7 @@ main.view_2d.prototype.draw_pose_2d = function (pose)
 		ctx_2d.scale(skel_bone.scaleX, skel_bone.scaleY);
 	}
 
-	var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
+	var skel_skin = pose.curSkin();//(pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
 
 	if (skel_skin) for (var slot_i in skel_slots)
 	{
@@ -1355,17 +1333,17 @@ main.view_gl.prototype.load_modelview_mtx = function (mtx)
  */
 main.view_gl.prototype.draw_pose_gl = function (pose)
 {
-	var data = pose.m_data;
+	var data = pose.data;
 	if (!data) { return; }
-	var skeleton = data.m_skeleton;
+	var skeleton = data.skeleton;
 	if (!skeleton) { return; }
 
 	pose.strike();
 
 	var ctx_gl = this.ctx_gl;
 
-	var skel_bones = pose.m_tweened_skel_bones;
-	var skel_slots = pose.m_tweened_skel_slots;
+	var skel_bones = pose.tweened_skel_bones;
+	var skel_slots = pose.tweened_skel_slots;
 
 	var mtx = new fo.m3x2();
 
@@ -1380,7 +1358,7 @@ main.view_gl.prototype.draw_pose_gl = function (pose)
 		mtx.selfScale(skel_bone.scaleY, skel_bone.scaleY);
 	}
 
-	var skel_skin = (skeleton.current_skin_i != null)?(skeleton.skins[skeleton.current_skin_i]):(null);
+	var skel_skin = pose.curSkin();//(pose.skin_key != null)?(skeleton.skins[pose.skin_key]):(null);
 
 	if (skel_skin) for (var slot_i in skel_slots)
 	{
