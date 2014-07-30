@@ -1661,23 +1661,23 @@ spine.pose.prototype.strike = function ()
 
 	this.tweened_events = [];
 
-	var add_event = function (tweened_events, event_keyframe)
-	{
-		var tweened_event = new spine.event();
-		var event = events && events[event_keyframe.name];
-		if (event)
-		{
-			// start with a copy of the event
-			tweened_event.copy(event);
-		}
-		if (typeof(event_keyframe['int']) !== 'undefined') { tweened_event['int'] = event_keyframe['int']; }
-		if (typeof(event_keyframe['float']) !== 'undefined') { tweened_event['float'] = event_keyframe['float']; }
-		if (typeof(event_keyframe.string) !== 'undefined') { tweened_event.string = event_keyframe.string; }
-		tweened_events.push(tweened_event);
-	}
-
 	if (anim)
 	{
+		var add_event = function (tweened_events, event_keyframe)
+		{
+			var tweened_event = new spine.event();
+			var event = events && events[event_keyframe.name];
+			if (event)
+			{
+				// start with a copy of the event
+				tweened_event.copy(event);
+			}
+			if (typeof(event_keyframe['int']) !== 'undefined') { tweened_event['int'] = event_keyframe['int']; }
+			if (typeof(event_keyframe['float']) !== 'undefined') { tweened_event['float'] = event_keyframe['float']; }
+			if (typeof(event_keyframe.string) !== 'undefined') { tweened_event.string = event_keyframe.string; }
+			tweened_events.push(tweened_event);
+		}
+
 		var prev_time = time - elapsed_time;
 		var wrapped_min = (elapsed_time < 0) && (prev_time > anim.max_time);
 		var wrapped_max = (elapsed_time > 0) && (prev_time < anim.min_time);
@@ -1711,9 +1711,12 @@ spine.pose.prototype.strike = function ()
 				add_event(this.tweened_events, event_keyframe);
 			}
 		}
+	}
 
-		this.tweened_skel_slot_keys = skel_slot_keys.slice(0);
+	this.tweened_skel_slot_keys = skel_slot_keys && skel_slot_keys.slice(0);
 
+	if (anim)
+	{
 		var draworder_keyframe_idx = spine.keyframe.find(anim.draworder_keyframes, time);
 		if (draworder_keyframe_idx !== -1)
 		{
