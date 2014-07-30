@@ -760,9 +760,9 @@ spine.scale_keyframe = function (time)
 	goog.base(this, time);
 
 	/** @type {number} */
-	this.scaleX = 0;
+	this.scaleX = 1;
 	/** @type {number} */
-	this.scaleY = 0;
+	this.scaleY = 1;
 	/** @type {function(number):number} */
 	this.curve = function (t) { return t; };
 }
