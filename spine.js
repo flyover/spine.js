@@ -38,7 +38,7 @@ goog.provide('spine');
  */
 spine.toBool = function (value, def)
 {
-	if (value !== undefined)
+	if (typeof(value) !== 'undefined')
 	{
 		return 'true' === value ? true : false;
 	}
@@ -52,7 +52,7 @@ spine.toBool = function (value, def)
  */
 spine.toInt = function (value, def)
 {
-	if (value !== undefined)
+	if (typeof(value) !== 'undefined')
 	{
 		return parseInt(value, 10);
 	}
@@ -66,7 +66,7 @@ spine.toInt = function (value, def)
  */
 spine.toFloat = function (value, def)
 {
-	if (value !== undefined)
+	if (typeof(value) !== 'undefined')
 	{
 		return parseFloat(value);
 	}
@@ -80,7 +80,7 @@ spine.toFloat = function (value, def)
  */
 spine.toString = function (value, def)
 {
-	if (value !== undefined)
+	if (typeof(value) !== 'undefined')
 	{
 		return value;
 	}
@@ -144,7 +144,7 @@ spine.color.prototype.copy = function (other)
  */
 spine.color.prototype.load = function (json)
 {
-	if (json !== undefined)
+	if (typeof(json) !== 'undefined')
 	{
 		this.rgba = parseInt(json, 16);
 	}
@@ -325,7 +325,7 @@ spine.step_bezier_curve = function (cx1, cy1, cx2, cy2)
  */
 spine.toCurve = function (value, def)
 {
-	if (value !== undefined)
+	if (typeof(value) !== 'undefined')
 	{
 		if (value === 'stepped')
 		{
