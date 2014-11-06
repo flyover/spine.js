@@ -112,17 +112,18 @@ spine.toArray = function (value, def)
  */
 spine.color = function ()
 {
-	/** @type {number} */
-	this.rgba = 0xffffffff;
-	/** @type {number} */
-	this.r = 1;
-	/** @type {number} */
-	this.g = 1;
-	/** @type {number} */
-	this.b = 1;
-	/** @type {number} */
-	this.a = 1;
 }
+
+/** @type {number} */
+spine.color.prototype.rgba = 0xffffffff;
+/** @type {number} */
+spine.color.prototype.r = 1;
+/** @type {number} */
+spine.color.prototype.g = 1;
+/** @type {number} */
+spine.color.prototype.b = 1;
+/** @type {number} */
+spine.color.prototype.a = 1;
 
 /**
  * @return {spine.color} 
@@ -383,25 +384,26 @@ spine.tweenAngle = function (a, b, t)
  */
 spine.skel_bone = function ()
 {
-	/** @type {?string} */
-	this.parent = null;
-	/** @type {number} */
-	this.length = 0;
-	/** @type {number} */
-	this.x = 0;
-	/** @type {number} */
-	this.y = 0;
-	/** @type {number} */
-	this.rotation = 0;
-	/** @type {number} */
-	this.scaleX = 1;
-	/** @type {number} */
-	this.scaleY = 1;
-	/** @type {boolean} */
-	this.inheritRotation = true;
-	/** @type {boolean} */
-	this.inheritScale = true;
 }
+
+/** @type {?string} */
+spine.skel_bone.prototype.parent = null;
+/** @type {number} */
+spine.skel_bone.prototype.length = 0;
+/** @type {number} */
+spine.skel_bone.prototype.x = 0;
+/** @type {number} */
+spine.skel_bone.prototype.y = 0;
+/** @type {number} */
+spine.skel_bone.prototype.rotation = 0;
+/** @type {number} */
+spine.skel_bone.prototype.scaleX = 1;
+/** @type {number} */
+spine.skel_bone.prototype.scaleY = 1;
+/** @type {boolean} */
+spine.skel_bone.prototype.inheritRotation = true;
+/** @type {boolean} */
+spine.skel_bone.prototype.inheritScale = true;
 
 /**
  * @return {spine.skel_bone} 
@@ -444,15 +446,17 @@ spine.skel_bone.prototype.load = function (json)
  */
 spine.skel_slot = function ()
 {
-	/** @type {string} */
-	this.bone = "";
-	/** @type {spine.color} */
 	this.color = new spine.color();
-	/** @type {?string} */
-	this.attachment = null;
-	/** @type {boolean} */
-	this.additive = false;
 }
+
+/** @type {string} */
+spine.skel_slot.prototype.bone = "";
+/** @type {spine.color} */
+spine.skel_slot.prototype.color;
+/** @type {?string} */
+spine.skel_slot.prototype.attachment = null;
+/** @type {boolean} */
+spine.skel_slot.prototype.additive = false;
 
 /**
  * @return {spine.skel_slot} 
@@ -485,25 +489,26 @@ spine.skel_slot.prototype.load = function (json)
  */
 spine.skin_attachment = function ()
 {
-	/** @type {?string} */
-	this.name = null;
-	/** @type {?string} */
-	this.type = "region";
-	/** @type {number} */
-	this.x = 0;
-	/** @type {number} */
-	this.y = 0;
-	/** @type {number} */
-	this.rotation = 0;
-	/** @type {number} */
-	this.scaleX = 1;
-	/** @type {number} */
-	this.scaleY = 1;
-	/** @type {number} */
-	this.width = 0;
-	/** @type {number} */
-	this.height = 0;
 }
+
+/** @type {?string} */
+spine.skin_attachment.prototype.name = null;
+/** @type {?string} */
+spine.skin_attachment.prototype.type = "region";
+/** @type {number} */
+spine.skin_attachment.prototype.x = 0;
+/** @type {number} */
+spine.skin_attachment.prototype.y = 0;
+/** @type {number} */
+spine.skin_attachment.prototype.rotation = 0;
+/** @type {number} */
+spine.skin_attachment.prototype.scaleX = 1;
+/** @type {number} */
+spine.skin_attachment.prototype.scaleY = 1;
+/** @type {number} */
+spine.skin_attachment.prototype.width = 0;
+/** @type {number} */
+spine.skin_attachment.prototype.height = 0;
 
 /**
  * @return {spine.skin_attachment} 
@@ -542,9 +547,11 @@ spine.skin_attachment.prototype.load = function (json)
  */
 spine.skin_slot = function ()
 {
-	/** @type {Object.<string,spine.skin_attachment>} */
 	this.skin_attachments = {};
 }
+
+/** @type {Object.<string,spine.skin_attachment>} */
+spine.skin_slot.prototype.skin_attachments;
 
 /**
  * @return {spine.skin_slot} 
@@ -564,9 +571,11 @@ spine.skin_slot.prototype.load = function (json)
  */
 spine.skin = function ()
 {
-	/** @type {Object.<string,spine.skin_slot>} */
 	this.skin_slots = {};
 }
+
+/** @type {Object.<string,spine.skin_slot>} */
+spine.skin.prototype.skin_slots;
 
 /**
  * @return {spine.skin} 
@@ -586,15 +595,16 @@ spine.skin.prototype.load = function (json)
  */
 spine.event = function ()
 {
-	/** @type {?string} */
-	this.name = null;
-	/** @type {?number} */
-	this['int'] = null;
-	/** @type {?number} */
-	this['float'] = null;
-	/** @type {?string} */
-	this.string = null;
 }
+
+/** @type {?string} */
+spine.event.prototype.name = null;
+/** @type {?number} */
+spine.event.prototype['int'] = null;
+/** @type {?number} */
+spine.event.prototype['float'] = null;
+/** @type {?string} */
+spine.event.prototype.string = null;
 
 /**
  * @return {spine.event}
@@ -641,9 +651,11 @@ spine.event.prototype.load = function (json)
  */
 spine.keyframe = function (time)
 {
-	/** @type {number} */
 	this.time = time || 0;
 }
+
+/** @type {number} */
+spine.keyframe.prototype.time = 0;
 
 /**
  * @return {spine.keyframe} 
@@ -697,16 +709,16 @@ spine.keyframe.compare = function (a, b)
 spine.translate_keyframe = function (time)
 {
 	goog.base(this, time);
-
-	/** @type {number} */
-	this.x = 0;
-	/** @type {number} */
-	this.y = 0;
-	/** @type {function(number):number} */
-	this.curve = function (t) { return t; };
 }
 
 goog.inherits(spine.translate_keyframe, spine.keyframe);
+
+/** @type {number} */
+spine.translate_keyframe.prototype.x = 0;
+/** @type {number} */
+spine.translate_keyframe.prototype.y = 0;
+/** @type {function(number):number} */
+spine.translate_keyframe.prototype.curve = function (t) { return t; };
 
 /**
  * @return {spine.translate_keyframe} 
@@ -729,14 +741,14 @@ spine.translate_keyframe.prototype.load = function (json)
 spine.rotate_keyframe = function (time)
 {
 	goog.base(this, time);
-
-	/** @type {number} */
-	this.angle = 0;
-	/** @type {function(number):number} */
-	this.curve = function (t) { return t; };
 }
 
 goog.inherits(spine.rotate_keyframe, spine.keyframe);
+
+/** @type {number} */
+spine.rotate_keyframe.prototype.angle = 0;
+/** @type {function(number):number} */
+spine.rotate_keyframe.prototype.curve = function (t) { return t; };
 
 /**
  * @return {spine.rotate_keyframe} 
@@ -758,16 +770,16 @@ spine.rotate_keyframe.prototype.load = function (json)
 spine.scale_keyframe = function (time)
 {
 	goog.base(this, time);
-
-	/** @type {number} */
-	this.scaleX = 1;
-	/** @type {number} */
-	this.scaleY = 1;
-	/** @type {function(number):number} */
-	this.curve = function (t) { return t; };
 }
 
 goog.inherits(spine.scale_keyframe, spine.keyframe);
+
+/** @type {number} */
+spine.scale_keyframe.prototype.scaleX = 1;
+/** @type {number} */
+spine.scale_keyframe.prototype.scaleY = 1;
+/** @type {function(number):number} */
+spine.scale_keyframe.prototype.curve = function (t) { return t; };
 
 /**
  * @return {spine.scale_keyframe} 
@@ -787,17 +799,18 @@ spine.scale_keyframe.prototype.load = function (json)
  */
 spine.anim_bone = function ()
 {
-	/** @type {number} */
-	this.min_time = 0;
-	/** @type {number} */
-	this.max_time = 0;
-	/** @type {Array.<spine.translate_keyframe>} */
-	this.translate_keyframes = null;
-	/** @type {Array.<spine.rotate_keyframe>} */
-	this.rotate_keyframes = null;
-	/** @type {Array.<spine.scale_keyframe>} */
-	this.scale_keyframes = null;
 }
+
+/** @type {number} */
+spine.anim_bone.prototype.min_time = 0;
+/** @type {number} */
+spine.anim_bone.prototype.max_time = 0;
+/** @type {Array.<spine.translate_keyframe>} */
+spine.anim_bone.prototype.translate_keyframes = null;
+/** @type {Array.<spine.rotate_keyframe>} */
+spine.anim_bone.prototype.rotate_keyframes = null;
+/** @type {Array.<spine.scale_keyframe>} */
+spine.anim_bone.prototype.scale_keyframes = null;
 
 /**
  * @return {spine.anim_bone} 
@@ -862,13 +875,15 @@ spine.color_keyframe = function (time)
 {
 	goog.base(this, time);
 
-	/** @type {spine.color} */
 	this.color = new spine.color();
-	/** @type {function(number):number} */
-	this.curve = function (t) { return t; };
 }
 
 goog.inherits(spine.color_keyframe, spine.keyframe);
+
+/** @type {spine.color} */
+spine.color_keyframe.prototype.color;
+/** @type {function(number):number} */
+spine.color_keyframe.prototype.curve = function (t) { return t; };
 
 /**
  * @return {spine.color_keyframe} 
@@ -890,12 +905,13 @@ spine.color_keyframe.prototype.load = function (json)
 spine.attachment_keyframe = function (time)
 {
 	goog.base(this, time);
-
-	/** @type {?string} */
-	this.name = null;
 }
 
 goog.inherits(spine.attachment_keyframe, spine.keyframe);
+
+
+/** @type {?string} */
+spine.attachment_keyframe.prototype.name = null;
 
 /**
  * @return {spine.attachment_keyframe} 
@@ -913,15 +929,16 @@ spine.attachment_keyframe.prototype.load = function (json)
  */
 spine.anim_slot = function ()
 {
-	/** @type {number} */
-	this.min_time = 0;
-	/** @type {number} */
-	this.max_time = 0;
-	/** @type {Array.<spine.color_keyframe>} */
-	this.color_keyframes = null;
-	/** @type {Array.<spine.attachment_keyframe>} */
-	this.attachment_keyframes = null;
 }
+
+/** @type {number} */
+spine.anim_slot.prototype.min_time = 0;
+/** @type {number} */
+spine.anim_slot.prototype.max_time = 0;
+/** @type {Array.<spine.color_keyframe>} */
+spine.anim_slot.prototype.color_keyframes = null;
+/** @type {Array.<spine.attachment_keyframe>} */
+spine.anim_slot.prototype.attachment_keyframes = null;
 
 /**
  * @return {spine.anim_slot} 
@@ -971,18 +988,18 @@ spine.anim_slot.prototype.load = function (json)
 spine.event_keyframe = function (time)
 {
 	goog.base(this, time);
-
-	/** @type {?string} */
-	this.name = null;
-	/** @type {?number} */
-	this['int'] = null;
-	/** @type {?number} */
-	this['float'] = null;
-	/** @type {?string} */
-	this.string = null;
 }
 
 goog.inherits(spine.event_keyframe, spine.keyframe);
+
+/** @type {?string} */
+spine.event_keyframe.prototype.name = null;
+/** @type {?number} */
+spine.event_keyframe.prototype['int'] = null;
+/** @type {?number} */
+spine.event_keyframe.prototype['float'] = null;
+/** @type {?string} */
+spine.event_keyframe.prototype.string = null;
 
 /**
  * @return {spine.event_keyframe} 
@@ -1015,9 +1032,12 @@ spine.event_keyframe.prototype.load = function (json)
  */
 spine.slot_offset = function ()
 {
-	this.slot = "";
-	this.offset = 0;
 }
+
+/** @type {?string} */
+spine.slot_offset.prototype.slot = null;
+/** @type {number} */
+spine.slot_offset.prototype.offset = 0;
 
 /**
  * @return {spine.slot_offset}
@@ -1025,7 +1045,7 @@ spine.slot_offset = function ()
  */
 spine.slot_offset.prototype.load = function (json)
 {
-	this.slot = spine.toString(json.slot, "");
+	this.slot = spine.toString(json.slot, null);
 	this.offset = spine.toInt(json.offset, 0);
 	return this;
 }
@@ -1039,11 +1059,13 @@ spine.draworder_keyframe = function (time)
 {
 	goog.base(this, time);
 
-	/** @type {Array.<spine.slot_offset>} */
 	this.slot_offsets = [];
 }
 
 goog.inherits(spine.draworder_keyframe, spine.keyframe);
+
+/** @type {Array.<spine.slot_offset>} */
+spine.draworder_keyframe.slot_offsets;
 
 /**
  * @return {spine.draworder_keyframe} 
@@ -1065,25 +1087,26 @@ spine.draworder_keyframe.prototype.load = function (json)
  */
 spine.animation = function ()
 {
-	/** @type {?string} */
-	this.name = null;
-
-	/** @type {Object.<string,spine.anim_bone>} */
-	this.anim_bones = null;
-	/** @type {Object.<string,spine.anim_slot>} */
-	this.anim_slots = null;
-	/** @type {Array.<spine.event_keyframe>} */
-	this.event_keyframes = null;
-	/** @type {Array.<spine.draworder_keyframe>} */
-	this.draworder_keyframes = null;
-
-	/** @type {number} */
-	this.min_time = 0;
-	/** @type {number} */
-	this.max_time = 0;
-	/** @type {number} */
-	this.length = 0;
 }
+
+/** @type {?string} */
+spine.animation.prototype.name = null;
+
+/** @type {Object.<string,spine.anim_bone>} */
+spine.animation.prototype.anim_bones = null;
+/** @type {Object.<string,spine.anim_slot>} */
+spine.animation.prototype.anim_slots = null;
+/** @type {Array.<spine.event_keyframe>} */
+spine.animation.prototype.event_keyframes = null;
+/** @type {Array.<spine.draworder_keyframe>} */
+spine.animation.prototype.draworder_keyframes = null;
+
+/** @type {number} */
+spine.animation.prototype.min_time = 0;
+/** @type {number} */
+spine.animation.prototype.max_time = 0;
+/** @type {number} */
+spine.animation.prototype.length = 0;
 
 /**
  * @return {spine.animation} 
@@ -1159,20 +1182,21 @@ spine.animation.prototype.load = function (json)
  */
 spine.skeleton = function ()
 {
-	/** @type {?string} */
-	this.name = null;
-
-	/** @type {Object.<string,spine.skel_bone>} */
-	this.skel_bones = null;
-	/** @type {Array.<string>} */
-	this.skel_bone_keys = null;
-	/** @type {Object.<string,spine.skel_slot>} */
-	this.skel_slots = null;
-	/** @type {Array.<string>} */
-	this.skel_slot_keys = null;
-	/** @type {Object.<string,spine.skin>} */
-	this.skins = null;
 }
+
+/** @type {?string} */
+spine.skeleton.prototype.name = null;
+
+/** @type {Object.<string,spine.skel_bone>} */
+spine.skeleton.prototype.skel_bones = null;
+/** @type {Array.<string>} */
+spine.skeleton.prototype.skel_bone_keys = null;
+/** @type {Object.<string,spine.skel_slot>} */
+spine.skeleton.prototype.skel_slots = null;
+/** @type {Array.<string>} */
+spine.skeleton.prototype.skel_slot_keys = null;
+/** @type {Object.<string,spine.skin>} */
+spine.skeleton.prototype.skins = null;
 
 /**
  * @return {spine.skeleton} 
@@ -1228,16 +1252,18 @@ spine.skeleton.prototype.load = function (json)
  */
 spine.data = function ()
 {
-	/** @type {?string} */
-	this.name = null;
-
-	/** @type {spine.skeleton} */
 	this.skeleton = new spine.skeleton();
-	/** @type {Object.<string,spine.event>} */
-	this.events = null;
-	/** @type {Object.<string,spine.animation>} */
-	this.animations = null;
 }
+
+/** @type {?string} */
+spine.data.prototype.name = null;
+
+/** @type {spine.skeleton} */
+spine.data.prototype.skeleton = new spine.skeleton();
+/** @type {Object.<string,spine.event>} */
+spine.data.prototype.events = null;
+/** @type {Object.<string,spine.animation>} */
+spine.data.prototype.animations = null;
 
 /**
  * @return {spine.data} 
@@ -1335,33 +1361,40 @@ spine.data.prototype.getAnims = function ()
  */
 spine.pose = function (data)
 {
-	/** @type {spine.data} */
 	this.data = data || null;
 
-	/** @type {string} */
-	this.skin_key = "";
-	/** @type {string} */
-	this.anim_key = "";
-	/** @type {number} */
-	this.time = 0;
-	/** @type {number} */
-	this.elapsed_time = 0;
-
-	/** @type {boolean} */
-	this.dirty = true;
-
-	/** @type {Object.<string,spine.skel_bone>} */
 	this.tweened_skel_bones = {};
-
-	/** @type {Object.<string,spine.skel_slot>} */
 	this.tweened_skel_slots = {};
-
-	/** @type {Array.<spine.event>} */
 	this.tweened_events = [];
-
-	/** @type {Array.<string>} */
 	this.tweened_skel_slot_keys = [];
 }
+
+/** @type {spine.data} */
+spine.pose.prototype.data;
+
+/** @type {string} */
+spine.pose.prototype.skin_key = "";
+/** @type {string} */
+spine.pose.prototype.anim_key = "";
+/** @type {number} */
+spine.pose.prototype.time = 0;
+/** @type {number} */
+spine.pose.prototype.elapsed_time = 0;
+
+/** @type {boolean} */
+spine.pose.prototype.dirty = true;
+
+/** @type {Object.<string,spine.skel_bone>} */
+spine.pose.prototype.tweened_skel_bones;
+
+/** @type {Object.<string,spine.skel_slot>} */
+spine.pose.prototype.tweened_skel_slots;
+
+/** @type {Array.<spine.event>} */
+spine.pose.prototype.tweened_events;
+
+/** @type {Array.<string>} */
+spine.pose.prototype.tweened_skel_slot_keys;
 
 /**
  * @return {spine.skeleton}
