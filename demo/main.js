@@ -56,11 +56,17 @@ main.start = function ()
 			for (var skin_attachment_key in skin_slot.skin_attachments)
 			{
 				var skin_attachment = skin_slot.skin_attachments[skin_attachment_key];
+				if (skin_attachment.type !== 'region') { continue; }
 				var image_key = skin_attachment.name || skin_attachment_key;
 				images[image_key] = loadImage("spineboy/images/" + image_key + ".png", function (image) {});
 			}
 		}		
 	});
+
+	document.body.style.margin = '0px';
+	document.body.style.border = '0px';
+	document.body.style.padding = '0px';
+	document.body.style.overflow = 'hidden';
 
 	var canvas = document.createElement('canvas');
 	canvas.width = window.innerWidth;
@@ -135,7 +141,7 @@ main.start = function ()
 			var skin_slot = skin.skin_slots[slot_key];
 			if (!skin_slot) { continue; }
 			var skin_attachment = skin_slot.skin_attachments[skin_attachment_key];
-			if (skin_attachment.type != 'region') { continue; }
+			if (skin_attachment.type !== 'region') { continue; }
 			var image_key = skin_attachment.name || skin_attachment_key;
 			var image = images[image_key];
 
