@@ -1136,12 +1136,12 @@ spine.animation.prototype.load = function (json)
 		this.event_keyframes = this.event_keyframes.sort(spine.keyframe.compare);
 	}
 
-	if (json.draworder)
+	if (json.drawOrder)
 	{
 		this.draworder_keyframes = [];
-		for (var draworder_idx = 0; draworder_idx < json.draworder.length; ++draworder_idx)
+		for (var draworder_idx = 0; draworder_idx < json.drawOrder.length; ++draworder_idx)
 		{
-			var draworder_keyframe = new spine.draworder_keyframe().load(json.draworder[draworder_idx]);
+			var draworder_keyframe = new spine.draworder_keyframe().load(json.drawOrder[draworder_idx]);
 			this.min_time = Math.min(this.min_time, draworder_keyframe.time);
 			this.max_time = Math.max(this.max_time, draworder_keyframe.time);
 			this.draworder_keyframes.push(draworder_keyframe);
@@ -1728,7 +1728,10 @@ spine.pose.prototype.strike = function ()
 				var index = this.tweened_skel_slot_keys.indexOf(slot_offset.slot);
 				if (index >= 0)
 				{
-					this.tweened_skel_slot_keys.splice(index + slot_offset.offset, 0, this.tweened_skel_slot_keys.splice(index, 1));
+					// delete old position
+					this.tweened_skel_slot_keys.splice(index, 1);
+					// insert new position
+					this.tweened_skel_slot_keys.splice(index + slot_offset.offset, 0, slot_offset.slot);
 				}
 			}
 		}
