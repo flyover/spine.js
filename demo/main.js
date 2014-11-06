@@ -1,8 +1,8 @@
 var loadText = function (url, callback)
 {
 	var req = new XMLHttpRequest();
-	req.responseType = 'text';
 	req.open("GET", url, true);
+	req.responseType = 'text';
 	req.addEventListener('error', function (event) {}, false);
 	req.addEventListener('abort', function (event) {}, false);
 	req.addEventListener('load', function (event) { callback(req.response); }, false);
