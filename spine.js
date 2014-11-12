@@ -356,13 +356,13 @@ spine.wrap = function (num, min, max)
 {
 	if (min < max)
 	{
-		if (num <= 0)
+		if (num < min)
 		{
-			return ((num + min) % (max - min)) - min;
+			return max - ((min - num) % (max - min));
 		}
 		else
 		{
-			return ((num - min) % (max - min)) + min;
+			return min + ((num - min) % (max - min));
 		}
 	}
 	else if (min === max)
