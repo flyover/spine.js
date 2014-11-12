@@ -347,6 +347,35 @@ spine.toCurve = function (value, def)
 }
 
 /**
+ * @return {number} 
+ * @param {number} num 
+ * @param {number} min 
+ * @param {number} max 
+ */
+spine.wrap = function (num, min, max)
+{
+	if (min < max)
+	{
+		if (num <= 0)
+		{
+			return ((num + min) % (max - min)) - min;
+		}
+		else
+		{
+			return ((num - min) % (max - min)) + min;
+		}
+	}
+	else if (min === max)
+	{
+		return min;
+	}
+	else
+	{
+		return num;
+	}
+}
+
+/**
  * @return {number}
  * @param {number} a
  * @param {number} b
@@ -363,9 +392,14 @@ spine.tween = function (a, b, t)
  */
 spine.wrapAngle = function (angle)
 {
-	while (angle >= 180) { angle -= 360; }
-	while (angle < -180) { angle += 360; }
-	return angle;
+	if (angle <= 0)
+	{
+		return ((angle - 180) % 360) + 180;
+	}
+	else
+	{
+		return ((angle + 180) % 360) - 180;
+	}
 }
 
 /**
@@ -1484,10 +1518,9 @@ spine.pose.prototype.setAnim = function (anim_key)
 	{
 		this.anim_key = anim_key;
 		var anim = this.curAnim();
-		if (anim && (anim.length > 0))
+		if (anim)
 		{
-			while (this.time < anim.min_time) { this.time += anim.length; }
-			while (this.time > anim.max_time) { this.time -= anim.length; }
+			this.time = spine.wrap(this.time, anim.min_time, anim.max_time);
 		}
 		this.elapsed_time = 0;
 		this.dirty = true;
@@ -1508,15 +1541,15 @@ spine.pose.prototype.getTime = function ()
  */
 spine.pose.prototype.setTime = function (time)
 {
+	var anim = this.curAnim();
+	if (anim)
+	{
+		time = spine.wrap(time, anim.min_time, anim.max_time);
+	}
+
 	if (this.time !== time)
 	{
 		this.time = time;
-		var anim = this.curAnim();
-		if (anim && (anim.length > 0))
-		{
-			while (this.time < anim.min_time) { this.time += anim.length; }
-			while (this.time > anim.max_time) { this.time -= anim.length; }
-		}
 		this.elapsed_time = 0;
 		this.dirty = true;
 	}
