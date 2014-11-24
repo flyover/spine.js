@@ -33,78 +33,78 @@ goog.provide('spine');
 
 /**
  * @return {boolean} 
- * @param {string} value 
+ * @param {string|boolean} value 
  * @param {boolean=} def 
  */
-spine.toBool = function (value, def)
+spine.importBool = function (value, def)
 {
-	if (typeof(value) !== 'undefined')
+	switch (typeof(value))
 	{
-		return 'true' === value ? true : false;
+	case 'string': return (value === 'true') ? true : false;
+	case 'boolean': return value;
+	default: return def || false;
 	}
-	return def || false;
 }
 
 /**
  * @return {number} 
- * @param {string} value 
+ * @param {string|number} value 
  * @param {number=} def 
  */
-spine.toInt = function (value, def)
+spine.importInt = function (value, def)
 {
-	if (typeof(value) !== 'undefined')
+	switch (typeof(value))
 	{
-		return parseInt(value, 10);
+	case 'string': return parseInt(value, 10);
+	case 'number': return 0 | value;
+	default: return def || 0;
 	}
-	return def || 0;
 }
 
 /**
  * @return {number} 
- * @param {string} value 
+ * @param {string|number} value 
  * @param {number=} def 
  */
-spine.toFloat = function (value, def)
+spine.importFloat = function (value, def)
 {
-	if (typeof(value) !== 'undefined')
+	switch (typeof(value))
 	{
-		return parseFloat(value);
+	case 'string': return parseFloat(value);
+	case 'number': return value;
+	default: return def || 0;
 	}
-	return def || 0;
 }
 
 /**
- * @return {?string} 
+ * @return {string} 
  * @param {string} value 
- * @param {?string=} def 
+ * @param {string=} def 
  */
-spine.toString = function (value, def)
+spine.importString = function (value, def)
 {
-	if (typeof(value) !== 'undefined')
+	switch (typeof(value))
 	{
-		return value;
+	case 'string': return value;
+	default: return def || "";
 	}
-	return def || "";
 }
 
 /**
  * @return {Array}
  * @param {*} value 
- * @param {Array=} def 
  */
-spine.toArray = function (value, def)
+spine.makeArray = function (value)
 {
-	if (value)
+	if ((typeof(value) === 'object') && (typeof(value.length) === 'number')) // (Object.isArray(value))
 	{
-		if (value.length)
-		{
-			return /** @type {Array} */ (value);
-		}
-
-		return [value];
+		return /** @type {Array} */ (value);
 	}
-
-	return def || [];
+	if (typeof(value) !== 'undefined')
+	{
+		return [ value ];
+	}
+	return [];
 }
 
 /**
@@ -145,13 +145,11 @@ spine.color.prototype.copy = function (other)
  */
 spine.color.prototype.load = function (json)
 {
-	if (typeof(json) !== 'undefined')
+	switch (typeof(json))
 	{
-		this.rgba = parseInt(json, 16);
-	}
-	else
-	{
-		this.rgba = 0xffffffff;
+	case 'string': this.rgba = parseInt(json, 16); break;
+	case 'number': this.rgba = 0 | json; break;
+	default: this.rgba = 0xffffffff; break;
 	}
 	this.r = ((this.rgba >> 24) & 0xff) / 255;
 	this.g = ((this.rgba >> 16) & 0xff) / 255;
@@ -326,20 +324,27 @@ spine.step_bezier_curve = function (cx1, cy1, cx2, cy2)
  */
 spine.toCurve = function (value, def)
 {
-	if (typeof(value) !== 'undefined')
+	if (typeof(value) === 'string')
 	{
-		if (value === 'stepped')
+		switch (value)
 		{
+		case 'stepped':
 			return function (t) { return 0; };
+			break;
 		}
-		else if (value.length === 4)
+	}
+	else if ((typeof(value) === 'object') && (typeof(value.length) === 'number')) // (Object.isArray(value))
+	{
+		switch (value.length)
 		{
-			var x1 = parseFloat(value[0]);
-			var y1 = parseFloat(value[1]);
-			var x2 = parseFloat(value[2]);
-			var y2 = parseFloat(value[3]);
+		case 4:
+			var x1 = spine.importFloat(value[0], 0);
+			var y1 = spine.importFloat(value[1], 0);
+			var x2 = spine.importFloat(value[2], 1);
+			var y2 = spine.importFloat(value[3], 1);
 			//return spine.bezier_curve(x1, y1, x2, y2);
 			return spine.step_bezier_curve(x1, y1, x2, y2);
+			break;
 		}
 	}
 
@@ -420,8 +425,8 @@ spine.skel_bone = function ()
 {
 }
 
-/** @type {?string} */
-spine.skel_bone.prototype.parent = null;
+/** @type {string} */
+spine.skel_bone.prototype.parent = "";
 /** @type {number} */
 spine.skel_bone.prototype.length = 0;
 /** @type {number} */
@@ -463,15 +468,15 @@ spine.skel_bone.prototype.copy = function (other)
  */
 spine.skel_bone.prototype.load = function (json)
 {
-	this.parent = spine.toString(json.parent, null);
-	this.length = spine.toFloat(json.length, 0);
-	this.x = spine.toFloat(json.x, 0);
-	this.y = spine.toFloat(json.y, 0);
-	this.rotation = spine.toFloat(json.rotation, 0);
-	this.scaleX = spine.toFloat(json.scaleX, 1);
-	this.scaleY = spine.toFloat(json.scaleY, 1);
-	this.inheritRotation = spine.toBool(json.inheritRotation, true);
-	this.inheritScale = spine.toBool(json.inheritScale, true);
+	this.parent = spine.importString(json.parent, "");
+	this.length = spine.importFloat(json.length, 0);
+	this.x = spine.importFloat(json.x, 0);
+	this.y = spine.importFloat(json.y, 0);
+	this.rotation = spine.importFloat(json.rotation, 0);
+	this.scaleX = spine.importFloat(json.scaleX, 1);
+	this.scaleY = spine.importFloat(json.scaleY, 1);
+	this.inheritRotation = spine.importBool(json.inheritRotation, true);
+	this.inheritScale = spine.importBool(json.inheritScale, true);
 	return this;
 }
 
@@ -487,8 +492,8 @@ spine.skel_slot = function ()
 spine.skel_slot.prototype.bone = "";
 /** @type {spine.color} */
 spine.skel_slot.prototype.color;
-/** @type {?string} */
-spine.skel_slot.prototype.attachment = null;
+/** @type {string} */
+spine.skel_slot.prototype.attachment = "";
 /** @type {boolean} */
 spine.skel_slot.prototype.additive = false;
 
@@ -511,10 +516,10 @@ spine.skel_slot.prototype.copy = function (other)
  */
 spine.skel_slot.prototype.load = function (json)
 {
-	this.bone = spine.toString(json.bone, null) || "";
+	this.bone = spine.importString(json.bone, "");
 	this.color.load(json.color);
-	this.attachment = spine.toString(json.attachment, null);
-	this.additive = spine.toBool(json.additive, false);
+	this.attachment = spine.importString(json.attachment, "");
+	this.additive = spine.importBool(json.additive, false);
 	return this;
 }
 
@@ -525,9 +530,9 @@ spine.skin_attachment = function ()
 {
 }
 
-/** @type {?string} */
-spine.skin_attachment.prototype.name = null;
-/** @type {?string} */
+/** @type {string} */
+spine.skin_attachment.prototype.name = "";
+/** @type {string} */
 spine.skin_attachment.prototype.type = "region";
 /** @type {number} */
 spine.skin_attachment.prototype.x = 0;
@@ -550,15 +555,15 @@ spine.skin_attachment.prototype.height = 0;
  */
 spine.skin_attachment.prototype.load = function (json)
 {
-	this.name = json.name || null;
-	this.type = spine.toString(json.type, "region");
+	this.name = spine.importString(json.name, "");
+	this.type = spine.importString(json.type, "region");
 	switch (this.type)
 	{
 	case "region":
 		break;
 	case "animatedRegion":
-		//var fps = json.fps && spine.toFloat(json.fps, 0);
-		//var playMode = json.playMode && spine.toString(json.playMode, "forward");
+		//var fps = json.fps && spine.importFloat(json.fps, 0);
+		//var playMode = json.playMode && spine.importString(json.playMode, "forward");
 		break;
 	case "boundingbox":
 		//var vertices = json.vertices;
@@ -566,13 +571,13 @@ spine.skin_attachment.prototype.load = function (json)
 	default:
 		break;
 	}
-	this.x = spine.toFloat(json.x, 0);
-	this.y = spine.toFloat(json.y, 0);
-	this.rotation = spine.toFloat(json.rotation, 0);
-	this.scaleX = spine.toFloat(json.scaleX, 1);
-	this.scaleY = spine.toFloat(json.scaleY, 1);
-	this.width = spine.toFloat(json.width, 0);
-	this.height = spine.toFloat(json.height, 0);
+	this.x = spine.importFloat(json.x, 0);
+	this.y = spine.importFloat(json.y, 0);
+	this.rotation = spine.importFloat(json.rotation, 0);
+	this.scaleX = spine.importFloat(json.scaleX, 1);
+	this.scaleY = spine.importFloat(json.scaleY, 1);
+	this.width = spine.importFloat(json.width, 0);
+	this.height = spine.importFloat(json.height, 0);
 	return this;
 }
 
@@ -631,14 +636,10 @@ spine.event = function ()
 {
 }
 
-/** @type {?string} */
-spine.event.prototype.name = null;
-/** @type {?number} */
-spine.event.prototype['int'] = null;
-/** @type {?number} */
-spine.event.prototype['float'] = null;
-/** @type {?string} */
-spine.event.prototype.string = null;
+/** @type {string} */
+spine.event.prototype.name = "";
+/** @type {number|string} */
+spine.event.prototype.value = 0;
 
 /**
  * @return {spine.event}
@@ -647,9 +648,7 @@ spine.event.prototype.string = null;
 spine.event.prototype.copy = function (other)
 {
 	this.name = other.name;
-	this['int'] = other['int'];
-	this['float'] = other['float'];
-	this.string = other.string;
+	this.value = other.value;
 	return this;
 }
 
@@ -659,21 +658,21 @@ spine.event.prototype.copy = function (other)
  */
 spine.event.prototype.load = function (json)
 {
-	if (typeof(json.name) !== 'undefined')
+	if (typeof(json.name) === 'string')
 	{
-		this.name = spine.toString(json.name, "");
+		this.name = spine.importString(json.name, "");
 	}
-	if (typeof(json['int']) !== 'undefined')
+	if (typeof(json['int']) === 'string')
 	{
-		this['int'] = spine.toInt(json['int'], 0);
+		this.value = spine.importInt(json['int'], 0);
 	}
-	if (typeof(json['float']) !== 'undefined')
+	if (typeof(json['float']) === 'string')
 	{
-		this['float'] = spine.toFloat(json['float'], 0);
+		this.value = spine.importFloat(json['float'], 0);
 	}
-	if (typeof(json.string) !== 'undefined')
+	if (typeof(json['string']) === 'string')
 	{
-		this.string = spine.toString(json.string, "");
+		this.value = spine.importString(json['string'], "");
 	}
 
 	return this;
@@ -697,7 +696,7 @@ spine.keyframe.prototype.time = 0;
  */
 spine.keyframe.prototype.load = function (json)
 {
-	this.time = 1000 * spine.toFloat(json.time, 0);
+	this.time = 1000 * spine.importFloat(json.time, 0);
 	return this;
 }
 
@@ -761,8 +760,8 @@ spine.translate_keyframe.prototype.curve = function (t) { return t; };
 spine.translate_keyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	this.x = spine.toFloat(json.x, 0);
-	this.y = spine.toFloat(json.y, 0);
+	this.x = spine.importFloat(json.x, 0);
+	this.y = spine.importFloat(json.y, 0);
 	this.curve = spine.toCurve(json.curve);
 	return this;
 }
@@ -791,7 +790,7 @@ spine.rotate_keyframe.prototype.curve = function (t) { return t; };
 spine.rotate_keyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	this.angle = spine.toFloat(json.angle, 0);
+	this.angle = spine.importFloat(json.angle, 0);
 	this.curve = spine.toCurve(json.curve);
 	return this;
 }
@@ -822,8 +821,8 @@ spine.scale_keyframe.prototype.curve = function (t) { return t; };
 spine.scale_keyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	this.scaleX = spine.toFloat(json.x, 1);
-	this.scaleY = spine.toFloat(json.y, 1);
+	this.scaleX = spine.importFloat(json.x, 1);
+	this.scaleY = spine.importFloat(json.y, 1);
 	this.curve = spine.toCurve(json.curve);
 	return this;
 }
@@ -944,8 +943,8 @@ spine.attachment_keyframe = function (time)
 goog.inherits(spine.attachment_keyframe, spine.keyframe);
 
 
-/** @type {?string} */
-spine.attachment_keyframe.prototype.name = null;
+/** @type {string} */
+spine.attachment_keyframe.prototype.name = "";
 
 /**
  * @return {spine.attachment_keyframe} 
@@ -954,7 +953,7 @@ spine.attachment_keyframe.prototype.name = null;
 spine.attachment_keyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	this.name = spine.toString(json.name, null);
+	this.name = spine.importString(json.name, "");
 	return this;
 }
 
@@ -1026,14 +1025,10 @@ spine.event_keyframe = function (time)
 
 goog.inherits(spine.event_keyframe, spine.keyframe);
 
-/** @type {?string} */
-spine.event_keyframe.prototype.name = null;
-/** @type {?number} */
-spine.event_keyframe.prototype['int'] = null;
-/** @type {?number} */
-spine.event_keyframe.prototype['float'] = null;
-/** @type {?string} */
-spine.event_keyframe.prototype.string = null;
+/** @type {string} */
+spine.event_keyframe.prototype.name = "";
+/** @type {number|string} */
+spine.event_keyframe.prototype.value = 0;
 
 /**
  * @return {spine.event_keyframe} 
@@ -1042,21 +1037,21 @@ spine.event_keyframe.prototype.string = null;
 spine.event_keyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	if (typeof(json.name) !== 'undefined')
+	if (typeof(json.name) === 'string')
 	{
-		this.name = spine.toString(json.name, "");
+		this.name = spine.importString(json.name, "");
 	}
-	if (typeof(json['int']) !== 'undefined')
+	if (typeof(json['int']) === 'string')
 	{
-		this['int'] = spine.toInt(json['int'], 0);
+		this.value = spine.importInt(json['int'], 0);
 	}
-	if (typeof(json['float']) !== 'undefined')
+	if (typeof(json['float']) === 'string')
 	{
-		this['float'] = spine.toFloat(json['float'], 0);
+		this.value = spine.importFloat(json['float'], 0);
 	}
-	if (typeof(json.string) !== 'undefined')
+	if (typeof(json['string']) === 'string')
 	{
-		this.string = spine.toString(json.string, "");
+		this.value = spine.importString(json['string'], "");
 	}
 	return this;
 }
@@ -1068,8 +1063,8 @@ spine.slot_offset = function ()
 {
 }
 
-/** @type {?string} */
-spine.slot_offset.prototype.slot = null;
+/** @type {string} */
+spine.slot_offset.prototype.slot = "";
 /** @type {number} */
 spine.slot_offset.prototype.offset = 0;
 
@@ -1079,8 +1074,8 @@ spine.slot_offset.prototype.offset = 0;
  */
 spine.slot_offset.prototype.load = function (json)
 {
-	this.slot = spine.toString(json.slot, null);
-	this.offset = spine.toInt(json.offset, 0);
+	this.slot = spine.importString(json.slot, "");
+	this.offset = spine.importInt(json.offset, 0);
 	return this;
 }
 
@@ -1123,8 +1118,8 @@ spine.animation = function ()
 {
 }
 
-/** @type {?string} */
-spine.animation.prototype.name = null;
+/** @type {string} */
+spine.animation.prototype.name = "";
 
 /** @type {Object.<string,spine.anim_bone>} */
 spine.animation.prototype.anim_bones = null;
@@ -1218,8 +1213,8 @@ spine.skeleton = function ()
 {
 }
 
-/** @type {?string} */
-spine.skeleton.prototype.name = null;
+/** @type {string} */
+spine.skeleton.prototype.name = "";
 
 /** @type {Object.<string,spine.skel_bone>} */
 spine.skeleton.prototype.skel_bones = null;
@@ -1289,8 +1284,8 @@ spine.data = function ()
 	this.skeleton = new spine.skeleton();
 }
 
-/** @type {?string} */
-spine.data.prototype.name = null;
+/** @type {string} */
+spine.data.prototype.name = "";
 
 /** @type {spine.skeleton} */
 spine.data.prototype.skeleton = new spine.skeleton();
@@ -1738,9 +1733,6 @@ spine.pose.prototype.strike = function ()
 				// start with a copy of the event
 				tweened_event.copy(event);
 			}
-			if (typeof(event_keyframe['int']) !== 'undefined') { tweened_event['int'] = event_keyframe['int']; }
-			if (typeof(event_keyframe['float']) !== 'undefined') { tweened_event['float'] = event_keyframe['float']; }
-			if (typeof(event_keyframe.string) !== 'undefined') { tweened_event.string = event_keyframe.string; }
 			tweened_events.push(tweened_event);
 		}
 
