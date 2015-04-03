@@ -28,7 +28,10 @@ main.start = function ()
 	var spine_pose = new spine.pose(spine_data);
 	var images = {};
 
-	loadText("spineboy/export/spineboy.json", function (text)
+	var spine_file_path = "spineboy/";
+	var spine_file_json_url = spine_file_path + "export/spineboy.json";
+
+	loadText(spine_file_json_url, function (text)
 	{
 		var spine_json = JSON.parse(text);
 	
@@ -49,6 +52,7 @@ main.start = function ()
 		}
 		next_anim();
 
+		var skel = spine_pose.curSkel();
 		var skin = spine_pose.curSkin();
 		for (var slot_key in skin.skin_slots)
 		{
@@ -58,7 +62,7 @@ main.start = function ()
 				var skin_attachment = skin_slot.skin_attachments[skin_attachment_key];
 				if (skin_attachment.type !== 'region') { continue; }
 				var image_key = skin_attachment.name || skin_attachment_key;
-				images[image_key] = loadImage("spineboy/images/" + image_key + ".png", function (image) {});
+				images[image_key] = loadImage(spine_file_path + skel.images + image_key + ".png", function (image) {});
 			}
 		}		
 	});
@@ -131,25 +135,32 @@ main.start = function ()
 			ctx.scale(skin_attachment.scaleX, skin_attachment.scaleY);			
 		}
 
-		if (skel_slot_keys) for (var skel_slot_key_idx = 0; skel_slot_key_idx < skel_slot_keys.length; ++skel_slot_key_idx)
+		if (skel_slot_keys && skel_slots && skin)
 		{
-			var slot_key = skel_slot_keys[skel_slot_key_idx];
-			var skel_slot = skel_slots[slot_key];
-			var bone_key = skel_slot.bone;
-			var skin_attachment_key = skel_slot.attachment;
-			if (!skin_attachment_key) { continue; }
-			var skin_slot = skin.skin_slots[slot_key];
-			if (!skin_slot) { continue; }
-			var skin_attachment = skin_slot.skin_attachments[skin_attachment_key];
-			if (skin_attachment.type !== 'region') { continue; }
-			var image_key = skin_attachment.name || skin_attachment_key;
-			var image = images[image_key];
+			var skin_slots = skin.skin_slots;
+			var skins = spine_pose.getSkins();
+			var default_skin = skins['default'];
+			var default_skin_slots = default_skin.skin_slots;
 
-			ctx.save();
-			applyBone(skel_bones[bone_key]);
-			applySkin(skin_attachment);
-			ctx.scale(1, -1); ctx.drawImage(image, -image.width/2, -image.height/2, image.width, image.height);
-			ctx.restore();
+			skel_slot_keys.forEach(function (slot_key)
+			{
+				var skel_slot = skel_slots[slot_key];
+				var bone_key = skel_slot.bone;
+				var skin_attachment_key = skel_slot.attachment;
+				if (!skin_attachment_key) { return; }
+				var skin_slot = skin_slots[slot_key] || default_skin_slots[slot_key];
+				if (!skin_slot) { return; }
+				var skin_attachment = skin_slot.skin_attachments[skin_attachment_key];
+				if (skin_attachment.type !== 'region') { return; }
+				var image_key = skin_attachment.name || skin_attachment_key;
+				var image = images[image_key];
+
+				ctx.save();
+				applyBone(skel_bones[bone_key]);
+				applySkin(skin_attachment);
+				ctx.scale(1, -1); ctx.drawImage(image, -image.width/2, -image.height/2, image.width, image.height);
+				ctx.restore();
+			});
 		}
 	}
 

@@ -328,6 +328,9 @@ spine.toCurve = function (value, def)
 	{
 		switch (value)
 		{
+		case 'linear':
+			return function (t) { return t; };
+			break;
 		case 'stepped':
 			return function (t) { return 0; };
 			break;
@@ -561,12 +564,18 @@ spine.skin_attachment.prototype.load = function (json)
 	{
 	case "region":
 		break;
-	case "animatedRegion":
+	case "regionsequence":
+		/// The frames per second to show each image in the sequence.
 		//var fps = json.fps && spine.importFloat(json.fps, 0);
-		//var playMode = json.playMode && spine.importString(json.playMode, "forward");
+		/// Defines how the sequence of images is cycled. One of: forward, 
+		/// backward, forwardLoop, backwardLoop, pingPong, or random. 
+		/// Assume "forward" if omitted.
+		//var mode = json.mode && spine.importString(json.mode, "forward");
 		break;
 	case "boundingbox":
+		/// The x/y pairs that make up the vertices of the polygon.
 		//var vertices = json.vertices;
+		this.vertices = json.vertices;
 		break;
 	default:
 		break;
@@ -739,19 +748,43 @@ spine.keyframe.compare = function (a, b)
  * @extends {spine.keyframe} 
  * @param {number=} time 
  */
+spine.bone_keyframe = function (time)
+{
+	goog.base(this, time);
+}
+
+goog.inherits(spine.bone_keyframe, spine.keyframe);
+
+/** @type {function(number):number} */
+spine.bone_keyframe.prototype.curve = function (t) { return t; };
+
+/**
+ * @return {spine.bone_keyframe} 
+ * @param {*} json 
+ */
+spine.bone_keyframe.prototype.load = function (json)
+{
+	goog.base(this, 'load', json);
+	this.curve = spine.toCurve(json.curve);
+	return this;
+}
+
+/**
+ * @constructor 
+ * @extends {spine.bone_keyframe} 
+ * @param {number=} time 
+ */
 spine.translate_keyframe = function (time)
 {
 	goog.base(this, time);
 }
 
-goog.inherits(spine.translate_keyframe, spine.keyframe);
+goog.inherits(spine.translate_keyframe, spine.bone_keyframe);
 
 /** @type {number} */
 spine.translate_keyframe.prototype.x = 0;
 /** @type {number} */
 spine.translate_keyframe.prototype.y = 0;
-/** @type {function(number):number} */
-spine.translate_keyframe.prototype.curve = function (t) { return t; };
 
 /**
  * @return {spine.translate_keyframe} 
@@ -762,13 +795,12 @@ spine.translate_keyframe.prototype.load = function (json)
 	goog.base(this, 'load', json);
 	this.x = spine.importFloat(json.x, 0);
 	this.y = spine.importFloat(json.y, 0);
-	this.curve = spine.toCurve(json.curve);
 	return this;
 }
 
 /**
  * @constructor 
- * @extends {spine.keyframe} 
+ * @extends {spine.bone_keyframe} 
  * @param {number=} time 
  */
 spine.rotate_keyframe = function (time)
@@ -776,12 +808,10 @@ spine.rotate_keyframe = function (time)
 	goog.base(this, time);
 }
 
-goog.inherits(spine.rotate_keyframe, spine.keyframe);
+goog.inherits(spine.rotate_keyframe, spine.bone_keyframe);
 
 /** @type {number} */
 spine.rotate_keyframe.prototype.angle = 0;
-/** @type {function(number):number} */
-spine.rotate_keyframe.prototype.curve = function (t) { return t; };
 
 /**
  * @return {spine.rotate_keyframe} 
@@ -791,13 +821,12 @@ spine.rotate_keyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
 	this.angle = spine.importFloat(json.angle, 0);
-	this.curve = spine.toCurve(json.curve);
 	return this;
 }
 
 /**
  * @constructor 
- * @extends {spine.keyframe} 
+ * @extends {spine.bone_keyframe} 
  * @param {number=} time 
  */
 spine.scale_keyframe = function (time)
@@ -805,14 +834,12 @@ spine.scale_keyframe = function (time)
 	goog.base(this, time);
 }
 
-goog.inherits(spine.scale_keyframe, spine.keyframe);
+goog.inherits(spine.scale_keyframe, spine.bone_keyframe);
 
 /** @type {number} */
 spine.scale_keyframe.prototype.scaleX = 1;
 /** @type {number} */
 spine.scale_keyframe.prototype.scaleY = 1;
-/** @type {function(number):number} */
-spine.scale_keyframe.prototype.curve = function (t) { return t; };
 
 /**
  * @return {spine.scale_keyframe} 
@@ -823,7 +850,6 @@ spine.scale_keyframe.prototype.load = function (json)
 	goog.base(this, 'load', json);
 	this.scaleX = spine.importFloat(json.x, 1);
 	this.scaleY = spine.importFloat(json.y, 1);
-	this.curve = spine.toCurve(json.curve);
 	return this;
 }
 
@@ -904,6 +930,28 @@ spine.anim_bone.prototype.load = function (json)
  * @extends {spine.keyframe} 
  * @param {number=} time 
  */
+spine.slot_keyframe = function (time)
+{
+	goog.base(this, time);
+}
+
+goog.inherits(spine.slot_keyframe, spine.keyframe);
+
+/**
+ * @return {spine.slot_keyframe} 
+ * @param {*} json 
+ */
+spine.slot_keyframe.prototype.load = function (json)
+{
+	goog.base(this, 'load', json);
+	return this;
+}
+
+/**
+ * @constructor 
+ * @extends {spine.slot_keyframe} 
+ * @param {number=} time 
+ */
 spine.color_keyframe = function (time)
 {
 	goog.base(this, time);
@@ -911,7 +959,7 @@ spine.color_keyframe = function (time)
 	this.color = new spine.color();
 }
 
-goog.inherits(spine.color_keyframe, spine.keyframe);
+goog.inherits(spine.color_keyframe, spine.slot_keyframe);
 
 /** @type {spine.color} */
 spine.color_keyframe.prototype.color;
@@ -932,7 +980,7 @@ spine.color_keyframe.prototype.load = function (json)
 
 /**
  * @constructor 
- * @extends {spine.keyframe} 
+ * @extends {spine.slot_keyframe} 
  * @param {number=} time 
  */
 spine.attachment_keyframe = function (time)
@@ -940,7 +988,7 @@ spine.attachment_keyframe = function (time)
 	goog.base(this, time);
 }
 
-goog.inherits(spine.attachment_keyframe, spine.keyframe);
+goog.inherits(spine.attachment_keyframe, spine.slot_keyframe);
 
 
 /** @type {string} */
@@ -1216,6 +1264,9 @@ spine.skeleton = function ()
 /** @type {string} */
 spine.skeleton.prototype.name = "";
 
+/** @type {string} */
+spine.skeleton.prototype.images = "";
+
 /** @type {Object.<string,spine.skel_bone>} */
 spine.skeleton.prototype.skel_bones = null;
 /** @type {Array.<string>} */
@@ -1238,6 +1289,11 @@ spine.skeleton.prototype.load = function (json)
 	this.skel_slots = null;
 	this.skel_slot_keys = null;
 	this.skins = null;
+
+	if (json.skeleton)
+	{
+		this.images = json.skeleton.images || "";
+	}
 
 	if (json.bones)
 	{
