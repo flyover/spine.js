@@ -1344,7 +1344,7 @@ spine.data = function ()
 spine.data.prototype.name = "";
 
 /** @type {spine.skeleton} */
-spine.data.prototype.skeleton = new spine.skeleton();
+spine.data.prototype.skeleton = null;
 /** @type {Object.<string,spine.event>} */
 spine.data.prototype.events = null;
 /** @type {Object.<string,spine.animation>} */
