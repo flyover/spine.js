@@ -38,6 +38,7 @@ main.start = function ()
 	var images = {};
 
 	var anim_time = 0;
+	var anim_rate = 1;
 	var anim_repeat = 2;
 
 	var bone_info_map = {};
@@ -176,11 +177,9 @@ main.start = function ()
 
 		var dt = 1000 / 60; // ms
 
-		var rate = 1;		
+		pose.update(dt * anim_rate);
 
-		pose.update(dt * rate);
-
-		anim_time += dt * rate;
+		anim_time += dt * anim_rate;
 
 		var anim_key = pose.getAnim();
 		var anim = data.anims[anim_key];
@@ -292,8 +291,7 @@ main.start = function ()
 				{
 				case 'region':
 					var bone = data.bones[slot.bone_key];
-					applySpace(ctx, bone.world_space);
-					applySpace(ctx, attachment.space);
+					applySpace(ctx, attachment.world_space);
 					var w = attachment.width;
 					var h = attachment.height;
 					//ctx.fillStyle = 'rgba(127,127,127,0.25)';
@@ -332,7 +330,7 @@ main.start = function ()
 			{
 				ctx.save();
 				applySpace(ctx, data_bone.world_space);
-				drawPoint(ctx, 'blue', 1);
+				drawPoint(ctx);
 				ctx.restore();
 			});
 
@@ -351,8 +349,7 @@ main.start = function ()
 				{
 				case 'region':
 					var bone = pose.bones[slot.bone_key];
-					applySpace(ctx, bone.world_space);
-					applySpace(ctx, attachment.space);
+					applySpace(ctx, attachment.world_space);
 					var w = attachment.width;
 					var h = attachment.height;
 					//ctx.fillStyle = 'rgba(127,127,127,0.25)';
@@ -392,7 +389,7 @@ main.start = function ()
 			{
 				ctx.save();
 				applySpace(ctx, pose_bone.world_space);
-				drawPoint(ctx, 'blue', 1);
+				drawPoint(ctx);
 				ctx.restore();
 			});
 
@@ -453,8 +450,7 @@ main.start = function ()
 					{
 					case 'region':
 						var bone = pose.bones[slot.bone_key];
-						applySpace(ctx, bone.world_space);
-						applySpace(ctx, attachment.space);
+						applySpace(ctx, attachment.world_space);
 						var w = attachment.width;
 						var h = attachment.height;
 						ctx.scale(1, -1); ctx.drawImage(image, tx, ty, tw, th, -w/2, -h/2, w, h);
@@ -525,9 +521,10 @@ function drawCircle (ctx, color, scale)
 
 function drawPoint (ctx, color, scale)
 {
+	scale = scale || 1;
 	ctx.beginPath();
 	ctx.arc(0, 0, 12*scale, 0, 2*Math.PI, false);
-	ctx.strokeStyle = color;
+	ctx.strokeStyle = color || 'blue';
 	ctx.stroke();
 	ctx.beginPath();
 	ctx.moveTo(0, 0);

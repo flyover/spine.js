@@ -1349,13 +1349,16 @@ spine.Attachment.prototype.load = function (json)
 spine.RegionAttachment = function ()
 {
 	goog.base(this, 'region');
-	this.space = new spine.Space();
+	this.local_space = new spine.Space();
+	this.world_space = new spine.Space();
 }
 
 goog.inherits(spine.RegionAttachment, spine.Attachment);
 
 /** @type {spine.Space} */
-spine.RegionAttachment.prototype.space;
+spine.RegionAttachment.prototype.local_space;
+/** @type {spine.Space} */
+spine.RegionAttachment.prototype.world_space;
 /** @type {number} */
 spine.RegionAttachment.prototype.width = 0;
 /** @type {number} */
@@ -1370,7 +1373,8 @@ spine.RegionAttachment.prototype.load = function (json)
 	goog.base(this, 'load', json);
 
 	var attachment = this;
-	attachment.space.load(json);
+	attachment.local_space.load(json);
+	attachment.world_space.copy(attachment.local_space);
 	attachment.width = spine.loadFloat(json, 'width', 0);
 	attachment.height = spine.loadFloat(json, 'height', 0);
 	return attachment;
@@ -1898,35 +1902,35 @@ spine.AnimBone.prototype.load = function (json)
 		{
 		case 'translate':
 			anim_bone.translate_keyframes = [];
-			for (var translate_idx = 0; translate_idx < json.translate.length; ++translate_idx)
+			json.translate.forEach(function (translate_json)
 			{
-				var translate_keyframe = new spine.TranslateKeyframe().load(json.translate[translate_idx]);
+				var translate_keyframe = new spine.TranslateKeyframe().load(translate_json);
 				anim_bone.translate_keyframes.push(translate_keyframe);
 				anim_bone.min_time = Math.min(anim_bone.min_time, translate_keyframe.time);
 				anim_bone.max_time = Math.max(anim_bone.max_time, translate_keyframe.time);
-			}
+			});
 			anim_bone.translate_keyframes = anim_bone.translate_keyframes.sort(spine.Keyframe.compare);
 			break;
 		case 'rotate':
 			anim_bone.rotate_keyframes = [];
-			for (var rotate_idx = 0; rotate_idx < json.rotate.length; ++rotate_idx)
+			json.rotate.forEach(function (rotate_json)
 			{
-				var rotate_keyframe = new spine.RotateKeyframe().load(json.rotate[rotate_idx]);
+				var rotate_keyframe = new spine.RotateKeyframe().load(rotate_json);
 				anim_bone.rotate_keyframes.push(rotate_keyframe);
 				anim_bone.min_time = Math.min(anim_bone.min_time, rotate_keyframe.time);
 				anim_bone.max_time = Math.max(anim_bone.max_time, rotate_keyframe.time);
-			}
+			});
 			anim_bone.rotate_keyframes = anim_bone.rotate_keyframes.sort(spine.Keyframe.compare);
 			break;
 		case 'scale':
 			anim_bone.scale_keyframes = [];
-			for (var scale_idx = 0; scale_idx < json.scale.length; ++scale_idx)
+			json.scale.forEach(function (scale_json)
 			{
-				var scale_keyframe = new spine.ScaleKeyframe().load(json.scale[scale_idx]);
+				var scale_keyframe = new spine.ScaleKeyframe().load(scale_json);
 				anim_bone.scale_keyframes.push(scale_keyframe);
 				anim_bone.min_time = Math.min(anim_bone.min_time, scale_keyframe.time);
 				anim_bone.max_time = Math.max(anim_bone.max_time, scale_keyframe.time);
-			}
+			});
 			anim_bone.scale_keyframes = anim_bone.scale_keyframes.sort(spine.Keyframe.compare);
 			break;
 		default:
@@ -3191,6 +3195,19 @@ spine.Pose.prototype.strike = function ()
 
 	pose.slot_keys = data_slot_keys;
 
+	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
+	{
+		if (!attachment) { return; }
+
+		switch (attachment.type)
+		{
+		case 'region':
+			var bone = pose.bones[slot.bone_key];
+			spine.Space.combine(bone.world_space, attachment.local_space, attachment.world_space);
+			break;
+		}
+	});
+
 	if (anim)
 	{
 		var order_keyframe_idx = spine.Keyframe.find(anim.order_keyframes, time);
@@ -3324,11 +3341,11 @@ Object.defineProperty(spine.Slot.prototype, 'attachment', { get: /** @this {spin
 Object.defineProperty(spine.Slot.prototype, 'additive', { get: /** @this {spine.Slot} */ function () { spine.deprecated(); return this.blend === 'additive'; } });
 
 Object.defineProperty(spine, 'attachment', { get: function () { spine.deprecated(); return spine.RegionAttachment; } });
-Object.defineProperty(spine.RegionAttachment.prototype, 'x', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.space.position.x; } });
-Object.defineProperty(spine.RegionAttachment.prototype, 'y', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.space.position.y; } });
-Object.defineProperty(spine.RegionAttachment.prototype, 'rotation', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.space.rotation.deg; } });
-Object.defineProperty(spine.RegionAttachment.prototype, 'scaleX', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.space.scale.x; } });
-Object.defineProperty(spine.RegionAttachment.prototype, 'scaleY', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.space.scale.y; } });
+Object.defineProperty(spine.RegionAttachment.prototype, 'x', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.local_space.position.x; } });
+Object.defineProperty(spine.RegionAttachment.prototype, 'y', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.local_space.position.y; } });
+Object.defineProperty(spine.RegionAttachment.prototype, 'rotation', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.local_space.rotation.deg; } });
+Object.defineProperty(spine.RegionAttachment.prototype, 'scaleX', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.local_space.scale.x; } });
+Object.defineProperty(spine.RegionAttachment.prototype, 'scaleY', { get: /** @this {spine.RegionAttachment} */ function () { spine.deprecated(); return this.local_space.scale.y; } });
 
 Object.defineProperty(spine, 'skin_slot', { get: function () { spine.deprecated(); return spine.SkinSlot; } });
 Object.defineProperty(spine.SkinSlot.prototype, 'skin_attachments', { get: /** @this {spine.SkinSlot} */ function () { spine.deprecated(); return this.attachments; } });
