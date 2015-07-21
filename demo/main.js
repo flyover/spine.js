@@ -83,6 +83,51 @@ main.start = function ()
 		gl_region_vertex.position = glMakeVertex(gl, new Float32Array([ -1, -1, 1, -1, 1, 1, -1, 1 ]), 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 		gl_region_vertex.texcoord = glMakeVertex(gl, new Float32Array([ 0, 1, 1, 1, 1, 0, 0, 0 ]), 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 		gl_region_vertex.triangle = glMakeVertex(gl, new Uint16Array([ 0, 1, 2, 0, 2, 3 ]), 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
+		var gl_skin_shader_max_blend_matrix_array_length = 16;
+		var gl_skin_shader_vs_src = 
+		[
+			"precision mediump int;",
+			"precision mediump float;",
+			"uniform mat3 uProjection;",
+			"uniform mat3 uBlendMatrixArray[" + gl_skin_shader_max_blend_matrix_array_length + "];",
+			"uniform mat3 uTexMatrix;",
+			"attribute vec2 aVertexSetupPosition;", // [ x, y ]
+			"attribute vec2 aVertexTexCoord;", // [ u, v ]
+			"attribute vec4 aVertexBlendIndex0;", // [ i0, i1, i2, i3 ]
+			"attribute vec4 aVertexBlendIndex1;", // [ i4, i5, i6, i7 ]
+			"attribute vec4 aVertexBlendWeight0;", // [ w0, w1, w2, w3 ]
+			"attribute vec4 aVertexBlendWeight1;", // [ w4, w5, w6, w7 ]
+			"varying vec3 vTexCoord;",
+			"void main(void) {",
+			" vTexCoord = uTexMatrix * vec3(aVertexTexCoord, 1.0);",
+			" vec3 setupPosition = vec3(aVertexSetupPosition, 1.0);",
+			" vec3 blendPosition = vec3(0.0);",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex0.x)] * setupPosition) * aVertexBlendWeight0.x;",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex0.y)] * setupPosition) * aVertexBlendWeight0.y;",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex0.z)] * setupPosition) * aVertexBlendWeight0.z;",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex0.w)] * setupPosition) * aVertexBlendWeight0.w;",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex1.x)] * setupPosition) * aVertexBlendWeight1.x;",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex1.y)] * setupPosition) * aVertexBlendWeight1.y;",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex1.z)] * setupPosition) * aVertexBlendWeight1.z;",
+			" blendPosition += (uBlendMatrixArray[int(aVertexBlendIndex1.w)] * setupPosition) * aVertexBlendWeight1.w;",
+			" gl_Position = vec4(uProjection * blendPosition, 1.0);",
+			"}"
+		];
+		var gl_skin_shader_fs_src = 
+		[
+			"precision mediump int;",
+			"precision mediump float;",
+			"uniform sampler2D uSampler;",
+			"uniform vec4 uColor;",
+			"varying vec3 vTexCoord;",
+			"void main(void) {",
+			" gl_FragColor = uColor * texture2D(uSampler, vTexCoord.st);",
+			" gl_FragColor.r = 1.0;",
+			" gl_FragColor.a *= 0.5;",
+			"}"
+		];
+		var gl_skin_shader = glMakeShader(gl, gl_skin_shader_vs_src, gl_skin_shader_fs_src);
+		var gl_skin_shader_blend_matrix_array = new Float32Array(9 * gl_skin_shader_max_blend_matrix_array_length);
 	}
 
 	var camera_x = 0;
@@ -108,8 +153,8 @@ main.start = function ()
 	// setup_space 
 	// blend_space
 	var attachment_info_map = {};
-	// setup_positions
-	// blend_positions
+	// vertex_setup_position
+	// vertex_blend_position
 
 	//var file_path = "spineboy/";
 	//var file_json_url = file_path + "export/spineboy.json";
@@ -148,23 +193,25 @@ main.start = function ()
 			{
 			case 'mesh':
 				var attachment_info = attachment_info_map[attachment_key] = {};
-				var positions = attachment_info.positions = new Float32Array(attachment.vertices);
-				var texcoords = attachment_info.texcoords = new Float32Array(attachment.uvs);
-				var triangles = attachment_info.triangles = new Uint16Array(attachment.triangles);
+				var vertex_position = attachment_info.vertex_position = new Float32Array(attachment.vertices);
+				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
+				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
 				if (gl)
 				{
 					var gl_vertex = attachment_info.gl_vertex = {};
-					gl_vertex.position = glMakeVertex(gl, positions, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-					gl_vertex.texcoord = glMakeVertex(gl, texcoords, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-					gl_vertex.triangle = glMakeVertex(gl, triangles, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.position = glMakeVertex(gl, vertex_position, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
 				}
 				break;
 			case 'skinnedmesh':
 				var attachment_info = attachment_info_map[attachment_key] = {};
-				var setup_positions = attachment_info.setup_positions = new Float32Array(attachment.uvs.length);
-				var blend_positions = attachment_info.blend_positions = new Float32Array(attachment.uvs.length);
-				var texcoords = attachment_info.texcoords = new Float32Array(attachment.uvs);
-				var triangles = attachment_info.triangles = new Uint16Array(attachment.triangles);
+				var vertex_setup_position = attachment_info.vertex_setup_position = new Float32Array(attachment.uvs.length);
+				var vertex_blend_position = attachment_info.vertex_blend_position = new Float32Array(attachment.uvs.length);
+				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
+				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
+				var setup_blend_arrays = attachment_info.setup_blend_arrays = [];
+				var blend_bone_index_array = attachment_info.blend_bone_index_array = [];
 				var position = new spine.Vector();
 				var setup_position = new spine.Vector();
 				for (var i = 0, position_i = 0; i < attachment.vertices.length; )
@@ -172,6 +219,7 @@ main.start = function ()
 					var blend_count = attachment.vertices[i++];
 					setup_position.x = 0;
 					setup_position.y = 0;
+					var blend_array = [];
 					for (var j = 0; j < blend_count; ++j)
 					{
 						var bone_index = attachment.vertices[i++];
@@ -183,17 +231,63 @@ main.start = function ()
 						spine.Space.transform(bone.world_space, position, position);
 						setup_position.x += position.x * weight;
 						setup_position.y += position.y * weight;
+						blend_array.push({ bone_index: bone_index, weight: weight });
 					}
-					setup_positions[position_i++] = setup_position.x;
-					setup_positions[position_i++] = setup_position.y;
+					vertex_setup_position[position_i++] = setup_position.x;
+					vertex_setup_position[position_i++] = setup_position.y;
+					setup_blend_arrays.push(blend_array);
 				}
+				setup_blend_arrays.forEach(function (blend_array)
+				{
+					// sort the blends descending by weight
+					blend_array = blend_array.sort(function (a, b) { return b.weight - a.weight; });
+
+					// clamp blends and adjust weights
+					if (blend_array.length > 8)
+					{
+						//console.log(attachment_key, blend_array.length);
+						blend_array.length = 8;
+						var weight_sum = 0;
+						blend_array.forEach(function (blend) { weight_sum += blend.weight; });
+						blend_array.forEach(function (blend) { blend.weight /= weight_sum; });
+					}
+
+					// keep track of which bones are used for blending
+					blend_array.forEach(function (blend)
+					{
+						if (blend_bone_index_array.indexOf(blend.bone_index) === -1)
+						{
+							blend_bone_index_array.push(blend.bone_index);
+						}
+					});
+
+					// pad out blends
+					while (blend_array.length < 8)
+					{
+						blend_array.push({ bone_index: -1, weight: 0 });
+					}
+				});
+				var vertex_blend_bone_index = attachment_info.vertex_blend_bone_index = new Float32Array(8 * setup_blend_arrays.length);
+				var vertex_blend_weight = attachment_info.vertex_blend_weight = new Float32Array(8 * setup_blend_arrays.length);
+				var blend_index = 0;
+				setup_blend_arrays.forEach(function (blend_array)
+				{
+					blend_array.forEach(function (blend, index)
+					{
+						vertex_blend_bone_index[blend_index] = (blend.bone_index > 0)?(blend_bone_index_array.indexOf(blend.bone_index)):(0);
+						vertex_blend_weight[blend_index] = blend.weight;
+						blend_index++;
+					});
+				});
 				if (gl)
 				{
 					var gl_vertex = attachment_info.gl_vertex = {};
-					gl_vertex.setup_position = glMakeVertex(gl, setup_positions, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-					gl_vertex.blend_position = glMakeVertex(gl, blend_positions, 2, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
-					gl_vertex.texcoord = glMakeVertex(gl, texcoords, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-					gl_vertex.triangle = glMakeVertex(gl, triangles, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.setup_position = glMakeVertex(gl, vertex_setup_position, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.blend_position = glMakeVertex(gl, vertex_blend_position, 2, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
+					gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.blend_bone_index = glMakeVertex(gl, vertex_blend_bone_index, 4, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+					gl_vertex.blend_weight = glMakeVertex(gl, vertex_blend_weight, 4, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				}
 				break;
 			}
@@ -308,7 +402,7 @@ main.start = function ()
 				break;
 			case 'skinnedmesh':
 				var attachment_info = attachment_info_map[attachment_key];
-				var blend_positions = attachment_info.blend_positions;
+				var vertex_blend_position = attachment_info.vertex_blend_position;
 				var position = new spine.Vector();
 				var blend_position = new spine.Vector();
 				for (var i = 0, blend_position_i = 0; i < attachment.vertices.length; )
@@ -328,8 +422,8 @@ main.start = function ()
 						blend_position.x += position.x * weight;
 						blend_position.y += position.y * weight;
 					}
-					blend_positions[blend_position_i++] = blend_position.x;
-					blend_positions[blend_position_i++] = blend_position.y;
+					vertex_blend_position[blend_position_i++] = blend_position.x;
+					vertex_blend_position[blend_position_i++] = blend_position.y;
 				}
 				if (gl)
 				{
@@ -367,6 +461,265 @@ main.start = function ()
 			mat3x3Scale(gl_projection, camera_zoom, camera_zoom);
 		}
 
+		if (gl)
+		{
+			pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
+			{
+				if (!attachment) { return; }
+				if (attachment.type === 'boundingbox') { return; }
+
+				var image = null;
+				var w = 0, h = 0;
+				var tx = 0, tw = 0;
+				var ty = 0, th = 0;
+				var gl_texture = null;
+				if (atlas)
+				{
+					var site = atlas.sites[attachment_key];
+					var page = atlas.pages[site.page];
+					var image_key = page.name;
+					image = images[image_key];
+					w = page.w; h = page.h;
+					tx = site.x; tw = site.w;
+					ty = site.y; th = site.h;
+					gl_texture = gl_textures[image_key];
+				}
+				else
+				{
+					var image_key = attachment_key;
+					image = images[image_key];
+					if (image && image.complete)
+					{
+						w = tw = image.width;
+						h = th = image.height;
+					}
+					gl_texture = gl_textures[image_key];
+				}
+
+				if (image && image.complete && gl_texture)
+				{
+					mat3x3Identity(gl_modelview);
+
+					mat3x3Identity(gl_tex_matrix);
+					mat3x3Scale(gl_tex_matrix, 1 / w, 1 / h);
+					mat3x3Translate(gl_tex_matrix, tx, ty);
+					mat3x3Scale(gl_tex_matrix, tw, th);
+
+					vec4ApplyColor(gl_color, slot.color);
+
+					gl.enable(gl.BLEND);
+					switch (slot.blend)
+					{
+					default:
+					case 'normal':
+						gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+						break;
+					case 'additive':
+						gl.blendFunc(gl.ONE, gl.ONE);
+						break;
+					case 'multiply':
+						gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+						break;
+					case 'screen':
+						gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+						break;
+					}
+
+					switch (attachment.type)
+					{
+					case 'region':
+						mat3x3ApplySpace(gl_modelview, attachment.world_space);
+						mat3x3Scale(gl_modelview, attachment.width/2, attachment.height/2);
+						var gl_shader = gl_mesh_shader;
+						gl.useProgram(gl_shader.program);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+						gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+						gl.activeTexture(gl.TEXTURE0);
+						gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+						gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+						var gl_vertex = gl_region_vertex;
+						gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
+						gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
+						gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
+						gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+						gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+						gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+						gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+						gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+						break;
+					case 'mesh':
+						var attachment_info = attachment_info_map[attachment_key];
+						var bone = pose.bones[slot.bone_key];
+						mat3x3ApplySpace(gl_modelview, bone.world_space);
+						var gl_shader = gl_mesh_shader;
+						gl.useProgram(gl_shader.program);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+						gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+						gl.activeTexture(gl.TEXTURE0);
+						gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+						gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+						var gl_vertex = attachment_info.gl_vertex;
+						gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
+						gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
+						gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
+						gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+						gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+						gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+						gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+						gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+						break;
+					case 'skinnedmesh':
+						var attachment_info = attachment_info_map[attachment_key];
+						var gl_shader = gl_mesh_shader;
+						gl.useProgram(gl_shader.program);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
+						gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+						gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+						gl.activeTexture(gl.TEXTURE0);
+						gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+						gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+						var gl_vertex = attachment_info.gl_vertex;
+						gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.blend_position.buffer);
+						gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.blend_position.size, gl_vertex.blend_position.type, false, 0, 0);
+						gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
+						gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+						gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+						gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+						gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+						gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+
+						if (render_debug_pose)
+						{
+							// update skin shader blend matrix array
+							var blend_bone_index_array = attachment_info.blend_bone_index_array;
+							for (var i = 0; i < blend_bone_index_array.length; ++i)
+							{
+								var bone_index = blend_bone_index_array[i];
+								var bone_key = pose.bone_keys[bone_index];
+								var bone_info = bone_info_map[bone_key];
+								if (i < gl_skin_shader_max_blend_matrix_array_length)
+								{
+									var blend_matrix = gl_skin_shader_blend_matrix_array.subarray(i * 9, (i + 1) * 9);
+									mat3x3Identity(blend_matrix);
+									mat3x3ApplySpace(blend_matrix, bone_info.blend_space);
+								}
+							}
+
+							var gl_shader = gl_skin_shader;
+							gl.useProgram(gl_shader.program);
+							gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+							gl.uniformMatrix3fv(gl_shader.uniforms['uBlendMatrixArray[0]'], false, gl_skin_shader_blend_matrix_array);
+							gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+							gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+							gl.activeTexture(gl.TEXTURE0);
+							gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+							gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+							var gl_vertex = attachment_info.gl_vertex;
+							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.setup_position.buffer);
+							gl.vertexAttribPointer(gl_shader.attribs['aVertexSetupPosition'], gl_vertex.setup_position.size, gl_vertex.setup_position.type, false, 0, 0);
+							gl.enableVertexAttribArray(gl_shader.attribs['aVertexSetupPosition']);
+							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+							gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+							gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.blend_bone_index.buffer);
+							gl.vertexAttribPointer(gl_shader.attribs['aVertexBlendIndex0'], gl_vertex.blend_bone_index.size, gl_vertex.blend_bone_index.type, false, 32, 0);
+							gl.enableVertexAttribArray(gl_shader.attribs['aVertexBlendIndex0']);
+							gl.vertexAttribPointer(gl_shader.attribs['aVertexBlendIndex1'], gl_vertex.blend_bone_index.size, gl_vertex.blend_bone_index.type, false, 32, 16);
+							gl.enableVertexAttribArray(gl_shader.attribs['aVertexBlendIndex1']);
+							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.blend_weight.buffer);
+							gl.vertexAttribPointer(gl_shader.attribs['aVertexBlendWeight0'], gl_vertex.blend_weight.size, gl_vertex.blend_weight.type, false, 32, 0);
+							gl.enableVertexAttribArray(gl_shader.attribs['aVertexBlendWeight0']);
+							gl.vertexAttribPointer(gl_shader.attribs['aVertexBlendWeight1'], gl_vertex.blend_weight.size, gl_vertex.blend_weight.type, false, 32, 16);
+							gl.enableVertexAttribArray(gl_shader.attribs['aVertexBlendWeight1']);
+							gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+							gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+						}
+						break;
+					}
+				}
+			});
+		}
+		else if (ctx)
+		{
+			pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
+			{
+				if (!attachment) { return; }
+				if (attachment.type === 'boundingbox') { return; }
+
+				var image = null;
+				var tx = 0, tw = 0;
+				var ty = 0, th = 0;
+				if (atlas)
+				{
+					var site = atlas.sites[attachment_key];
+					var page = atlas.pages[site.page];
+					var image_key = page.name;
+					image = images[image_key];
+					tx = site.x; tw = site.w;
+					ty = site.y; th = site.h;
+				}
+				else
+				{
+					var image_key = attachment_key;
+					image = images[image_key];
+					if (image && image.complete)
+					{
+						tw = image.width;
+						th = image.height;
+					}
+				}
+
+				if (image && image.complete)
+				{
+					ctx.save();
+
+					switch (slot.blend)
+					{
+					default:
+					case 'normal':
+						ctx.globalCompositeOperation = 'source-over';
+						break;
+					case 'additive':
+						ctx.globalCompositeOperation = 'lighter';
+						break;
+					case 'multiply':
+						ctx.globalCompositeOperation = 'multiply';
+						break;
+					case 'screen':
+						ctx.globalCompositeOperation = 'screen';
+						break;
+					}
+
+					switch (attachment.type)
+					{
+					case 'region':
+						applySpace(ctx, attachment.world_space);
+						var w = attachment.width;
+						var h = attachment.height;
+						ctx.scale(1, -1); ctx.drawImage(image, tx, ty, tw, th, -w/2, -h/2, w, h);
+						break;
+					case 'mesh':
+						var attachment_info = attachment_info_map[attachment_key];
+						var bone = pose.bones[slot.bone_key];
+						applySpace(ctx, bone.world_space);
+						drawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, attachment_info.vertex_texcoord, image, tx, ty, tw, th);
+						break;
+					case 'skinnedmesh':
+						var attachment_info = attachment_info_map[attachment_key];
+						drawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_blend_position, attachment_info.vertex_texcoord, image, tx, ty, tw, th);
+						break;
+					}
+
+					ctx.restore();
+				}
+			});
+		}
+
 		if (render_debug_data)
 		{
 			if (ctx)
@@ -380,7 +733,9 @@ main.start = function ()
 					switch (attachment.type)
 					{
 					case 'region':
-						applySpace(ctx, attachment.world_space);
+						var bone = data.bones[slot.bone_key];
+						applySpace(ctx, bone.world_space);
+						applySpace(ctx, attachment.local_space);
 						var w = attachment.width;
 						var h = attachment.height;
 						ctx.fillStyle = 'rgba(127,127,127,0.25)';
@@ -405,11 +760,11 @@ main.start = function ()
 						var attachment_info = attachment_info_map[attachment_key];
 						var bone = data.bones[slot.bone_key];
 						applySpace(ctx, bone.world_space);
-						drawMesh(ctx, attachment_info.triangles, attachment_info.positions, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+						drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					case 'skinnedmesh':
 						var attachment_info = attachment_info_map[attachment_key];
-						drawMesh(ctx, attachment_info.triangles, attachment_info.setup_positions, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+						drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_setup_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					}
 
@@ -463,13 +818,14 @@ main.start = function ()
 						ctx.stroke();
 						break;
 					case 'mesh':
+						var attachment_info = attachment_info_map[attachment_key];
 						var bone = pose.bones[slot.bone_key];
 						applySpace(ctx, bone.world_space);
-						drawMesh(ctx, attachment.triangles, attachment.vertices, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+						drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					case 'skinnedmesh':
 						var attachment_info = attachment_info_map[attachment_key];
-						drawMesh(ctx, attachment_info.triangles, attachment_info.blend_positions, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+						drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_blend_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					}
 
@@ -485,220 +841,6 @@ main.start = function ()
 				});
 
 				drawIkConstraints(ctx, data, pose.bones);
-			}
-		}
-		else
-		{
-			if (gl)
-			{
-				pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
-				{
-					if (!attachment) { return; }
-					if (attachment.type === 'boundingbox') { return; }
-
-					var image = null;
-					var w = 0, h = 0;
-					var tx = 0, tw = 0;
-					var ty = 0, th = 0;
-					var gl_texture = null;
-					if (atlas)
-					{
-						var site = atlas.sites[attachment_key];
-						var page = atlas.pages[site.page];
-						var image_key = page.name;
-						image = images[image_key];
-						w = page.w; h = page.h;
-						tx = site.x; tw = site.w;
-						ty = site.y; th = site.h;
-						gl_texture = gl_textures[image_key];
-					}
-					else
-					{
-						var image_key = attachment_key;
-						image = images[image_key];
-						if (image && image.complete)
-						{
-							w = tw = image.width;
-							h = th = image.height;
-						}
-						gl_texture = gl_textures[image_key];
-					}
-
-					if (image && image.complete && gl_texture)
-					{
-						mat3x3Identity(gl_modelview);
-
-						mat3x3Identity(gl_tex_matrix);
-						mat3x3Scale(gl_tex_matrix, 1 / w, 1 / h);
-						mat3x3Translate(gl_tex_matrix, tx, ty);
-						mat3x3Scale(gl_tex_matrix, tw, th);
-
-						vec4ApplyColor(gl_color, slot.color);
-
-						gl.enable(gl.BLEND);
-						switch (slot.blend)
-						{
-						default:
-						case 'normal':
-							gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-							break;
-						case 'additive':
-							gl.blendFunc(gl.ONE, gl.ONE);
-							break;
-						case 'multiply':
-							gl.blendFunc(gl.DST_COLOR, gl.ZERO);
-							break;
-						case 'screen':
-							gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
-							break;
-						}
-
-						switch (attachment.type)
-						{
-						case 'region':
-							mat3x3ApplySpace(gl_modelview, attachment.world_space);
-							mat3x3Scale(gl_modelview, attachment.width/2, attachment.height/2);
-							var gl_shader = gl_mesh_shader;
-							gl.useProgram(gl_shader.program);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
-							gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-							gl.activeTexture(gl.TEXTURE0);
-							gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-							gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
-							var gl_vertex = gl_region_vertex;
-							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
-							gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
-							gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
-							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
-							gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
-							gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-							gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-							gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-							break;
-						case 'mesh':
-							var attachment_info = attachment_info_map[attachment_key];
-							var bone = pose.bones[slot.bone_key];
-							mat3x3ApplySpace(gl_modelview, bone.world_space);
-							var gl_shader = gl_mesh_shader;
-							gl.useProgram(gl_shader.program);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
-							gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-							gl.activeTexture(gl.TEXTURE0);
-							gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-							gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
-							var gl_vertex = attachment_info.gl_vertex;
-							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
-							gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
-							gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
-							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
-							gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
-							gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-							gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-							gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-							break;
-						case 'skinnedmesh':
-							var attachment_info = attachment_info_map[attachment_key];
-							var gl_shader = gl_mesh_shader;
-							gl.useProgram(gl_shader.program);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
-							gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
-							gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-							gl.activeTexture(gl.TEXTURE0);
-							gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-							gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
-							var gl_vertex = attachment_info.gl_vertex;
-							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.blend_position.buffer);
-							gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.blend_position.size, gl_vertex.blend_position.type, false, 0, 0);
-							gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
-							gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
-							gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
-							gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-							gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-							gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-							break;
-						}
-					}
-				});
-			}
-			else if (ctx)
-			{
-				pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
-				{
-					if (!attachment) { return; }
-					if (attachment.type === 'boundingbox') { return; }
-
-					var image = null;
-					var tx = 0, tw = 0;
-					var ty = 0, th = 0;
-					if (atlas)
-					{
-						var site = atlas.sites[attachment_key];
-						var page = atlas.pages[site.page];
-						var image_key = page.name;
-						image = images[image_key];
-						tx = site.x; tw = site.w;
-						ty = site.y; th = site.h;
-					}
-					else
-					{
-						var image_key = attachment_key;
-						image = images[image_key];
-						if (image && image.complete)
-						{
-							tw = image.width;
-							th = image.height;
-						}
-					}
-
-					if (image && image.complete)
-					{
-						ctx.save();
-
-						switch (slot.blend)
-						{
-						default:
-						case 'normal':
-							ctx.globalCompositeOperation = 'source-over';
-							break;
-						case 'additive':
-							ctx.globalCompositeOperation = 'lighter';
-							break;
-						case 'multiply':
-							ctx.globalCompositeOperation = 'multiply';
-							break;
-						case 'screen':
-							ctx.globalCompositeOperation = 'screen';
-							break;
-						}
-
-						switch (attachment.type)
-						{
-						case 'region':
-							applySpace(ctx, attachment.world_space);
-							var w = attachment.width;
-							var h = attachment.height;
-							ctx.scale(1, -1); ctx.drawImage(image, tx, ty, tw, th, -w/2, -h/2, w, h);
-							break;
-						case 'mesh':
-							var attachment_info = attachment_info_map[attachment_key];
-							var bone = pose.bones[slot.bone_key];
-							applySpace(ctx, bone.world_space);
-							drawImageMesh(ctx, attachment_info.triangles, attachment_info.positions, attachment_info.texcoords, image, tx, ty, tw, th);
-							break;
-						case 'skinnedmesh':
-							var attachment_info = attachment_info_map[attachment_key];
-							drawImageMesh(ctx, attachment_info.triangles, attachment_info.blend_positions, attachment_info.texcoords, image, tx, ty, tw, th);
-							break;
-						}
-
-						ctx.restore();
-					}
-				});
 			}
 		}
 	}
@@ -962,7 +1104,7 @@ function glCompileShader (gl, src, type)
 	gl.compileShader(shader);
 	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
 	{
-		console.log(src);
+		src.forEach(function (line, index) { console.log(index + 1, line); });
 		console.log(gl.getShaderInfoLog(shader));
 		gl.deleteShader(shader);
 		shader = null;
@@ -1037,7 +1179,9 @@ function glMakeVertex (gl, type_array, size, buffer_type, buffer_draw)
 	vertex.count = type_array.length / vertex.size;
 	vertex.type_array = type_array;
 	vertex.buffer = gl.createBuffer();
-	gl.bindBuffer(buffer_type, vertex.buffer);
-	gl.bufferData(buffer_type, vertex.type_array, buffer_draw);
+	vertex.buffer_type = buffer_type;
+	vertex.buffer_draw = buffer_draw;
+	gl.bindBuffer(vertex.buffer_type, vertex.buffer);
+	gl.bufferData(vertex.buffer_type, vertex.type_array, vertex.buffer_draw);
 	return vertex;
 }
