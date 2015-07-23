@@ -2805,6 +2805,16 @@ spine.Pose.prototype.curAnim = function ()
 }
 
 /**
+ * @return {number}
+ */
+spine.Pose.prototype.curAnimLength = function ()
+{
+	var pose = this;
+	var anim = pose.curAnim();
+	return (anim && anim.length) || 0;
+}
+
+/**
  * @return {string}
  */
 spine.Pose.prototype.getAnim = function ()
