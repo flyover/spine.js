@@ -259,10 +259,6 @@ main.start = function ()
 		
 			data.load(json);
 		
-			pose.setSkin(data.skin_keys[0]);
-		
-			pose.setAnim(data.anim_keys[0]);
-
 			data.iterateSkins(function (skin_key, skin)
 			{
 				var skin_info = skin_info_map[skin_key] = {};
@@ -407,9 +403,6 @@ main.start = function ()
 					// load attachment images
 					data.iterateSkins(function (skin_key, skin)
 					{
-						var skin_info = skin_info_map[skin_key];
-						var slot_info_map = skin_info.slot_info_map;
-
 						data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
 						{
 							if (!attachment) { return; }
@@ -482,7 +475,14 @@ main.start = function ()
 
 	var file = files[file_index];
 	messages.innerHTML = "loading";
-	loading = true; loadFile(file, function () { loading = false; });
+	loading = true; loadFile(file, function ()
+	{
+		loading = false;
+		pose.setSkin(data.skin_keys[skin_index = 0]);
+		pose.setAnim(data.anim_keys[anim_index = 0]);
+		pose.setTime(anim_time = 0);
+		anim_length = pose.curAnimLength() || 1000;
+	});
 
 	var prev_time = 0;
 
@@ -506,22 +506,30 @@ main.start = function ()
 					if (++skin_index >= data.skin_keys.length)
 					{
 						skin_index = 0;
-						if (++file_index >= files.length)
+						if (files.length > 1)
 						{
-							file_index = 0;
+							if (++file_index >= files.length)
+							{
+								file_index = 0;
+							}
+							file = files[file_index];
+							messages.innerHTML = "loading";
+							loading = true; loadFile(file, function ()
+							{
+								loading = false;
+								pose.setSkin(data.skin_keys[skin_index = 0]);
+								pose.setAnim(data.anim_keys[anim_index = 0]);
+								pose.setTime(anim_time = 0);
+								anim_length = pose.curAnimLength() || 1000;
+							});
+							return;
 						}
-						file = files[file_index];
-						messages.innerHTML = "loading";
-						loading = true; loadFile(file, function () { loading = false; });
-						return;
 					}
 					pose.setSkin(data.skin_keys[skin_index]);
 				}
 				pose.setAnim(data.anim_keys[anim_index]);
-				pose.setTime(0);
-				anim_time = 0;
-				var anim = pose.curAnim();
-				anim_length = (anim && anim.length) || 1000;
+				pose.setTime(anim_time = 0);
+				anim_length = pose.curAnimLength() || 1000;
 			}
 
 			messages.innerHTML = "skin: " + pose.skin_key + ", anim: " + pose.anim_key + "<br>" + file.path + file.json_url;
@@ -565,7 +573,8 @@ main.start = function ()
 				if (attachment.type !== 'skinnedmesh') { return; }
 
 				var skin_info = skin_info_map[pose.skin_key];
-				var slot_info = skin_info.slot_info_map[slot_key];
+				var slot_info_map = skin_info.slot_info_map;
+				var slot_info = slot_info_map[slot_key];
 				var vertex_blend_position = slot_info.vertex_blend_position;
 				var position = new spine.Vector();
 				for (var i = 0, vertex_i = 0; i < attachment.vertices.length; ++vertex_i)
@@ -601,35 +610,24 @@ main.start = function ()
 				if (attachment.type === 'boundingbox') { return; }
 
 				var image = null;
-				var w = 0, h = 0;
-				var tx = 0, tw = 0;
-				var ty = 0, th = 0;
-				var rotate = false;
+				var site = atlas && atlas.sites[attachment_key];
 				var gl_texture = null;
-				if (atlas)
+				if (site)
 				{
-					var site = atlas.sites[attachment_key];
-					//if (site)
+					var page = atlas.pages[site.page];
+					var image_key = page.name;
+					image = images[image_key];
+					if (image && image.complete)
 					{
-						var page = atlas.pages[site.page];
-						var image_key = page.name;
-						image = images[image_key];
-						w = page.w || image.width; h = page.h || image.height;
-						tx = site.x; tw = site.w;
-						ty = site.y; th = site.h;
-						rotate = site.rotate;
-						gl_texture = gl_textures[image_key];
+						page.w = page.w || image.width;
+						page.h = page.h || image.height;
 					}
+					gl_texture = gl_textures[image_key];
 				}
 				else
 				{
 					var image_key = attachment_key;
 					image = images[image_key];
-					if (image && image.complete)
-					{
-						w = tw = image.width;
-						h = th = image.height;
-					}
 					gl_texture = gl_textures[image_key];
 				}
 
@@ -637,21 +635,28 @@ main.start = function ()
 				{
 					mat3x3Identity(gl_modelview);
 
-					if (rotate)
+					if (site)
 					{
-						mat3x3Identity(gl_tex_matrix);
-						mat3x3Scale(gl_tex_matrix, 1 / w, 1 / h);
-						mat3x3Translate(gl_tex_matrix, tx, ty);
-						mat3x3Scale(gl_tex_matrix, th, tw);
-						mat3x3Translate(gl_tex_matrix, 0, 1); // bottom-left corner
-						mat3x3Rotate(gl_tex_matrix, -Math.PI/2); // -90 degrees
+						if (site.rotate)
+						{
+							mat3x3Identity(gl_tex_matrix);
+							mat3x3Scale(gl_tex_matrix, 1 / page.w, 1 / page.h);
+							mat3x3Translate(gl_tex_matrix, site.x, site.y);
+							mat3x3Scale(gl_tex_matrix, site.h, site.w);
+							mat3x3Translate(gl_tex_matrix, 0, 1); // bottom-left corner
+							mat3x3Rotate(gl_tex_matrix, -Math.PI/2); // -90 degrees
+						}
+						else
+						{
+							mat3x3Identity(gl_tex_matrix);
+							mat3x3Scale(gl_tex_matrix, 1 / page.w, 1 / page.h);
+							mat3x3Translate(gl_tex_matrix, site.x, site.y);
+							mat3x3Scale(gl_tex_matrix, site.w, site.h);
+						}
 					}
 					else
 					{
 						mat3x3Identity(gl_tex_matrix);
-						mat3x3Scale(gl_tex_matrix, 1 / w, 1 / h);
-						mat3x3Translate(gl_tex_matrix, tx, ty);
-						mat3x3Scale(gl_tex_matrix, tw, th);
 					}
 
 					vec4ApplyColor(gl_color, slot.color);
@@ -679,6 +684,12 @@ main.start = function ()
 					case 'region':
 						mat3x3ApplySpace(gl_modelview, attachment.world_space);
 						mat3x3Scale(gl_modelview, attachment.width/2, attachment.height/2);
+						if (site)
+						{
+							mat3x3Scale(gl_modelview, 1 / site.original_w, 1 / site.original_h);
+							mat3x3Translate(gl_modelview, site.offset_x, site.offset_y);
+							mat3x3Scale(gl_modelview, site.w, site.h);
+						}
 
 						var gl_shader = gl_mesh_shader;
 						var gl_vertex = gl_region_vertex;
@@ -716,9 +727,16 @@ main.start = function ()
 						break;
 					case 'mesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
 						var bone = pose.bones[slot.bone_key];
 						mat3x3ApplySpace(gl_modelview, bone.world_space);
+						if (site)
+						{
+							mat3x3Scale(gl_modelview, 1 / site.original_w, 1 / site.original_h);
+							mat3x3Translate(gl_modelview, site.offset_x, site.offset_y);
+							mat3x3Scale(gl_modelview, site.w, site.h);
+						}
 						
 						var gl_shader = gl_mesh_shader;
 						var gl_vertex = slot_info.gl_vertex;
@@ -758,7 +776,8 @@ main.start = function ()
 						break;
 					case 'skinnedmesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
 						// update skin shader modelview array
 						var blend_bone_index_array = slot_info.blend_bone_index_array;
 						for (var i = 0; i < blend_bone_index_array.length; ++i)
@@ -771,6 +790,12 @@ main.start = function ()
 								var modelview = gl_skin_shader_modelview_array.subarray(i * 9, (i + 1) * 9);
 								mat3x3Copy(modelview, gl_modelview);
 								mat3x3ApplySpace(modelview, bone.world_space);
+								if (site)
+								{
+									mat3x3Scale(gl_modelview, 1 / site.original_w, 1 / site.original_h);
+									mat3x3Translate(gl_modelview, site.offset_x, site.offset_y);
+									mat3x3Scale(gl_modelview, site.w, site.h);
+								}
 							}
 						}
 						var gl_shader = gl_skin_shader;
@@ -830,31 +855,22 @@ main.start = function ()
 				if (attachment.type === 'boundingbox') { return; }
 
 				var image = null;
-				var tx = 0, tw = 0;
-				var ty = 0, th = 0;
-				var rotate = false;
-				if (atlas)
+				var site = atlas && atlas.sites[attachment_key];
+				if (site)
 				{
-					var site = atlas.sites[attachment_key];
-					//if (site)
+					var page = atlas.pages[site.page];
+					var image_key = page.name;
+					image = images[image_key];
+					if (image && image.complete)
 					{
-						var page = atlas.pages[site.page];
-						var image_key = page.name;
-						image = images[image_key];
-						tx = site.x; tw = site.w;
-						ty = site.y; th = site.h;
-						rotate = site.rotate;
+						page.w = page.w || image.width;
+						page.h = page.h || image.height;
 					}
 				}
 				else
 				{
 					var image_key = attachment_key;
 					image = images[image_key];
-					if (image && image.complete)
-					{
-						tw = image.width;
-						th = image.height;
-					}
 				}
 
 				if (image && image.complete)
@@ -883,19 +899,21 @@ main.start = function ()
 					case 'region':
 						applySpace(ctx, attachment.world_space);
 						ctx.scale(attachment.width/2, attachment.height/2);
-						drawImageMesh(ctx, region_vertex_triangle, region_vertex_position, region_vertex_texcoord, image, tx, ty, tw, th, rotate);
+						drawImageMesh(ctx, region_vertex_triangle, region_vertex_position, region_vertex_texcoord, image, site);
 						break;
 					case 'mesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
 						var bone = pose.bones[slot.bone_key];
 						applySpace(ctx, bone.world_space);
-						drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, slot_info.vertex_texcoord, image, tx, ty, tw, th, rotate);
+						drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, slot_info.vertex_texcoord, image, site);
 						break;
 					case 'skinnedmesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
-						drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, slot_info.vertex_texcoord, image, tx, ty, tw, th, rotate);
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
+						drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, slot_info.vertex_texcoord, image, site);
 						break;
 					}
 
@@ -942,14 +960,16 @@ main.start = function ()
 						break;
 					case 'mesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
 						var bone = data.bones[slot.bone_key];
 						applySpace(ctx, bone.world_space);
 						drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					case 'skinnedmesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
 						drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_setup_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					}
@@ -1005,14 +1025,16 @@ main.start = function ()
 						break;
 					case 'mesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
 						var bone = pose.bones[slot.bone_key];
 						applySpace(ctx, bone.world_space);
 						drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					case 'skinnedmesh':
 						var skin_info = skin_info_map[pose.skin_key];
-						var slot_info = skin_info.slot_info_map[slot_key];
+						var slot_info_map = skin_info.slot_info_map;
+						var slot_info = slot_info_map[slot_key];
 						drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 						break;
 					}
@@ -1133,24 +1155,27 @@ function drawMesh(ctx, triangles, positions, stroke_style, fill_style)
 	ctx.stroke();
 }
 
-function drawImageMesh(ctx, triangles, positions, texcoords, image, tx, ty, tw, th, rotate)
+function drawImageMesh(ctx, triangles, positions, texcoords, image, site)
 {
-	var tex_matrix = new Float32Array(9);
-	var texcoord = new Float32Array(2);
+	if (site)
+	{
+		var tex_matrix = new Float32Array(9);
+		var site_texcoord = new Float32Array(2);
 
-	if (rotate)
-	{
-		mat3x3Identity(tex_matrix);
-		mat3x3Translate(tex_matrix, tx, ty);
-		mat3x3Scale(tex_matrix, th, tw);
-		mat3x3Translate(tex_matrix, 0, 1); // bottom-left corner
-		mat3x3Rotate(tex_matrix, -Math.PI/2); // -90 degrees
-	}
-	else
-	{
-		mat3x3Identity(tex_matrix);
-		mat3x3Translate(tex_matrix, tx, ty);
-		mat3x3Scale(tex_matrix, tw, th);
+		if (site.rotate)
+		{
+			mat3x3Identity(tex_matrix);
+			mat3x3Translate(tex_matrix, site.x, site.y);
+			mat3x3Scale(tex_matrix, site.h, site.w);
+			mat3x3Translate(tex_matrix, 0, 1); // bottom-left corner
+			mat3x3Rotate(tex_matrix, -Math.PI/2); // -90 degrees
+		}
+		else
+		{
+			mat3x3Identity(tex_matrix);
+			mat3x3Translate(tex_matrix, site.x, site.y);
+			mat3x3Scale(tex_matrix, site.w, site.h);
+		}
 	}
 
 	/// http://www.irrlicht3d.org/pivot/entry.php?id=1329
@@ -1159,19 +1184,22 @@ function drawImageMesh(ctx, triangles, positions, texcoords, image, tx, ty, tw, 
 		var triangle = triangles[i++]*2;
 		var position = positions.subarray(triangle, triangle+2);
 		var x0 = position[0], y0 = position[1];
-		mat3x3Transform(tex_matrix, texcoords.subarray(triangle, triangle+2), texcoord);
+		var texcoord = texcoords.subarray(triangle, triangle+2);
+		if (site) { texcoord = mat3x3Transform(tex_matrix, texcoord, site_texcoord); }
 		var u0 = texcoord[0], v0 = texcoord[1];
 
 		var triangle = triangles[i++]*2;
 		var position = positions.subarray(triangle, triangle+2);
 		var x1 = position[0], y1 = position[1];
-		mat3x3Transform(tex_matrix, texcoords.subarray(triangle, triangle+2), texcoord);
+		var texcoord = texcoords.subarray(triangle, triangle+2);
+		if (site) { texcoord = mat3x3Transform(tex_matrix, texcoord, site_texcoord); }
 		var u1 = texcoord[0], v1 = texcoord[1];
 
 		var triangle = triangles[i++]*2;
 		var position = positions.subarray(triangle, triangle+2);
 		var x2 = position[0], y2 = position[1];
-		mat3x3Transform(tex_matrix, texcoords.subarray(triangle, triangle+2), texcoord);
+		var texcoord = texcoords.subarray(triangle, triangle+2);
+		if (site) { texcoord = mat3x3Transform(tex_matrix, texcoord, site_texcoord); }
 		var u2 = texcoord[0], v2 = texcoord[1];
 
 		ctx.save();
