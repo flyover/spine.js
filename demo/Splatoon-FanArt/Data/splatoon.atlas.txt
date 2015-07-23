@@ -1,0 +1,132 @@
+
+splatoon.png
+size: 255,529
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+arm_1
+  rotate: true
+  xy: 209, 260
+  size: 88, 39
+  orig: 88, 39
+  offset: 0, 0
+  index: -1
+back_arm
+  rotate: false
+  xy: 133, 213
+  size: 74, 135
+  orig: 74, 135
+  offset: 0, 0
+  index: -1
+back_hand_1
+  rotate: false
+  xy: 205, 68
+  size: 28, 55
+  orig: 28, 55
+  offset: 0, 0
+  index: -1
+back_tank
+  rotate: false
+  xy: 145, 125
+  size: 85, 86
+  orig: 85, 86
+  offset: 0, 0
+  index: -1
+body
+  rotate: false
+  xy: 143, 350
+  size: 101, 105
+  orig: 101, 105
+  offset: 0, 0
+  index: -1
+foot_1
+  rotate: false
+  xy: 143, 457
+  size: 110, 70
+  orig: 110, 70
+  offset: 0, 0
+  index: -1
+forearm_1
+  rotate: false
+  xy: 112, 116
+  size: 31, 87
+  orig: 31, 87
+  offset: 0, 0
+  index: -1
+front_hand_1
+  rotate: false
+  xy: 108, 24
+  size: 50, 54
+  orig: 50, 54
+  offset: 0, 0
+  index: -1
+gun
+  rotate: false
+  xy: 2, 350
+  size: 139, 177
+  orig: 139, 177
+  offset: 0, 0
+  index: -1
+hair_1
+  rotate: false
+  xy: 2, 3
+  size: 104, 78
+  orig: 104, 78
+  offset: 0, 0
+  index: -1
+hair_boop_1
+  rotate: false
+  xy: 236, 215
+  size: 15, 43
+  orig: 15, 43
+  offset: 0, 0
+  index: -1
+hair_boop_2
+  rotate: false
+  xy: 112, 95
+  size: 18, 19
+  orig: 18, 19
+  offset: 0, 0
+  index: -1
+head
+  rotate: false
+  xy: 2, 83
+  size: 108, 120
+  orig: 108, 120
+  offset: 0, 0
+  index: -1
+leg_1
+  rotate: true
+  xy: 2, 205
+  size: 143, 129
+  orig: 143, 129
+  offset: 0, 0
+  index: -1
+neck
+  rotate: true
+  xy: 160, 31
+  size: 47, 39
+  orig: 47, 39
+  offset: 0, 0
+  index: -1
+pelvis
+  rotate: false
+  xy: 145, 80
+  size: 58, 43
+  orig: 58, 43
+  offset: 0, 0
+  index: -1
+shoulder_strap
+  rotate: false
+  xy: 209, 218
+  size: 25, 40
+  orig: 25, 40
+  offset: 0, 0
+  index: -1
+wrist_strap
+  rotate: false
+  xy: 108, 2
+  size: 30, 20
+  orig: 30, 20
+  offset: 0, 0
+  index: -1
