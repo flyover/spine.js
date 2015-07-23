@@ -206,7 +206,6 @@ spine.Atlas.prototype.import = function (text)
 	atlas.sites = {};
 
 	function trim (s) { return s.replace(/^\s+|\s+$/g, ""); }
-	function next_pow2 (n) { var pow2 = 1; while (pow2 < n) { pow2 <<= 1; } return pow2; }
 
 	var page = null;
 	var site = null;
@@ -214,29 +213,17 @@ spine.Atlas.prototype.import = function (text)
 	var lines = text.split(/\n|\r\n/);
 	var match = null;
 
-	var extent_x = 0;
-	var extent_y = 0;
-
 	lines.forEach(function (line)
 	{
 		if (trim(line).length === 0)
 		{
-			if (page)
-			{
-				if (page.w === 0) { page.w = next_pow2(extent_x); }
-				if (page.h === 0) { page.h = next_pow2(extent_y); }
-			}
-			extent_x = 0;
-			extent_y = 0;
 			page = null;
 			site = null;
 		}
 		else if (match = line.match(/^size: (.*),(.*)$/))
 		{
-			var size_x = parseInt(match[1], 10);
-			var size_y = parseInt(match[2], 10);
-			page.w = next_pow2(size_x);
-			page.h = next_pow2(size_y);
+			page.w = parseInt(match[1], 10);
+			page.h = parseInt(match[2], 10);
 		}
 		else if (match = line.match(/^format: (.*)$/))
 		{
@@ -296,23 +283,12 @@ spine.Atlas.prototype.import = function (text)
 			}
 			else
 			{
-				if (site)
-				{
-					extent_x = Math.max(extent_x, site.x + site.w);
-					extent_y = Math.max(extent_y, site.y + site.h);
-				}
 				site = new spine.AtlasSite();
 				site.page = atlas.pages.length - 1;
 				atlas.sites[line] = site;
 			}
 		}
 	});
-
-	if (page)
-	{
-		if (page.w === 0) { page.w = next_pow2(extent_x); }
-		if (page.h === 0) { page.h = next_pow2(extent_y); }
-	}
 
 	return atlas;
 }
@@ -1325,6 +1301,8 @@ spine.Attachment = function (type)
 spine.Attachment.prototype.type = "region";
 /** @type {string} */
 spine.Attachment.prototype.name = "";
+/** @type {string} */
+spine.Attachment.prototype.path = "";
 
 /**
  * @return {spine.Attachment} 
@@ -1339,6 +1317,7 @@ spine.Attachment.prototype.load = function (json)
 		throw new Error();
 	}
 	attachment.name = spine.loadString(json, 'name', "");
+	attachment.path = spine.loadString(json, 'path', "");
 	return attachment;
 }
 
@@ -1620,7 +1599,7 @@ spine.Skin.prototype.iterateAttachments = function (callback)
 		for (var attachment_key in skin_slot.attachments)
 		{
 			var attachment = skin_slot.attachments[attachment_key];
-			callback(slot_key, skin_slot, attachment_key, attachment);
+			callback(slot_key, skin_slot, attachment.path || attachment.name || attachment_key, attachment);
 		}
 	}
 }
@@ -2354,6 +2333,7 @@ spine.Animation.prototype.load = function (json)
 			anim.event_keyframes = anim.event_keyframes.sort(spine.Keyframe.compare);
 			break;
 		case 'drawOrder':
+		case 'draworder':
 			anim.order_keyframes = [];
 			json[key].forEach(function (order)
 			{
@@ -2652,8 +2632,9 @@ spine.Data.prototype.iterateAttachments = function (skin_key, callback)
 	{
 		var data_slot = data.slots[slot_key];
 		var skin_slot = skin.slots[slot_key] || default_skin.slots[slot_key];
+		if (!skin_slot) { return; }
 		var attachment = skin_slot.attachments[data_slot.attachment_key];
-		var attachment_key = (attachment && attachment.name) || data_slot.attachment_key;
+		var attachment_key = (attachment && (attachment.path || attachment.name)) || data_slot.attachment_key;
 		callback(slot_key, data_slot, skin_slot, attachment_key, attachment);
 	});
 }
@@ -3312,8 +3293,9 @@ spine.Pose.prototype.iterateAttachments = function (callback)
 	{
 		var pose_slot = pose.slots[slot_key];
 		var skin_slot = skin.slots[slot_key] || default_skin.slots[slot_key];
+		if (!skin_slot) { return; }
 		var attachment = skin_slot.attachments[pose_slot.attachment_key];
-		var attachment_key = (attachment && attachment.name) || pose_slot.attachment_key;
+		var attachment_key = (attachment && (attachment.path || attachment.name)) || pose_slot.attachment_key;
 		callback(slot_key, pose_slot, skin_slot, attachment_key, attachment);
 	});
 }
