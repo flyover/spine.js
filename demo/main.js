@@ -348,9 +348,10 @@ main.start = function ()
 							var vertex_position_offset = vertex_i * 4 * gl_skin_shader_position_count;
 							blenders.forEach(function (blend, index)
 							{
+								var blend_index = (blend.bone_index >= 0)?(blend_bone_index_array.indexOf(blend.bone_index)):(0);
 								vertex_position[vertex_position_offset++] = blend.x;
 								vertex_position[vertex_position_offset++] = blend.y;
-								vertex_position[vertex_position_offset++] = (blend.bone_index >= 0)?(blend_bone_index_array.indexOf(blend.bone_index)):(0);
+								vertex_position[vertex_position_offset++] = blend_index;
 								vertex_position[vertex_position_offset++] = blend.weight;
 							});
 						}
@@ -535,8 +536,6 @@ main.start = function ()
 			messages.innerHTML = "skin: " + pose.skin_key + ", anim: " + pose.anim_key + "<br>" + file.path + file.json_url;
 		}
 
-		pose.strike();
-
 		//pose.events.forEach(function (event) { console.log(event.name, event.int_value, event.float_value, event.string_value); });
 
 		if (ctx)
@@ -564,6 +563,10 @@ main.start = function ()
 			mat3x3Translate(gl_projection, -camera_x, -camera_y);
 			mat3x3Scale(gl_projection, camera_zoom, camera_zoom);
 		}
+
+		if (loading) { return; }
+
+		pose.strike();
 
 		if (ctx)
 		{
