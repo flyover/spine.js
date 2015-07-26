@@ -698,6 +698,20 @@ spine.Vector.prototype.copy = function (other)
 }
 
 /**
+ * @return {boolean} 
+ * @param {spine.Vector} a 
+ * @param {spine.Vector} b 
+ * @param {number=} epsilon 
+ */
+spine.Vector.equal = function (a, b, epsilon)
+{
+	epsilon = epsilon || 1e-6;
+	if (Math.abs(a.x - b.x) > epsilon) { return false; }
+	if (Math.abs(a.y - b.y) > epsilon) { return false; }
+	return true;
+}
+
+/**
  * @return {spine.Vector}
  * @param {spine.Vector} a 
  * @param {spine.Vector} b 
