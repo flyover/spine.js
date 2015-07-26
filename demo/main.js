@@ -1105,8 +1105,8 @@ function loadImage (url, callback)
 function applySpace (ctx, space)
 {
 	ctx.translate(space.position.x, space.position.y);
-	ctx.rotate(space.rotation.rad);
-	ctx.scale(space.scale.x, space.scale.y);
+	ctx.rotate(space.rotation.rad * space.flip.x * space.flip.y);
+	ctx.scale(space.scale.x * space.flip.x, space.scale.y * space.flip.y);
 }
 
 function drawCircle (ctx, color, scale)
@@ -1366,8 +1366,8 @@ function mat3x3Transform (m, v, out)
 function mat3x3ApplySpace (m, space)
 {
 	mat3x3Translate(m, space.position.x, space.position.y);
-	mat3x3Rotate(m, space.rotation.rad);
-	mat3x3Scale(m, space.scale.x, space.scale.y);
+	mat3x3Rotate(m, space.rotation.rad * space.flip.x * space.flip.y);
+	mat3x3Scale(m, space.scale.x * space.flip.x, space.scale.y * space.flip.y);
 	return m;
 }
 
