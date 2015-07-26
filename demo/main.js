@@ -672,10 +672,10 @@ main.start = function ()
 						gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 						break;
 					case 'additive':
-						gl.blendFunc(gl.ONE, gl.ONE);
+						gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 						break;
 					case 'multiply':
-						gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+						gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
 						break;
 					case 'screen':
 						gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
