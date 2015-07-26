@@ -1661,11 +1661,9 @@ spine.Event.prototype.load = function (json)
 
 /**
  * @constructor 
- * @param {number=} time 
  */
-spine.Keyframe = function (time)
+spine.Keyframe = function ()
 {
-	this.time = time || 0;
 }
 
 /** @type {number} */
@@ -1737,11 +1735,10 @@ spine.Keyframe.compare = function (a, b)
 /**
  * @constructor 
  * @extends {spine.Keyframe} 
- * @param {number=} time 
  */
-spine.BoneKeyframe = function (time)
+spine.BoneKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 	this.curve = new spine.Curve();
 }
 
@@ -1764,11 +1761,10 @@ spine.BoneKeyframe.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.BoneKeyframe} 
- * @param {number=} time 
  */
-spine.TranslateKeyframe = function (time)
+spine.TranslateKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 	this.position = new spine.Position();
 }
 
@@ -1792,11 +1788,10 @@ spine.TranslateKeyframe.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.BoneKeyframe} 
- * @param {number=} time 
  */
-spine.RotateKeyframe = function (time)
+spine.RotateKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 	this.rotation = new spine.Rotation();
 }
 
@@ -1819,11 +1814,10 @@ spine.RotateKeyframe.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.BoneKeyframe} 
- * @param {number=} time 
  */
-spine.ScaleKeyframe = function (time)
+spine.ScaleKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 	this.scale = new spine.Scale();
 }
 
@@ -1924,11 +1918,10 @@ spine.AnimBone.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.Keyframe} 
- * @param {number=} time 
  */
-spine.SlotKeyframe = function (time)
+spine.SlotKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 }
 
 goog.inherits(spine.SlotKeyframe, spine.Keyframe);
@@ -1946,11 +1939,10 @@ spine.SlotKeyframe.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.SlotKeyframe} 
- * @param {number=} time 
  */
-spine.ColorKeyframe = function (time)
+spine.ColorKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 
 	this.color = new spine.Color();
 	this.curve = new spine.Curve();
@@ -1978,11 +1970,10 @@ spine.ColorKeyframe.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.SlotKeyframe} 
- * @param {number=} time 
  */
-spine.AttachmentKeyframe = function (time)
+spine.AttachmentKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 }
 
 goog.inherits(spine.AttachmentKeyframe, spine.SlotKeyframe);
@@ -2069,11 +2060,10 @@ spine.AnimSlot.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.Keyframe} 
- * @param {number=} time 
  */
-spine.EventKeyframe = function (time)
+spine.EventKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 }
 
 goog.inherits(spine.EventKeyframe, spine.Keyframe);
@@ -2139,11 +2129,10 @@ spine.SlotOffset.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.Keyframe} 
- * @param {number=} time 
  */
-spine.OrderKeyframe = function (time)
+spine.OrderKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 
 	this.slot_offsets = [];
 }
@@ -2181,11 +2170,10 @@ spine.OrderKeyframe.prototype.load = function (json)
 /**
  * @constructor 
  * @extends {spine.Keyframe} 
- * @param {number=} time 
  */
-spine.IkConstraintKeyframe = function (time)
+spine.IkConstraintKeyframe = function ()
 {
-	goog.base(this, time);
+	goog.base(this);
 
 	this.curve = new spine.Curve();
 }
