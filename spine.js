@@ -1124,87 +1124,59 @@ spine.Bone.prototype.load = function (json)
 }
 
 /**
- * @return {spine.Space}
- * @param {spine.Bone} bone 
- * @param {Object.<string,spine.Bone>} bones 
- * @param {spine.Space=} out 
- */
-spine.Bone.flatten = function (bone, bones, out)
-{
-	out = out || new spine.Space();
-
-	var parent_bone = bones[bone.parent_key];
-	if (parent_bone)
-	{
-		spine.Bone.flatten(parent_bone, bones, out);
-	}
-	else
-	{
-		spine.Space.identity(out);
-	}
-
-	//spine.Space.combine(out, bone.local_space, out);
-
-	spine.Space.translate(out, bone.local_space.position.x, bone.local_space.position.y);
-
-	if (bone.inherit_rotation)
-	{
-		spine.Space.rotate(out, bone.local_space.rotation.rad);
-	}
-	else
-	{
-		out.rotation.copy(bone.local_space.rotation);
-	}
-
-	if (bone.inherit_scale)
-	{
-		spine.Space.scale(out, bone.local_space.scale.x, bone.local_space.scale.y);
-	}
-	else
-	{
-		out.scale.copy(bone.local_space.scale);
-	}
-
-	return out;
-}
-
-/**
- * @return {spine.Space}
+ * @return {spine.Bone}
  * @param {spine.Bone} bone 
  * @param {Object.<string,spine.Bone>} bones 
  */
-spine.Bone.updateWorldSpace = function (bone, bones)
+spine.Bone.flatten = function (bone, bones)
 {
 	var parent_bone = bones[bone.parent_key];
 	if (parent_bone)
 	{
-		bone.world_space.position.copy(parent_bone.world_space.position);
+		spine.Bone.flatten(parent_bone, bones);
+
+		//spine.Space.combine(parent_bone.world_space, bone.local_space, bone.world_space);
+
+		var a = parent_bone.world_space;
+		var b = bone.local_space;
+		var out = bone.world_space;
+
+		var x = b.position.x * a.scale.x;
+		var y = b.position.y * a.scale.y;
+		var rad = a.rotation.rad;
+		var c = Math.cos(rad);
+		var s = Math.sin(rad);
+		var tx = c*x - s*y;
+		var ty = s*x + c*y;
+		out.position.x = tx + a.position.x;
+		out.position.y = ty + a.position.y;
 
 		if (bone.inherit_rotation)
 		{
-			bone.world_space.rotation.copy(parent_bone.world_space.rotation);
+			out.rotation.rad = spine.wrapAngleRadians(b.rotation.rad + a.rotation.rad);
 		}
 		else
 		{
-			bone.world_space.rotation.selfIdentity();
+			out.rotation.rad = b.rotation.rad;
 		}
 
 		if (bone.inherit_scale)
 		{
-			bone.world_space.scale.copy(parent_bone.world_space.scale);
+			out.scale.x = b.scale.x * a.scale.x;
+			out.scale.y = b.scale.y * a.scale.y;
 		}
 		else
 		{
-			bone.world_space.scale.selfIdentity();
+			out.scale.x = b.scale.x;
+			out.scale.y = b.scale.y;
 		}
-
-		spine.Space.combine(bone.world_space, bone.local_space, bone.world_space);
 	}
 	else
 	{
 		bone.world_space.copy(bone.local_space);
 	}
-	return bone.world_space;
+
+	return bone;
 }
 
 /**
@@ -2525,7 +2497,7 @@ spine.Data.prototype.load = function (json)
 
 	data.iterateBones(function (bone_key, bone)
 	{
-		spine.Bone.flatten(bone, data.bones, bone.world_space);
+		spine.Bone.flatten(bone, data.bones);
 	});
 
 	return data;
@@ -3029,7 +3001,7 @@ spine.Pose.prototype.strike = function ()
 		}
 
 		var target = pose.bones[ik_constraint.target_key];
-		spine.Bone.flatten(target, pose.bones, target.world_space);
+		spine.Bone.flatten(target, pose.bones);
 		var target_x = target.world_space.position.x;
 		var target_y = target.world_space.position.y;
 		var alpha = ik_constraint_mix;
@@ -3041,12 +3013,12 @@ spine.Pose.prototype.strike = function ()
 		{
 		case 1:
 			var bone = pose.bones[ik_constraint.bone_keys[0]];
-			spine.Bone.flatten(bone, pose.bones, bone.world_space);
+			spine.Bone.flatten(bone, pose.bones);
 			var parent_rotation = 0;
 			var bone_parent = pose.bones[bone.parent_key];
 			if (bone_parent && bone.inherit_rotation)
 			{
-				spine.Bone.flatten(bone_parent, pose.bones, bone_parent.world_space);
+				spine.Bone.flatten(bone_parent, pose.bones);
 				parent_rotation = bone_parent.world_space.rotation.rad;
 			}
 			target_x -= bone.world_space.position.x;
@@ -3055,16 +3027,16 @@ spine.Pose.prototype.strike = function ()
 			break;
 		case 2:
 			var parent = pose.bones[ik_constraint.bone_keys[0]];
-			spine.Bone.flatten(parent, pose.bones, parent.world_space);
+			spine.Bone.flatten(parent, pose.bones);
 			var child = pose.bones[ik_constraint.bone_keys[1]];
-			spine.Bone.flatten(child, pose.bones, child.world_space);
+			spine.Bone.flatten(child, pose.bones);
 			var position = new spine.Vector();
 			var parent_parent = pose.bones[parent.parent_key];
 			if (parent_parent)
 			{
 				position.x = target_x;
 				position.y = target_y;
-				spine.Bone.flatten(parent_parent, pose.bones, parent_parent.world_space);
+				spine.Bone.flatten(parent_parent, pose.bones);
 				spine.Space.untransform(parent_parent.world_space, position, position); // world to local
 				target_x = (position.x - parent.local_space.position.x) * parent_parent.world_space.scale.x;
 				target_y = (position.y - parent.local_space.position.y) * parent_parent.world_space.scale.y;
@@ -3078,7 +3050,7 @@ spine.Pose.prototype.strike = function ()
 			var child_parent = pose.bones[child.parent_key];
 			if (child_parent !== parent)
 			{
-				spine.Bone.flatten(child_parent, pose.bones, child_parent.world_space);
+				spine.Bone.flatten(child_parent, pose.bones);
 				spine.Space.transform(child_parent.world_space, position, position); // local to world
 				spine.Space.untransform(parent.world_space, position, position); // world to local
 			}
@@ -3112,7 +3084,7 @@ spine.Pose.prototype.strike = function ()
 
 	pose.iterateBones(function (bone_key, bone)
 	{
-		spine.Bone.flatten(bone, pose.bones, bone.world_space);
+		spine.Bone.flatten(bone, pose.bones);
 	});
 
 	var data_slots = data && data.slots;
