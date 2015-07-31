@@ -155,6 +155,15 @@ main.start = function ()
 		var gl_skin_shader_modelview_count = 16; // * mat3
 		var gl_skin_shader_modelview_array = new Float32Array(9 * gl_skin_shader_modelview_count);
 		var gl_skin_shader_position_count = 5; // * vec4
+		function repeat (format, count)
+		{
+			var array = [];
+			for (var index = 0; index < count; ++index)
+			{
+				array.push(format.replace(/{index}/g, index));
+			}
+			return array;
+		}
 		var gl_skin_shader_vs_src = 
 		[
 			"precision mediump int;",
@@ -162,27 +171,13 @@ main.start = function ()
 			"uniform mat3 uProjection;",
 			"uniform mat3 uModelviewArray[" + gl_skin_shader_modelview_count + "];",
 			"uniform mat3 uTexMatrix;",
-			"attribute vec4 aVertexPosition0;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition1;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition2;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition3;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition4;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition5;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition6;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition7;", // [ x, y, i, w ]
+			repeat("attribute vec4 aVertexPosition{index};", gl_skin_shader_position_count), // [ x, y, i, w ]
 			"attribute vec2 aVertexTexCoord;", // [ u, v ]
 			"varying vec3 vTexCoord;",
 			"void main(void) {",
 			" vTexCoord = uTexMatrix * vec3(aVertexTexCoord, 1.0);",
 			" vec3 blendPosition = vec3(0.0);",
-			" blendPosition += (uModelviewArray[int(aVertexPosition0.z)] * vec3(aVertexPosition0.xy, 1.0)) * aVertexPosition0.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition1.z)] * vec3(aVertexPosition1.xy, 1.0)) * aVertexPosition1.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition2.z)] * vec3(aVertexPosition2.xy, 1.0)) * aVertexPosition2.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition3.z)] * vec3(aVertexPosition3.xy, 1.0)) * aVertexPosition3.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition4.z)] * vec3(aVertexPosition4.xy, 1.0)) * aVertexPosition4.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition5.z)] * vec3(aVertexPosition5.xy, 1.0)) * aVertexPosition5.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition6.z)] * vec3(aVertexPosition6.xy, 1.0)) * aVertexPosition6.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition7.z)] * vec3(aVertexPosition7.xy, 1.0)) * aVertexPosition7.w;",
+			repeat(" blendPosition += (uModelviewArray[int(aVertexPosition{index}.z)] * vec3(aVertexPosition{index}.xy, 1.0)) * aVertexPosition{index}.w;", gl_skin_shader_position_count),
 			" gl_Position = vec4(uProjection * blendPosition, 1.0);",
 			"}"
 		];
@@ -193,35 +188,14 @@ main.start = function ()
 			"uniform mat3 uProjection;",
 			"uniform mat3 uModelviewArray[" + gl_skin_shader_modelview_count + "];",
 			"uniform mat3 uTexMatrix;",
-			"attribute vec4 aVertexPosition0;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition1;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition2;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition3;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition4;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition5;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition6;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition7;", // [ x, y, i, w ]
+			repeat("attribute vec4 aVertexPosition{index};", gl_skin_shader_position_count), // [ x, y, i, w ]
 			"attribute vec2 aVertexTexCoord;", // [ u, v ]
-			"attribute vec2 aVertexMorphPosition0;", // [ dx, dy ]
-			"attribute vec2 aVertexMorphPosition1;", // [ dx, dy ]
-			"attribute vec2 aVertexMorphPosition2;", // [ dx, dy ]
-			"attribute vec2 aVertexMorphPosition3;", // [ dx, dy ]
-			"attribute vec2 aVertexMorphPosition4;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorphPosition5;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorphPosition6;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorphPosition7;", // [ dx, dy ]
+			repeat("attribute vec2 aVertexMorphPosition{index};", gl_skin_shader_position_count), // [ dx, dy ]
 			"varying vec3 vTexCoord;",
 			"void main(void) {",
 			" vTexCoord = uTexMatrix * vec3(aVertexTexCoord, 1.0);",
 			" vec3 blendPosition = vec3(0.0);",
-			" blendPosition += (uModelviewArray[int(aVertexPosition0.z)] * vec3(aVertexPosition0.xy + aVertexMorphPosition0, 1.0)) * aVertexPosition0.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition1.z)] * vec3(aVertexPosition1.xy + aVertexMorphPosition1, 1.0)) * aVertexPosition1.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition2.z)] * vec3(aVertexPosition2.xy + aVertexMorphPosition2, 1.0)) * aVertexPosition2.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition3.z)] * vec3(aVertexPosition3.xy + aVertexMorphPosition3, 1.0)) * aVertexPosition3.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition4.z)] * vec3(aVertexPosition4.xy + aVertexMorphPosition4, 1.0)) * aVertexPosition4.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition5.z)] * vec3(aVertexPosition5.xy + aVertexMorphPosition5, 1.0)) * aVertexPosition5.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition6.z)] * vec3(aVertexPosition6.xy + aVertexMorphPosition6, 1.0)) * aVertexPosition6.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition7.z)] * vec3(aVertexPosition7.xy + aVertexMorphPosition7, 1.0)) * aVertexPosition7.w;",
+			repeat(" blendPosition += (uModelviewArray[int(aVertexPosition{index}.z)] * vec3(aVertexPosition{index}.xy + aVertexMorphPosition{index}, 1.0)) * aVertexPosition{index}.w;", gl_skin_shader_position_count),
 			" gl_Position = vec4(uProjection * blendPosition, 1.0);",
 			"}"
 		];
@@ -233,43 +207,15 @@ main.start = function ()
 			"uniform mat3 uModelviewArray[" + gl_skin_shader_modelview_count + "];",
 			"uniform mat3 uTexMatrix;",
 			"uniform float uMorphWeight;",
-			"attribute vec4 aVertexPosition0;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition1;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition2;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition3;", // [ x, y, i, w ]
-			"attribute vec4 aVertexPosition4;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition5;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition6;", // [ x, y, i, w ]
-			//"attribute vec4 aVertexPosition7;", // [ x, y, i, w ]
+			repeat("attribute vec4 aVertexPosition{index};", gl_skin_shader_position_count), // [ x, y, i, w ]
 			"attribute vec2 aVertexTexCoord;", // [ u, v ]
-			"attribute vec2 aVertexMorph0Position0;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph0Position1;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph0Position2;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph0Position3;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph0Position4;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorph0Position5;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorph0Position6;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorph0Position7;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph1Position0;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph1Position1;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph1Position2;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph1Position3;", // [ dx, dy ]
-			"attribute vec2 aVertexMorph1Position4;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorph1Position5;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorph1Position6;", // [ dx, dy ]
-			//"attribute vec2 aVertexMorph1Position7;", // [ dx, dy ]
+			repeat("attribute vec2 aVertexMorph0Position{index};", gl_skin_shader_position_count), // [ dx, dy ]
+			repeat("attribute vec2 aVertexMorph1Position{index};", gl_skin_shader_position_count), // [ dx, dy ]
 			"varying vec3 vTexCoord;",
 			"void main(void) {",
 			" vTexCoord = uTexMatrix * vec3(aVertexTexCoord, 1.0);",
 			" vec3 blendPosition = vec3(0.0);",
-			" blendPosition += (uModelviewArray[int(aVertexPosition0.z)] * vec3(aVertexPosition0.xy + mix(aVertexMorph0Position0, aVertexMorph1Position0, uMorphWeight), 1.0)) * aVertexPosition0.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition1.z)] * vec3(aVertexPosition1.xy + mix(aVertexMorph0Position1, aVertexMorph1Position1, uMorphWeight), 1.0)) * aVertexPosition1.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition2.z)] * vec3(aVertexPosition2.xy + mix(aVertexMorph0Position2, aVertexMorph1Position2, uMorphWeight), 1.0)) * aVertexPosition2.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition3.z)] * vec3(aVertexPosition3.xy + mix(aVertexMorph0Position3, aVertexMorph1Position3, uMorphWeight), 1.0)) * aVertexPosition3.w;",
-			" blendPosition += (uModelviewArray[int(aVertexPosition4.z)] * vec3(aVertexPosition4.xy + mix(aVertexMorph0Position4, aVertexMorph1Position4, uMorphWeight), 1.0)) * aVertexPosition4.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition5.z)] * vec3(aVertexPosition5.xy + mix(aVertexMorph0Position5, aVertexMorph1Position5, uMorphWeight), 1.0)) * aVertexPosition5.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition6.z)] * vec3(aVertexPosition6.xy + mix(aVertexMorph0Position6, aVertexMorph1Position6, uMorphWeight), 1.0)) * aVertexPosition6.w;",
-			//" blendPosition += (uModelviewArray[int(aVertexPosition7.z)] * vec3(aVertexPosition7.xy + mix(aVertexMorph0Position7, aVertexMorph1Position7, uMorphWeight), 1.0)) * aVertexPosition7.w;",
+			repeat(" blendPosition += (uModelviewArray[int(aVertexPosition{index}.z)] * vec3(aVertexPosition{index}.xy + mix(aVertexMorph0Position{index}, aVertexMorph1Position{index}, uMorphWeight), 1.0)) * aVertexPosition{index}.w;", gl_skin_shader_position_count),
 			" gl_Position = vec4(uProjection * blendPosition, 1.0);",
 			"}"
 		];
@@ -557,14 +503,8 @@ main.start = function ()
 											var x = attachment.vertices[i++];
 											var y = attachment.vertices[i++];
 											var weight = attachment.vertices[i++];
-
-											var dx = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0;
-											++ffd_index;
-											var dy = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0;
-											++ffd_index;
-
-											vertex[vertex_position_offset++] = dx;
-											vertex[vertex_position_offset++] = dy;
+											vertex[vertex_position_offset++] = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0; ++ffd_index;
+											vertex[vertex_position_offset++] = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0; ++ffd_index;
 										}
 									}
 									if (gl)
@@ -794,31 +734,28 @@ main.start = function ()
 					var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
 					var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 					var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
-					if (ffd_attachment)
+					var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
+					var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+					if (ffd_keyframe_index !== -1)
 					{
-						var ffd_keyframe_index = spine.Keyframe.find(ffd_attachment.ffd_keyframes, pose.time);
-						if (ffd_keyframe_index !== -1)
+						var ffd_keyframe0 = ffd_keyframes[ffd_keyframe_index];
+						var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
+						if (ffd_keyframe1)
 						{
-							var ffd_keyframe0 = ffd_attachment.ffd_keyframes[ffd_keyframe_index];
-							var ffd_keyframe1 = ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
-							if (ffd_keyframe1)
+							var pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
+							for (var i = 0; i < slot_info.vertex_position.length; ++i)
 							{
-								var pct = (pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time);
-								pct = ffd_keyframe0.curve.evaluate(pct);
-								for (var i = 0; i < slot_info.vertex_position.length; ++i)
-								{
-									var v0 = ffd_keyframe0.vertices[i - ffd_keyframe0.offset] || 0;
-									var v1 = ffd_keyframe1.vertices[i - ffd_keyframe1.offset] || 0;
-									slot_info.vertex_position[i] = attachment.vertices[i] + spine.tween(v0, v1, pct);
-								}
+								var v0 = ffd_keyframe0.vertices[i - ffd_keyframe0.offset] || 0;
+								var v1 = ffd_keyframe1.vertices[i - ffd_keyframe1.offset] || 0;
+								slot_info.vertex_position[i] = attachment.vertices[i] + spine.tween(v0, v1, pct);
 							}
-							else
+						}
+						else
+						{
+							for (var i = 0; i < slot_info.vertex_position.length; ++i)
 							{
-								for (var i = 0; i < slot_info.vertex_position.length; ++i)
-								{
-									var v0 = ffd_keyframe0.vertices[i - ffd_keyframe0.offset] || 0;
-									slot_info.vertex_position[i] = attachment.vertices[i] + v0;
-								}
+								var v0 = ffd_keyframe0.vertices[i - ffd_keyframe0.offset] || 0;
+								slot_info.vertex_position[i] = attachment.vertices[i] + v0;
 							}
 						}
 					}
@@ -831,91 +768,76 @@ main.start = function ()
 					var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
 					var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 					var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
-					if (ffd_attachment)
+					var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
+					var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+					if (ffd_keyframe_index !== -1)
 					{
-						var ffd_keyframe_index = spine.Keyframe.find(ffd_attachment.ffd_keyframes, pose.time);
-						if (ffd_keyframe_index !== -1)
+						var ffd_keyframe0 = ffd_keyframes[ffd_keyframe_index];
+						var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
+						if (ffd_keyframe1)
 						{
-							var ffd_keyframe0 = ffd_attachment.ffd_keyframes[ffd_keyframe_index];
-							var ffd_keyframe1 = ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
-							if (ffd_keyframe1)
+							// ffd with tweening
+
+							var pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
+
+							var vertex_blend_position = slot_info.vertex_blend_position;
+							var position = new spine.Vector();
+							for (var vertex_index = 0, i = 0, ffd_index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
 							{
-								// ffd with tweening
-
-								var pct = (pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time);
-								pct = ffd_keyframe0.curve.evaluate(pct);
-
-								var vertex_blend_position = slot_info.vertex_blend_position;
-								var position = new spine.Vector();
-								for (var vertex_index = 0, i = 0, ffd_index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
+								var blender_count = attachment.vertices[i++];
+								var blend_position_x = 0;
+								var blend_position_y = 0;
+								for (var blender_index = 0; blender_index < blender_count; ++blender_index)
 								{
-									var blender_count = attachment.vertices[i++];
-									var blend_position_x = 0;
-									var blend_position_y = 0;
-									for (var blender_index = 0; blender_index < blender_count; ++blender_index)
-									{
-										var bone_index = attachment.vertices[i++];
-										position.x = attachment.vertices[i++];
-										position.y = attachment.vertices[i++];
-										var weight = attachment.vertices[i++];
-										var bone_key = pose.bone_keys[bone_index];
-										var bone = pose.bones[bone_key];
-
-										var dx0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
-										var dx1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
-										++ffd_index;
-										var dy0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
-										var dy1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
-										++ffd_index;
-										position.x += spine.tween(dx0, dx1, pct);
-										position.y += spine.tween(dy0, dy1, pct);
-										
-										spine.Space.transform(bone.world_space, position, position);
-										blend_position_x += position.x * weight;
-										blend_position_y += position.y * weight;
-									}
-									var vertex_blend_position_x_offset = vertex_index*2;
-									var vertex_blend_position_y_offset = vertex_blend_position_x_offset+1;
-									vertex_blend_position[vertex_blend_position_x_offset] = blend_position_x;
-									vertex_blend_position[vertex_blend_position_y_offset] = blend_position_y;
+									var bone_index = attachment.vertices[i++];
+									position.x = attachment.vertices[i++];
+									position.y = attachment.vertices[i++];
+									var weight = attachment.vertices[i++];
+									var bone_key = pose.bone_keys[bone_index];
+									var bone = pose.bones[bone_key];
+									var v0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
+									var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
+									position.x += spine.tween(v0, v1, pct); ++ffd_index;
+									var v0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
+									var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
+									position.y += spine.tween(v0, v1, pct); ++ffd_index;
+									spine.Space.transform(bone.world_space, position, position);
+									blend_position_x += position.x * weight;
+									blend_position_y += position.y * weight;
 								}
+								var vertex_position_offset = vertex_index * 2;
+								vertex_blend_position[vertex_position_offset++] = blend_position_x;
+								vertex_blend_position[vertex_position_offset++] = blend_position_y;
 							}
-							else
+						}
+						else
+						{
+							// ffd with no tweening
+
+							var vertex_blend_position = slot_info.vertex_blend_position;
+							var position = new spine.Vector();
+							for (var vertex_index = 0, i = 0, ffd_index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
 							{
-								// ffd with no tweening
-
-								var vertex_blend_position = slot_info.vertex_blend_position;
-								var position = new spine.Vector();
-								for (var vertex_index = 0, i = 0, ffd_index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
+								var blender_count = attachment.vertices[i++];
+								var blend_position_x = 0;
+								var blend_position_y = 0;
+								for (var blender_index = 0; blender_index < blender_count; ++blender_index)
 								{
-									var blender_count = attachment.vertices[i++];
-									var blend_position_x = 0;
-									var blend_position_y = 0;
-									for (var blender_index = 0; blender_index < blender_count; ++blender_index)
-									{
-										var bone_index = attachment.vertices[i++];
-										position.x = attachment.vertices[i++];
-										position.y = attachment.vertices[i++];
-										var weight = attachment.vertices[i++];
-										var bone_key = pose.bone_keys[bone_index];
-										var bone = pose.bones[bone_key];
-
-										var dx = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
-										++ffd_index;
-										var dy = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
-										++ffd_index;
-										position.x += dx;
-										position.y += dy;
-										
-										spine.Space.transform(bone.world_space, position, position);
-										blend_position_x += position.x * weight;
-										blend_position_y += position.y * weight;
-									}
-									var vertex_blend_position_x_offset = vertex_index*2;
-									var vertex_blend_position_y_offset = vertex_blend_position_x_offset+1;
-									vertex_blend_position[vertex_blend_position_x_offset] = blend_position_x;
-									vertex_blend_position[vertex_blend_position_y_offset] = blend_position_y;
+									var bone_index = attachment.vertices[i++];
+									position.x = attachment.vertices[i++];
+									position.y = attachment.vertices[i++];
+									var weight = attachment.vertices[i++];
+									var bone_key = pose.bone_keys[bone_index];
+									var bone = pose.bones[bone_key];
+									position.x += ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0; ++ffd_index;
+									position.y += ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0; ++ffd_index;
+									spine.Space.transform(bone.world_space, position, position);
+									blend_position_x += position.x * weight;
+									blend_position_y += position.y * weight;
 								}
+								var vertex_position_offset = vertex_index * 2;
+								vertex_blend_position[vertex_position_offset++] = blend_position_x;
+								vertex_blend_position[vertex_position_offset++] = blend_position_y;
 							}
 						}
 					}
@@ -942,10 +864,9 @@ main.start = function ()
 								blend_position_x += position.x * weight;
 								blend_position_y += position.y * weight;
 							}
-							var vertex_blend_position_x_offset = vertex_index*2;
-							var vertex_blend_position_y_offset = vertex_blend_position_x_offset+1;
-							vertex_blend_position[vertex_blend_position_x_offset] = blend_position_x;
-							vertex_blend_position[vertex_blend_position_y_offset] = blend_position_y;
+							var vertex_position_offset = vertex_index * 2;
+							vertex_blend_position[vertex_position_offset++] = blend_position_x;
+							vertex_blend_position[vertex_position_offset++] = blend_position_y;
 						}
 					}
 					break;
@@ -1092,120 +1013,116 @@ main.start = function ()
 						var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
 						var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 						var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
-						if (ffd_attachment)
+						var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
+						var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+						if (ffd_keyframe_index !== -1)
 						{
-							var ffd_keyframe_index = spine.Keyframe.find(ffd_attachment.ffd_keyframes, pose.time);
-							if (ffd_keyframe_index !== -1)
+							var ffd_keyframe0 = ffd_keyframes[ffd_keyframe_index];
+							var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
+							if (ffd_keyframe1)
 							{
-								var ffd_keyframe0 = ffd_attachment.ffd_keyframes[ffd_keyframe_index];
-								var ffd_keyframe1 = ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
-								if (ffd_keyframe1)
-								{
-									// ffd with tweening
+								// ffd with tweening
 
-									var pct = (pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time);
-									pct = ffd_keyframe0.curve.evaluate(pct);
+								var pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
 
-									var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
-									var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
-									var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
+								var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
+								var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
+								var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
 
-									var gl_shader = gl_mesh_shader_morph_2;
-									var gl_vertex = slot_info.gl_vertex;
+								var gl_shader = gl_mesh_shader_morph_2;
+								var gl_vertex = slot_info.gl_vertex;
 
-									gl.useProgram(gl_shader.program);
-									
-									gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
-									gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-									
-									gl.activeTexture(gl.TEXTURE0);
-									gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-									gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+								gl.useProgram(gl_shader.program);
+								
+								gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+								gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+								gl.uniform1f(gl_shader.uniforms['uMorphWeight'], pct);
+								
+								gl.activeTexture(gl.TEXTURE0);
+								gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+								gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
 
-									gl.uniform1f(gl_shader.uniforms['uMorphWeight'], pct);
+								gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph0Position'], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, 0, 0);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph0Position'], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, 0, 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe1.gl_vertex.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph1Position'], anim_ffd_keyframe1.gl_vertex.size, anim_ffd_keyframe1.gl_vertex.type, false, 0, 0);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe1.gl_vertex.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph1Position'], anim_ffd_keyframe1.gl_vertex.size, anim_ffd_keyframe1.gl_vertex.type, false, 0, 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, null);
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position']);
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position']);
 
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position']);
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position']);
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+								gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-									gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position']);
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position']);
 
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position']);
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position']);
+								gl.bindTexture(gl.TEXTURE_2D, null);
 
-									gl.bindTexture(gl.TEXTURE_2D, null);
+								gl.useProgram(null);
+							}
+							else
+							{
+								// ffd with no tweening
 
-									gl.useProgram(null);
-								}
-								else
-								{
-									// ffd with no tweening
+								var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
+								var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
 
-									var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
-									var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
+								var gl_shader = gl_mesh_shader_morph_1;
+								var gl_vertex = slot_info.gl_vertex;
 
-									var gl_shader = gl_mesh_shader_morph_1;
-									var gl_vertex = slot_info.gl_vertex;
+								gl.useProgram(gl_shader.program);
+								
+								gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+								gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+								
+								gl.activeTexture(gl.TEXTURE0);
+								gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+								gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
 
-									gl.useProgram(gl_shader.program);
-									
-									gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
-									gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-									
-									gl.activeTexture(gl.TEXTURE0);
-									gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-									gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'], gl_vertex.position.size, gl_vertex.position.type, false, 0, 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexMorphPosition'], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, 0, 0);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexMorphPosition'], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, 0, 0);
+								gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-									gl.bindBuffer(gl.ARRAY_BUFFER, null);
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition']);
 
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition']);
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+								gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-									gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition']);
 
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition']);
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition']);
+								gl.bindTexture(gl.TEXTURE_2D, null);
 
-									gl.bindTexture(gl.TEXTURE_2D, null);
-
-									gl.useProgram(null);
-								}
+								gl.useProgram(null);
 							}
 						}
 						else
@@ -1277,152 +1194,149 @@ main.start = function ()
 						var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
 						var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 						var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
-						if (ffd_attachment)
+						var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
+						var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+						if (ffd_keyframe_index !== -1)
 						{
-							var ffd_keyframe_index = spine.Keyframe.find(ffd_attachment.ffd_keyframes, pose.time);
-							if (ffd_keyframe_index !== -1)
+							var ffd_keyframe0 = ffd_keyframes[ffd_keyframe_index];
+							var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
+							if (ffd_keyframe1)
 							{
-								var ffd_keyframe0 = ffd_attachment.ffd_keyframes[ffd_keyframe_index];
-								var ffd_keyframe1 = ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
-								if (ffd_keyframe1)
+								// ffd with tweening
+
+								var pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
+
+								var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
+								var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
+								var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
+
+								var gl_shader = gl_skin_shader_morph_2;
+								var gl_vertex = slot_info.gl_vertex;
+
+								gl.useProgram(gl_shader.program);
+								
+								gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uModelviewArray[0]'], false, gl_skin_shader_modelview_array);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+								gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+								gl.uniform1f(gl_shader.uniforms['uMorphWeight'], pct);
+								
+								gl.activeTexture(gl.TEXTURE0);
+								gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+								gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+								
+								var position_stride = 16 * gl_skin_shader_position_count; // in bytes: sizeof(vec4) * count
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
 								{
-									// ffd with tweening
-
-									var pct = (pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time);
-									pct = ffd_keyframe0.curve.evaluate(pct);
-
-									var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
-									var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
-									var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index + 1];
-
-									var gl_shader = gl_skin_shader_morph_2;
-									var gl_vertex = slot_info.gl_vertex;
-
-									gl.useProgram(gl_shader.program);
-									
-									gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uModelviewArray[0]'], false, gl_skin_shader_modelview_array);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
-									gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-									gl.uniform1f(gl_shader.uniforms['uMorphWeight'], pct);
-									
-									gl.activeTexture(gl.TEXTURE0);
-									gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-									gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
-									
-									var position_stride = 16 * gl_skin_shader_position_count; // in bytes: sizeof(vec4) * count
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										var position_offset = 16 * i; // in bytes: sizeof(vec4) * i
-										gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'+i], gl_vertex.position.size, gl_vertex.position.type, false, position_stride, position_offset);
-									}
-									
-									var position_stride = 8 * gl_skin_shader_position_count; // in bytes: sizeof(vec2) * count
-									gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										var position_offset = 8 * i; // in bytes: sizeof(vec2) * i
-										gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph0Position'+i], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, position_stride, position_offset);
-									}
-
-									var position_stride = 8 * gl_skin_shader_position_count; // in bytes: sizeof(vec2) * count
-									gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe1.gl_vertex.buffer);
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										var position_offset = 8 * i; // in bytes: sizeof(vec2) * i
-										gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph1Position'+i], anim_ffd_keyframe1.gl_vertex.size, anim_ffd_keyframe1.gl_vertex.type, false, position_stride, position_offset);
-									}
-
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
-
-									gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
-										gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position'+i]);
-										gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position'+i]);
-									}
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-									
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-									gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-									
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
-										gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position'+i]);
-										gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position'+i]);
-									}
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-
-									gl.bindTexture(gl.TEXTURE_2D, null);
+									var position_offset = 16 * i; // in bytes: sizeof(vec4) * i
+									gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'+i], gl_vertex.position.size, gl_vertex.position.type, false, position_stride, position_offset);
 								}
-								else
+								
+								var position_stride = 8 * gl_skin_shader_position_count; // in bytes: sizeof(vec2) * count
+								gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
 								{
-									// ffd with no tweening
-
-									var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
-									var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
-
-									var gl_shader = gl_skin_shader_morph_1;
-									var gl_vertex = slot_info.gl_vertex;
-
-									gl.useProgram(gl_shader.program);
-									
-									gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uModelviewArray[0]'], false, gl_skin_shader_modelview_array);
-									gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
-									gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-									
-									gl.activeTexture(gl.TEXTURE0);
-									gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-									gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
-									
-									var position_stride = 16 * gl_skin_shader_position_count; // in bytes: sizeof(vec4) * count
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										var position_offset = 16 * i; // in bytes: sizeof(vec4) * i
-										gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'+i], gl_vertex.position.size, gl_vertex.position.type, false, position_stride, position_offset);
-									}
-
-									var position_stride = 8 * gl_skin_shader_position_count; // in bytes: sizeof(vec2) * count
-									gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										var position_offset = 8 * i; // in bytes: sizeof(vec2) * i
-										gl.vertexAttribPointer(gl_shader.attribs['aVertexMorphPosition'+i], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, position_stride, position_offset);
-									}
-									
-									gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
-									gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
-
-									gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
-										gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition'+i]);
-									}
-									gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-									
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-									gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-									gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-									
-									for (var i = 0; i < gl_skin_shader_position_count; ++i)
-									{
-										gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
-										gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition'+i]);
-									}
-									gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
-
-									gl.bindTexture(gl.TEXTURE_2D, null);
+									var position_offset = 8 * i; // in bytes: sizeof(vec2) * i
+									gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph0Position'+i], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, position_stride, position_offset);
 								}
+
+								var position_stride = 8 * gl_skin_shader_position_count; // in bytes: sizeof(vec2) * count
+								gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe1.gl_vertex.buffer);
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
+								{
+									var position_offset = 8 * i; // in bytes: sizeof(vec2) * i
+									gl.vertexAttribPointer(gl_shader.attribs['aVertexMorph1Position'+i], anim_ffd_keyframe1.gl_vertex.size, anim_ffd_keyframe1.gl_vertex.type, false, position_stride, position_offset);
+								}
+
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+
+								gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
+								{
+									gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
+									gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position'+i]);
+									gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position'+i]);
+								}
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+								
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+								gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+								
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
+								{
+									gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
+									gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph0Position'+i]);
+									gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorph1Position'+i]);
+								}
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+
+								gl.bindTexture(gl.TEXTURE_2D, null);
+							}
+							else
+							{
+								// ffd with no tweening
+
+								var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
+								var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe_index];
+
+								var gl_shader = gl_skin_shader_morph_1;
+								var gl_vertex = slot_info.gl_vertex;
+
+								gl.useProgram(gl_shader.program);
+								
+								gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uModelviewArray[0]'], false, gl_skin_shader_modelview_array);
+								gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
+								gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
+								
+								gl.activeTexture(gl.TEXTURE0);
+								gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+								gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
+								
+								var position_stride = 16 * gl_skin_shader_position_count; // in bytes: sizeof(vec4) * count
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.position.buffer);
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
+								{
+									var position_offset = 16 * i; // in bytes: sizeof(vec4) * i
+									gl.vertexAttribPointer(gl_shader.attribs['aVertexPosition'+i], gl_vertex.position.size, gl_vertex.position.type, false, position_stride, position_offset);
+								}
+
+								var position_stride = 8 * gl_skin_shader_position_count; // in bytes: sizeof(vec2) * count
+								gl.bindBuffer(gl.ARRAY_BUFFER, anim_ffd_keyframe0.gl_vertex.buffer);
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
+								{
+									var position_offset = 8 * i; // in bytes: sizeof(vec2) * i
+									gl.vertexAttribPointer(gl_shader.attribs['aVertexMorphPosition'+i], anim_ffd_keyframe0.gl_vertex.size, anim_ffd_keyframe0.gl_vertex.type, false, position_stride, position_offset);
+								}
+								
+								gl.bindBuffer(gl.ARRAY_BUFFER, gl_vertex.texcoord.buffer);
+								gl.vertexAttribPointer(gl_shader.attribs['aVertexTexCoord'], gl_vertex.texcoord.size, gl_vertex.texcoord.type, false, 0, 0);
+
+								gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
+								{
+									gl.enableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
+									gl.enableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition'+i]);
+								}
+								gl.enableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+								
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
+								gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
+								gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+								
+								for (var i = 0; i < gl_skin_shader_position_count; ++i)
+								{
+									gl.disableVertexAttribArray(gl_shader.attribs['aVertexPosition'+i]);
+									gl.disableVertexAttribArray(gl_shader.attribs['aVertexMorphPosition'+i]);
+								}
+								gl.disableVertexAttribArray(gl_shader.attribs['aVertexTexCoord']);
+
+								gl.bindTexture(gl.TEXTURE_2D, null);
 							}
 						}
 						else
@@ -2002,6 +1916,16 @@ function mat3x3ApplySpace (m, space)
 
 function glCompileShader (gl, src, type)
 {
+	function flatten (array, out)
+	{
+		out = out || [];
+		array.forEach(function (value)
+		{
+			if (Array.isArray(value)) { flatten(value, out); } else { out.push(value); }
+		});
+		return out;
+	}
+	src = flatten(src);
 	var shader = gl.createShader(type);
 	gl.shaderSource(shader, src.join('\n'));
 	gl.compileShader(shader);
