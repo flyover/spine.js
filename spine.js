@@ -2350,6 +2350,180 @@ spine.AnimIkConstraint.prototype.load = function (json)
 
 /**
  * @constructor
+ * @extends {spine.Keyframe} 
+ */
+spine.FfdKeyframe = function ()
+{
+	goog.base(this);
+
+	this.curve = new spine.Curve();
+	this.vertices = [];
+}
+
+goog.inherits(spine.FfdKeyframe, spine.Keyframe);
+
+/** @type {spine.Curve} */
+spine.FfdKeyframe.prototype.curve;
+
+/** @type {number} */
+spine.FfdKeyframe.prototype.offset = 0;
+
+/** @type {Array.<number>} */
+spine.FfdKeyframe.prototype.vertices;
+
+/**
+ * @return {spine.FfdKeyframe} 
+ * @param {Object.<string,?>} json 
+ */
+spine.FfdKeyframe.prototype.load = function (json)
+{
+	goog.base(this, 'load', json);
+	this.curve.load(json);
+	this.offset = spine.loadInt(json, 'offset', 0);
+	this.vertices = json.vertices || [];
+	return this;
+}
+
+/**
+ * @constructor 
+ */
+spine.FfdAttachment = function ()
+{
+}
+
+/** @type {number} */
+spine.FfdAttachment.prototype.min_time = 0;
+/** @type {number} */
+spine.FfdAttachment.prototype.max_time = 0;
+/** @type {Array.<spine.FfdKeyframe>} */
+spine.FfdAttachment.prototype.ffd_keyframes = null;
+
+/**
+ * @return {spine.FfdAttachment} 
+ * @param {Object.<string,?>} json 
+ */
+spine.FfdAttachment.prototype.load = function (json)
+{
+	var ffd_attachment = this;
+
+	ffd_attachment.min_time = 0;
+	ffd_attachment.max_time = 0;
+	ffd_attachment.ffd_keyframes = [];
+
+	json.forEach(function (ffd_keyframe_json)
+	{
+		var ffd_keyframe = new spine.FfdKeyframe().load(ffd_keyframe_json);
+		ffd_attachment.min_time = Math.min(ffd_attachment.min_time, ffd_keyframe.time);
+		ffd_attachment.max_time = Math.max(ffd_attachment.max_time, ffd_keyframe.time);
+		ffd_attachment.ffd_keyframes.push(ffd_keyframe);
+	});
+
+	ffd_attachment.ffd_keyframes = ffd_attachment.ffd_keyframes.sort(spine.Keyframe.compare);
+
+	return ffd_attachment;
+}
+
+/**
+ * @constructor 
+ */
+spine.FfdSlot = function ()
+{
+}
+
+/** @type {Object.<string,spine.FfdAttachment>} */
+spine.FfdSlot.prototype.ffd_attachments = null;
+
+/**
+ * @return {spine.FfdSlot} 
+ * @param {Object.<string,?>} json 
+ */
+spine.FfdSlot.prototype.load = function (json)
+{
+	var ffd_slot = this;
+
+	ffd_slot.ffd_attachments = {};
+
+	for (var key in json)
+	{
+		ffd_slot.ffd_attachments[key] = new spine.FfdAttachment().load(json[key]);
+	}
+
+	return ffd_slot;
+}
+
+/**
+ * @return {void}
+ * @param {function(string, spine.FfdAttachment):void} callback
+ */
+spine.FfdSlot.prototype.iterateAttachments = function (callback)
+{
+	var ffd_slot = this;
+
+	for (var ffd_attachment_key in ffd_slot.ffd_attachments)
+	{
+		var ffd_attachment = ffd_slot.ffd_attachments[ffd_attachment_key];
+
+		callback(ffd_attachment_key, ffd_attachment);
+	}
+}
+
+/**
+ * @constructor 
+ */
+spine.AnimFfd = function ()
+{
+}
+
+/** @type {Object.<string,spine.FfdSlot>} */
+spine.AnimFfd.prototype.ffd_slots = null;
+
+/**
+ * @return {spine.AnimFfd} 
+ * @param {Object.<string,?>} json 
+ */
+spine.AnimFfd.prototype.load = function (json)
+{
+	var anim_ffd = this;
+
+	anim_ffd.min_time = 0;
+	anim_ffd.max_time = 0;
+	anim_ffd.ffd_slots = {};
+
+	for (var key in json)
+	{
+		anim_ffd.ffd_slots[key] = new spine.FfdSlot().load(json[key]);
+	}
+
+	anim_ffd.iterateAttachments(function (ffd_slot_key, ffd_slot, ffd_attachment_key, ffd_attachment)
+	{
+		anim_ffd.min_time = Math.min(anim_ffd.min_time, ffd_attachment.min_time);
+		anim_ffd.max_time = Math.max(anim_ffd.max_time, ffd_attachment.max_time);
+	});
+
+	return anim_ffd;
+}
+
+/**
+ * @return {void}
+ * @param {function(string, spine.FfdSlot, string, spine.FfdAttachment):void} callback
+ */
+spine.AnimFfd.prototype.iterateAttachments = function (callback)
+{
+	var anim_ffd = this;
+
+	for (var ffd_slot_key in anim_ffd.ffd_slots)
+	{
+		var ffd_slot = anim_ffd.ffd_slots[ffd_slot_key];
+
+		ffd_slot.iterateAttachments(function (ffd_attachment_key, ffd_attachment)
+		{
+			callback(ffd_slot_key, ffd_slot, ffd_attachment_key, ffd_attachment);
+		});
+	}
+}
+
+/**
+ * @constructor
  */
 spine.Animation = function ()
 {
@@ -2368,6 +2542,8 @@ spine.Animation.prototype.event_keyframes = null;
 spine.Animation.prototype.order_keyframes = null;
 /** @type {Object.<string,spine.AnimIkConstraint>} */
 spine.Animation.prototype.ik_constraints = null;
+/** @type {Object.<string,spine.AnimFfd>} */
+spine.Animation.prototype.ffds = null;
 
 /** @type {number} */
 spine.Animation.prototype.min_time = 0;
@@ -2389,6 +2565,7 @@ spine.Animation.prototype.load = function (json)
 	anim.event_keyframes = null;
 	anim.order_keyframes = null;
 	anim.ik_constraints = null;
+	anim.ffds = null;
 
 	anim.min_time = 0;
 	anim.max_time = 0;
@@ -2448,6 +2625,16 @@ spine.Animation.prototype.load = function (json)
 				anim.min_time = Math.min(anim.min_time, anim_ik_constraint.min_time);
 				anim.max_time = Math.max(anim.max_time, anim_ik_constraint.max_time);
 				anim.ik_constraints[ik_constraint_key] = anim_ik_constraint;
+			}
+			break;
+		case 'ffd':
+			anim.ffds = {};
+			for (var ffd_key in json[key])
+			{
+				var anim_ffd = new spine.AnimFfd().load(json[key][ffd_key]);
+				anim.min_time = Math.min(anim.min_time, anim_ffd.min_time);
+				anim.max_time = Math.max(anim.max_time, anim_ffd.max_time);
+				anim.ffds[ffd_key] = anim_ffd;
 			}
 			break;
 		default:
