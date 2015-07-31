@@ -3508,12 +3508,12 @@ spine.Pose.prototype.strike = function ()
 
 	if (anim)
 	{
-		var order_keyframe_idx = spine.Keyframe.find(anim.order_keyframes, time);
-		if (order_keyframe_idx !== -1)
+		var order_keyframe_index = spine.Keyframe.find(anim.order_keyframes, time);
+		if (order_keyframe_index !== -1)
 		{
 			pose.slot_keys = data_slot_keys.slice(0); // copy array before reordering
 
-			var order_keyframe = anim.order_keyframes[order_keyframe_idx];
+			var order_keyframe = anim.order_keyframes[order_keyframe_index];
 			var slot_offsets = order_keyframe.slot_offsets;
 			slot_offsets.forEach(function (slot_offset)
 			{
@@ -3551,27 +3551,27 @@ spine.Pose.prototype.strike = function ()
 
 		if (wrapped_min)
 		{
-			var event_keyframe_idx = spine.Keyframe.find(anim.event_keyframes, anim.min_time);
-			if (event_keyframe_idx !== -1)
+			var event_keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.min_time);
+			if (event_keyframe_index !== -1)
 			{
-				var event_keyframe = anim.event_keyframes[event_keyframe_idx];
+				var event_keyframe = anim.event_keyframes[event_keyframe_index];
 				add_event(event_keyframe);
 			}
 		}
 		else if (wrapped_max)
 		{
-			var event_keyframe_idx = spine.Keyframe.find(anim.event_keyframes, anim.max_time);
-			if (event_keyframe_idx !== -1)
+			var event_keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.max_time);
+			if (event_keyframe_index !== -1)
 			{
-				var event_keyframe = anim.event_keyframes[event_keyframe_idx];
+				var event_keyframe = anim.event_keyframes[event_keyframe_index];
 				add_event(event_keyframe);
 			}
 		}
 
-		var event_keyframe_idx = spine.Keyframe.find(anim.event_keyframes, time);
-		if (event_keyframe_idx !== -1)
+		var event_keyframe_index = spine.Keyframe.find(anim.event_keyframes, time);
+		if (event_keyframe_index !== -1)
 		{
-			var event_keyframe = anim.event_keyframes[event_keyframe_idx];
+			var event_keyframe = anim.event_keyframes[event_keyframe_index];
 			if (((elapsed_time < 0) && ((time <= event_keyframe.time) && (event_keyframe.time <= prev_time))) || 
 				((elapsed_time > 0) && ((prev_time <= event_keyframe.time) && (event_keyframe.time <= time))))
 			{
