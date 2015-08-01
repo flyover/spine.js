@@ -2914,9 +2914,8 @@ spine.Data.prototype.iterateAttachments = function (skin_key, callback)
 	data.slot_keys.forEach(function (slot_key)
 	{
 		var data_slot = data.slots[slot_key];
-		var skin_slot = skin.slots[slot_key] || default_skin.slots[slot_key];
-		if (!skin_slot) { return; }
-		var attachment = skin_slot.attachments[data_slot.attachment_key];
+		var skin_slot = skin && (skin.slots[slot_key] || default_skin.slots[slot_key]);
+		var attachment = skin_slot && skin_slot.attachments[data_slot.attachment_key];
 		var attachment_key = (attachment && (attachment.path || attachment.name)) || data_slot.attachment_key;
 		callback(slot_key, data_slot, skin_slot, attachment_key, attachment);
 	});
@@ -3015,7 +3014,8 @@ spine.Pose.prototype.events;
 spine.Pose.prototype.curSkel = function ()
 {
 	var pose = this;
-	return pose.data && pose.data.skeleton;
+	var data = pose.data;
+	return data && data.skeleton;
 }
 
 /**
@@ -3024,7 +3024,8 @@ spine.Pose.prototype.curSkel = function ()
 spine.Pose.prototype.getSkins = function ()
 {
 	var pose = this;
-	return pose.data && pose.data.getSkins();
+	var data = pose.data;
+	return data && data.skins;
 }
 
 /**
@@ -3033,8 +3034,8 @@ spine.Pose.prototype.getSkins = function ()
 spine.Pose.prototype.curSkin = function ()
 {
 	var pose = this;
-	var skins = pose.getSkins();
-	return skins && skins[pose.skin_key];
+	var data = pose.data;
+	return data && data.skins[pose.skin_key];
 }
 
 /**
@@ -3065,7 +3066,8 @@ spine.Pose.prototype.setSkin = function (skin_key)
 spine.Pose.prototype.getEvents = function ()
 {
 	var pose = this;
-	return pose.data && pose.data.getEvents();
+	var data = pose.data;
+	return data && data.events;
 }
 
 /**
@@ -3074,7 +3076,8 @@ spine.Pose.prototype.getEvents = function ()
 spine.Pose.prototype.getAnims = function ()
 {
 	var pose = this;
-	return pose.data && pose.data.getAnims();
+	var data = pose.data;
+	return data && data.anims;
 }
 
 /**
@@ -3083,8 +3086,8 @@ spine.Pose.prototype.getAnims = function ()
 spine.Pose.prototype.curAnim = function ()
 {
 	var pose = this;
-	var anims = pose.getAnims();
-	return anims && anims[pose.anim_key];
+	var data = pose.data;
+	return data && data.anims[pose.anim_key];
 }
 
 /**
@@ -3093,7 +3096,8 @@ spine.Pose.prototype.curAnim = function ()
 spine.Pose.prototype.curAnimLength = function ()
 {
 	var pose = this;
-	var anim = pose.curAnim();
+	var data = pose.data;
+	var anim = data && data.anims[pose.anim_key];
 	return (anim && anim.length) || 0;
 }
 
@@ -3116,7 +3120,8 @@ spine.Pose.prototype.setAnim = function (anim_key)
 	if (pose.anim_key !== anim_key)
 	{
 		pose.anim_key = anim_key;
-		var anim = pose.curAnim();
+		var data = pose.data;
+		var anim = data && data.anims[pose.anim_key];
 		if (anim)
 		{
 			pose.time = spine.wrap(pose.time, anim.min_time, anim.max_time);
@@ -3142,7 +3147,8 @@ spine.Pose.prototype.getTime = function ()
 spine.Pose.prototype.setTime = function (time)
 {
 	var pose = this;
-	var anim = pose.curAnim();
+	var data = pose.data;
+	var anim = data && data.anims[pose.anim_key];
 	if (anim)
 	{
 		time = spine.wrap(time, anim.min_time, anim.max_time);
@@ -3178,7 +3184,7 @@ spine.Pose.prototype.strike = function ()
 
 	var data = pose.data;
 
-	var anim = pose.curAnim();
+	var anim = data && data.anims[pose.anim_key];
 
 	var prev_time = pose.time;
 	var elapsed_time = pose.elapsed_time;
@@ -3533,7 +3539,7 @@ spine.Pose.prototype.strike = function ()
 
 	if (anim)
 	{
-		var data_events = pose.getEvents()
+		var data_events = data && data.events;
 
 		var add_event = function (event_keyframe)
 		{
@@ -3602,16 +3608,14 @@ spine.Pose.prototype.iterateBones = function (callback)
 spine.Pose.prototype.iterateAttachments = function (callback)
 {
 	var pose = this;
-	var skin = pose.curSkin();
-	if (!skin) { return; }
-	var skins = pose.getSkins();
-	var default_skin = skins['default'];
+	var data = pose.data;
+	var skin = data && data.skins[pose.skin_key];
+	var default_skin = data && data.skins['default'];
 	pose.slot_keys.forEach(function (slot_key)
 	{
 		var pose_slot = pose.slots[slot_key];
-		var skin_slot = skin.slots[slot_key] || default_skin.slots[slot_key];
-		if (!skin_slot) { return; }
-		var attachment = skin_slot.attachments[pose_slot.attachment_key];
+		var skin_slot = skin && (skin.slots[slot_key] || default_skin.slots[slot_key]);
+		var attachment = skin_slot && skin_slot.attachments[pose_slot.attachment_key];
 		var attachment_key = (attachment && (attachment.path || attachment.name)) || pose_slot.attachment_key;
 		callback(slot_key, pose_slot, skin_slot, attachment_key, attachment);
 	});
