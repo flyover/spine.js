@@ -1774,14 +1774,14 @@ function drawImageMesh(ctx, triangles, positions, texcoords, image, site)
 
 function drawIkConstraints (ctx, data, bones)
 {
-	data.ik_constraint_keys.forEach(function (ik_constraint_key)
+	data.ikc_keys.forEach(function (ikc_key)
 	{
-		var ik_constraint = data.ik_constraints[ik_constraint_key];
-		var target = bones[ik_constraint.target_key];
-		switch (ik_constraint.bone_keys.length)
+		var ikc = data.ikcs[ikc_key];
+		var target = bones[ikc.target_key];
+		switch (ikc.bone_keys.length)
 		{
 		case 1:
-			var bone = bones[ik_constraint.bone_keys[0]];
+			var bone = bones[ikc.bone_keys[0]];
 			
 			ctx.beginPath();
 			ctx.moveTo(target.world_space.position.x, target.world_space.position.y);
@@ -1800,8 +1800,8 @@ function drawIkConstraints (ctx, data, bones)
 			ctx.restore();
 			break;
 		case 2:
-			var parent = bones[ik_constraint.bone_keys[0]];
-			var child = bones[ik_constraint.bone_keys[1]];
+			var parent = bones[ikc.bone_keys[0]];
+			var child = bones[ikc.bone_keys[1]];
 			
 			ctx.beginPath();
 			ctx.moveTo(target.world_space.position.x, target.world_space.position.y);

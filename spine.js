@@ -301,8 +301,6 @@ spine.Color = function ()
 }
 
 /** @type {number} */
-spine.Color.prototype.rgba = 0xffffffff;
-/** @type {number} */
 spine.Color.prototype.r = 1;
 /** @type {number} */
 spine.Color.prototype.g = 1;
@@ -318,7 +316,6 @@ spine.Color.prototype.a = 1;
 spine.Color.prototype.copy = function (other)
 {
 	var color = this;
-	color.rgba = other.rgba;
 	color.r = other.r;
 	color.g = other.g;
 	color.b = other.b;
@@ -333,16 +330,17 @@ spine.Color.prototype.copy = function (other)
 spine.Color.prototype.load = function (json)
 {
 	var color = this;
+	var rgba = 0xffffffff;
 	switch (typeof(json))
 	{
-	case 'string': color.rgba = parseInt(json, 16); break;
-	case 'number': color.rgba = 0 | json; break;
-	default: color.rgba = 0xffffffff; break;
+	case 'string': rgba = parseInt(json, 16); break;
+	case 'number': rgba = 0 | json; break;
+	default: rgba = 0xffffffff; break;
 	}
-	color.r = ((color.rgba >> 24) & 0xff) / 255;
-	color.g = ((color.rgba >> 16) & 0xff) / 255;
-	color.b = ((color.rgba >> 8) & 0xff) / 255;
-	color.a = (color.rgba & 0xff) / 255;
+	color.r = ((rgba >> 24) & 0xff) / 255;
+	color.g = ((rgba >> 16) & 0xff) / 255;
+	color.b = ((rgba >> 8) & 0xff) / 255;
+	color.a = (rgba & 0xff) / 255;
 	return color;
 }
 
@@ -1240,36 +1238,36 @@ spine.Bone.flatten = function (bone, bones)
 /**
  * @constructor 
  */
-spine.IkConstraint = function ()
+spine.Ikc = function ()
 {
-	var ik_constraint = this;
-	ik_constraint.bone_keys = [];
+	var ikc = this;
+	ikc.bone_keys = [];
 }
 
 /** @type {string} */
-spine.IkConstraint.prototype.name = "";
+spine.Ikc.prototype.name = "";
 /** @type {Array.<string>} */
-spine.IkConstraint.prototype.bone_keys;
+spine.Ikc.prototype.bone_keys;
 /** @type {string} */
-spine.IkConstraint.prototype.target_key = "";
+spine.Ikc.prototype.target_key = "";
 /** @type {number} */
-spine.IkConstraint.prototype.mix = 1;
+spine.Ikc.prototype.mix = 1;
 /** @type {boolean} */
-spine.IkConstraint.prototype.bend_positive = true;
+spine.Ikc.prototype.bend_positive = true;
 
 /**
- * @return {spine.IkConstraint} 
+ * @return {spine.Ikc} 
  * @param {Object.<string,?>} json 
  */
-spine.IkConstraint.prototype.load = function (json)
+spine.Ikc.prototype.load = function (json)
 {
-	var ik_constraint = this;
-	ik_constraint.name = spine.loadString(json, 'name', "");
-	ik_constraint.bone_keys = json['bones'] || [];
-	ik_constraint.target_key = spine.loadString(json, 'target', "");
-	ik_constraint.mix = spine.loadFloat(json, 'mix', 1);
-	ik_constraint.bend_positive = spine.loadBool(json, 'bendPositive', true);
-	return ik_constraint;
+	var ikc = this;
+	ikc.name = spine.loadString(json, 'name', "");
+	ikc.bone_keys = json['bones'] || [];
+	ikc.target_key = spine.loadString(json, 'target', "");
+	ikc.mix = spine.loadFloat(json, 'mix', 1);
+	ikc.bend_positive = spine.loadBool(json, 'bendPositive', true);
+	return ikc;
 }
 
 /**
@@ -2279,29 +2277,29 @@ spine.OrderKeyframe.prototype.load = function (json)
  * @constructor 
  * @extends {spine.Keyframe} 
  */
-spine.IkConstraintKeyframe = function ()
+spine.IkcKeyframe = function ()
 {
 	goog.base(this);
 
 	this.curve = new spine.Curve();
 }
 
-goog.inherits(spine.IkConstraintKeyframe, spine.Keyframe);
+goog.inherits(spine.IkcKeyframe, spine.Keyframe);
 
 /** @type {spine.Curve} */
-spine.IkConstraintKeyframe.prototype.curve;
+spine.IkcKeyframe.prototype.curve;
 
 /** @type {number} */
-spine.IkConstraintKeyframe.prototype.mix = 1;
+spine.IkcKeyframe.prototype.mix = 1;
 
 /** @type {boolean} */
-spine.IkConstraintKeyframe.prototype.bend_positive = true;
+spine.IkcKeyframe.prototype.bend_positive = true;
 
 /**
- * @return {spine.IkConstraintKeyframe} 
+ * @return {spine.IkcKeyframe} 
  * @param {Object.<string,?>} json 
  */
-spine.IkConstraintKeyframe.prototype.load = function (json)
+spine.IkcKeyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
 	this.curve.load(json);
@@ -2313,39 +2311,38 @@ spine.IkConstraintKeyframe.prototype.load = function (json)
 /**
  * @constructor 
  */
-spine.AnimIkConstraint = function ()
+spine.AnimIkc = function ()
 {
 }
 
 /** @type {number} */
-spine.AnimIkConstraint.prototype.min_time = 0;
+spine.AnimIkc.prototype.min_time = 0;
 /** @type {number} */
-spine.AnimIkConstraint.prototype.max_time = 0;
-/** @type {Array.<spine.IkConstraintKeyframe>} */
-spine.AnimIkConstraint.prototype.ik_constraint_keyframes = null;
+spine.AnimIkc.prototype.max_time = 0;
+/** @type {Array.<spine.IkcKeyframe>} */
+spine.AnimIkc.prototype.ikc_keyframes = null;
 
 /**
- * @return {spine.AnimIkConstraint} 
+ * @return {spine.AnimIkc} 
  * @param {Object.<string,?>} json 
  */
-spine.AnimIkConstraint.prototype.load = function (json)
+spine.AnimIkc.prototype.load = function (json)
 {
-	var anim_ik_constraint = this;
-	anim_ik_constraint.min_time = 0;
-	anim_ik_constraint.max_time = 0;
-	anim_ik_constraint.ik_constraint_keyframes = null;
+	var anim_ikc = this;
+	anim_ikc.min_time = 0;
+	anim_ikc.max_time = 0;
+	anim_ikc.ikc_keyframes = [];
 
-	anim_ik_constraint.ik_constraint_keyframes = [];
-	json.forEach(function (ik_constraint)
+	json.forEach(function (ikc)
 	{
-		var ik_constraint_keyframe = new spine.IkConstraintKeyframe().load(ik_constraint);
-		anim_ik_constraint.min_time = Math.min(anim_ik_constraint.min_time, ik_constraint_keyframe.time);
-		anim_ik_constraint.max_time = Math.max(anim_ik_constraint.max_time, ik_constraint_keyframe.time);
-		anim_ik_constraint.ik_constraint_keyframes.push(ik_constraint_keyframe);
+		var ikc_keyframe = new spine.IkcKeyframe().load(ikc);
+		anim_ikc.min_time = Math.min(anim_ikc.min_time, ikc_keyframe.time);
+		anim_ikc.max_time = Math.max(anim_ikc.max_time, ikc_keyframe.time);
+		anim_ikc.ikc_keyframes.push(ikc_keyframe);
 	});
-	anim_ik_constraint.ik_constraint_keyframes = anim_ik_constraint.ik_constraint_keyframes.sort(spine.Keyframe.compare);
+	anim_ikc.ikc_keyframes = anim_ikc.ikc_keyframes.sort(spine.Keyframe.compare);
 
-	return anim_ik_constraint;
+	return anim_ikc;
 }
 
 /**
@@ -2428,10 +2425,12 @@ spine.FfdAttachment.prototype.load = function (json)
  */
 spine.FfdSlot = function ()
 {
+	var ffd_slot = this;
+	ffd_slot.ffd_attachments = {};
 }
 
 /** @type {Object.<string,spine.FfdAttachment>} */
-spine.FfdSlot.prototype.ffd_attachments = null;
+spine.FfdSlot.prototype.ffd_attachments;
 
 /**
  * @return {spine.FfdSlot} 
@@ -2472,10 +2471,16 @@ spine.FfdSlot.prototype.iterateAttachments = function (callback)
  */
 spine.AnimFfd = function ()
 {
+	var anim_ffd = this;
+	anim_ffd.ffd_slots = {};
 }
 
+/** @type {number} */
+spine.AnimFfd.prototype.min_time = 0;
+/** @type {number} */
+spine.AnimFfd.prototype.max_time = 0;
 /** @type {Object.<string,spine.FfdSlot>} */
-spine.AnimFfd.prototype.ffd_slots = null;
+spine.AnimFfd.prototype.ffd_slots;
 
 /**
  * @return {spine.AnimFfd} 
@@ -2527,23 +2532,28 @@ spine.AnimFfd.prototype.iterateAttachments = function (callback)
  */
 spine.Animation = function ()
 {
+	var anim = this;
+	anim.bones = {};
+	anim.slots = {};
+	anim.ikcs = {};
+	anim.ffds = {};
 }
 
 /** @type {string} */
 spine.Animation.prototype.name = "";
 
 /** @type {Object.<string,spine.AnimBone>} */
-spine.Animation.prototype.bones = null;
+spine.Animation.prototype.bones;
 /** @type {Object.<string,spine.AnimSlot>} */
-spine.Animation.prototype.slots = null;
+spine.Animation.prototype.slots;
 /** @type {Array.<spine.EventKeyframe>} */
 spine.Animation.prototype.event_keyframes = null;
 /** @type {Array.<spine.OrderKeyframe>} */
 spine.Animation.prototype.order_keyframes = null;
-/** @type {Object.<string,spine.AnimIkConstraint>} */
-spine.Animation.prototype.ik_constraints = null;
+/** @type {Object.<string,spine.AnimIkc>} */
+spine.Animation.prototype.ikcs;
 /** @type {Object.<string,spine.AnimFfd>} */
-spine.Animation.prototype.ffds = null;
+spine.Animation.prototype.ffds;
 
 /** @type {number} */
 spine.Animation.prototype.min_time = 0;
@@ -2560,12 +2570,12 @@ spine.Animation.prototype.load = function (json)
 {
 	var anim = this;
 
-	anim.bones = null;
-	anim.slots = null;
+	anim.bones = {};
+	anim.slots = {};
 	anim.event_keyframes = null;
 	anim.order_keyframes = null;
-	anim.ik_constraints = null;
-	anim.ffds = null;
+	anim.ikcs = {};
+	anim.ffds = {};
 
 	anim.min_time = 0;
 	anim.max_time = 0;
@@ -2575,7 +2585,6 @@ spine.Animation.prototype.load = function (json)
 		switch (key)
 		{
 		case 'bones':
-			anim.bones = {};
 			for (var bone_key in json[key])
 			{
 				var anim_bone = new spine.AnimBone().load(json[key][bone_key]);
@@ -2585,7 +2594,6 @@ spine.Animation.prototype.load = function (json)
 			}
 			break;
 		case 'slots':
-			anim.slots = {};
 			for (var slot_key in json[key])
 			{
 				var anim_slot = new spine.AnimSlot().load(json[key][slot_key]);
@@ -2618,17 +2626,15 @@ spine.Animation.prototype.load = function (json)
 			anim.order_keyframes = anim.order_keyframes.sort(spine.Keyframe.compare);
 			break;
 		case 'ik':
-			anim.ik_constraints = {};
-			for (var ik_constraint_key in json[key])
+			for (var ikc_key in json[key])
 			{
-				var anim_ik_constraint = new spine.AnimIkConstraint().load(json[key][ik_constraint_key]);
-				anim.min_time = Math.min(anim.min_time, anim_ik_constraint.min_time);
-				anim.max_time = Math.max(anim.max_time, anim_ik_constraint.max_time);
-				anim.ik_constraints[ik_constraint_key] = anim_ik_constraint;
+				var anim_ikc = new spine.AnimIkc().load(json[key][ikc_key]);
+				anim.min_time = Math.min(anim.min_time, anim_ikc.min_time);
+				anim.max_time = Math.max(anim.max_time, anim_ikc.max_time);
+				anim.ikcs[ikc_key] = anim_ikc;
 			}
 			break;
 		case 'ffd':
-			anim.ffds = {};
 			for (var ffd_key in json[key])
 			{
 				var anim_ffd = new spine.AnimFfd().load(json[key][ffd_key]);
@@ -2692,8 +2698,8 @@ spine.Data = function ()
 	data.skeleton = new spine.Skeleton();
 	data.bones = {};
 	data.bone_keys = [];
-	data.ik_constraints = {};
-	data.ik_constraint_keys = [];
+	data.ikcs = {};
+	data.ikc_keys = [];
 	data.slots = {};
 	data.slot_keys = [];
 	data.skins = {};
@@ -2708,31 +2714,31 @@ spine.Data = function ()
 spine.Data.prototype.name = "";
 
 /** @type {spine.Skeleton} */
-spine.Data.prototype.skeleton = null;
+spine.Data.prototype.skeleton;
 /** @type {Object.<string,spine.Bone>} */
-spine.Data.prototype.bones = null;
+spine.Data.prototype.bones;
 /** @type {Array.<string>} */
-spine.Data.prototype.bone_keys = null;
-/** @type {Object.<string,spine.IkConstraint>} */
-spine.Data.prototype.ik_constraints = null;
+spine.Data.prototype.bone_keys;
+/** @type {Object.<string,spine.Ikc>} */
+spine.Data.prototype.ikcs;
 /** @type {Array.<string>} */
-spine.Data.prototype.ik_constraint_keys = null;
+spine.Data.prototype.ikc_keys;
 /** @type {Object.<string,spine.Slot>} */
-spine.Data.prototype.slots = null;
+spine.Data.prototype.slots;
 /** @type {Array.<string>} */
-spine.Data.prototype.slot_keys = null;
+spine.Data.prototype.slot_keys;
 /** @type {Object.<string,spine.Skin>} */
-spine.Data.prototype.skins = null;
+spine.Data.prototype.skins;
 /** @type {Array.<string>} */
-spine.Data.prototype.skin_keys = null;
+spine.Data.prototype.skin_keys;
 /** @type {Object.<string,spine.Event>} */
-spine.Data.prototype.events = null;
+spine.Data.prototype.events;
 /** @type {Array.<string>} */
-spine.Data.prototype.event_keys = null;
+spine.Data.prototype.event_keys;
 /** @type {Object.<string,spine.Animation>} */
-spine.Data.prototype.anims = null;
+spine.Data.prototype.anims;
 /** @type {Array.<string>} */
-spine.Data.prototype.anim_keys = null;
+spine.Data.prototype.anim_keys;
 
 /**
  * @return {spine.Data} 
@@ -2744,8 +2750,8 @@ spine.Data.prototype.load = function (json)
 
 	data.bones = {};
 	data.bone_keys = [];
-	data.ik_constraints = {};
-	data.ik_constraint_keys = [];
+	data.ikcs = {};
+	data.ikc_keys = [];
 	data.slots = {};
 	data.slot_keys = [];
 	data.skins = {};
@@ -2772,10 +2778,10 @@ spine.Data.prototype.load = function (json)
 			break;
 		case 'ik':
 			var json_ik = json[key];
-			json_ik.forEach(function (ik_constraint, ik_constraint_index)
+			json_ik.forEach(function (ikc, ikc_index)
 			{
-				data.ik_constraints[ik_constraint.name] = new spine.IkConstraint().load(ik_constraint);
-				data.ik_constraint_keys[ik_constraint_index] = ik_constraint.name;
+				data.ikcs[ikc.name] = new spine.Ikc().load(ikc);
+				data.ikc_keys[ikc_index] = ikc.name;
 			});
 			break;
 		case 'slots':
@@ -3203,169 +3209,135 @@ spine.Pose.prototype.strike = function ()
 	
 	var time = pose.time;
 
-	var data_bones = data && data.bones;
-	var data_bone_keys = data && data.bone_keys;
-	var anim_bones = anim && anim.bones;
-
-	data_bone_keys.forEach(function (bone_key)
+	data.bone_keys.forEach(function (bone_key)
 	{
-		var data_bone = data_bones[bone_key];
+		var data_bone = data.bones[bone_key];
 		var pose_bone = pose.bones[bone_key] || (pose.bones[bone_key] = new spine.Bone());
 
 		// start with a copy of the data bone
 		pose_bone.copy(data_bone);
 
 		// tween anim bone if keyframes are available
-		var anim_bone = anim_bones && anim_bones[bone_key];
+		var anim_bone = anim && anim.bones[bone_key];
 		if (anim_bone)
 		{
-			var translate_keyframes = anim_bone.translate_keyframes;
-			if (translate_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_bone.translate_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var translate_keyframe_index = spine.Keyframe.find(translate_keyframes, time);
-				if (translate_keyframe_index !== -1)
+				var translate_keyframe0 = anim_bone.translate_keyframes[keyframe_index];
+				var translate_keyframe1 = anim_bone.translate_keyframes[keyframe_index + 1];
+				if (translate_keyframe1)
 				{
-					var translate_keyframe0 = translate_keyframes[translate_keyframe_index];
-					var translate_keyframe1 = translate_keyframes[translate_keyframe_index + 1];
-					if (translate_keyframe1)
-					{
-						var pct = (time - translate_keyframe0.time) / (translate_keyframe1.time - translate_keyframe0.time);
-						pct = translate_keyframe0.curve.evaluate(pct);
-						pose_bone.local_space.position.x += spine.tween(translate_keyframe0.position.x, translate_keyframe1.position.x, pct);
-						pose_bone.local_space.position.y += spine.tween(translate_keyframe0.position.y, translate_keyframe1.position.y, pct);
-					}
-					else
-					{
-						pose_bone.local_space.position.x += translate_keyframe0.position.x;
-						pose_bone.local_space.position.y += translate_keyframe0.position.y;
-					}
+					var pct = translate_keyframe0.curve.evaluate((time - translate_keyframe0.time) / (translate_keyframe1.time - translate_keyframe0.time));
+					pose_bone.local_space.position.x += spine.tween(translate_keyframe0.position.x, translate_keyframe1.position.x, pct);
+					pose_bone.local_space.position.y += spine.tween(translate_keyframe0.position.y, translate_keyframe1.position.y, pct);
+				}
+				else
+				{
+					pose_bone.local_space.position.x += translate_keyframe0.position.x;
+					pose_bone.local_space.position.y += translate_keyframe0.position.y;
 				}
 			}
 
-			var rotate_keyframes = anim_bone.rotate_keyframes;
-			if (rotate_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_bone.rotate_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var rotate_keyframe_index = spine.Keyframe.find(rotate_keyframes, time);
-				if (rotate_keyframe_index !== -1)
+				var rotate_keyframe0 = anim_bone.rotate_keyframes[keyframe_index];
+				var rotate_keyframe1 = anim_bone.rotate_keyframes[keyframe_index + 1];
+				if (rotate_keyframe1)
 				{
-					var rotate_keyframe0 = rotate_keyframes[rotate_keyframe_index];
-					var rotate_keyframe1 = rotate_keyframes[rotate_keyframe_index + 1];
-					if (rotate_keyframe1)
-					{
-						var pct = (time - rotate_keyframe0.time) / (rotate_keyframe1.time - rotate_keyframe0.time);
-						pct = rotate_keyframe0.curve.evaluate(pct);
-						pose_bone.local_space.rotation.rad += spine.tweenAngle(rotate_keyframe0.rotation.rad, rotate_keyframe1.rotation.rad, pct);
-					}
-					else
-					{
-						pose_bone.local_space.rotation.rad += rotate_keyframe0.rotation.rad;
-					}
+					var pct = rotate_keyframe0.curve.evaluate((time - rotate_keyframe0.time) / (rotate_keyframe1.time - rotate_keyframe0.time));
+					pose_bone.local_space.rotation.rad += spine.tweenAngle(rotate_keyframe0.rotation.rad, rotate_keyframe1.rotation.rad, pct);
+				}
+				else
+				{
+					pose_bone.local_space.rotation.rad += rotate_keyframe0.rotation.rad;
 				}
 			}
 
-			var scale_keyframes = anim_bone.scale_keyframes;
-			if (scale_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_bone.scale_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var scale_keyframe_index = spine.Keyframe.find(scale_keyframes, time);
-				if (scale_keyframe_index !== -1)
+				var scale_keyframe0 = anim_bone.scale_keyframes[keyframe_index];
+				var scale_keyframe1 = anim_bone.scale_keyframes[keyframe_index + 1];
+				if (scale_keyframe1)
 				{
-					var scale_keyframe0 = scale_keyframes[scale_keyframe_index];
-					var scale_keyframe1 = scale_keyframes[scale_keyframe_index + 1];
-					if (scale_keyframe1)
-					{
-						var pct = (time - scale_keyframe0.time) / (scale_keyframe1.time - scale_keyframe0.time);
-						pct = scale_keyframe0.curve.evaluate(pct);
-						pose_bone.local_space.scale.x += spine.tween(scale_keyframe0.scale.x, scale_keyframe1.scale.x, pct) - 1;
-						pose_bone.local_space.scale.y += spine.tween(scale_keyframe0.scale.y, scale_keyframe1.scale.y, pct) - 1;
-					}
-					else
-					{
-						pose_bone.local_space.scale.x += scale_keyframe0.scale.x - 1;
-						pose_bone.local_space.scale.y += scale_keyframe0.scale.y - 1;
-					}
+					var pct = scale_keyframe0.curve.evaluate((time - scale_keyframe0.time) / (scale_keyframe1.time - scale_keyframe0.time));
+					pose_bone.local_space.scale.x += spine.tween(scale_keyframe0.scale.x, scale_keyframe1.scale.x, pct) - 1;
+					pose_bone.local_space.scale.y += spine.tween(scale_keyframe0.scale.y, scale_keyframe1.scale.y, pct) - 1;
+				}
+				else
+				{
+					pose_bone.local_space.scale.x += scale_keyframe0.scale.x - 1;
+					pose_bone.local_space.scale.y += scale_keyframe0.scale.y - 1;
 				}
 			}
 
-			var flip_x_keyframes = anim_bone.flip_x_keyframes;
-			if (flip_x_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_bone.flip_x_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var flip_x_keyframe_index = spine.Keyframe.find(flip_x_keyframes, time);
-				if (flip_x_keyframe_index !== -1)
-				{
-					var flip_x_keyframe0 = flip_x_keyframes[flip_x_keyframe_index];
-					// no tweening bone flip x
-					pose_bone.local_space.flip.x = (flip_x_keyframe0.flip)?(-1):(1);
-				}
+				var flip_x_keyframe0 = anim_bone.flip_x_keyframes[keyframe_index];
+				// no tweening bone flip x
+				pose_bone.local_space.flip.x = (flip_x_keyframe0.flip)?(-1):(1);
 			}
 
-			var flip_y_keyframes = anim_bone.flip_y_keyframes;
-			if (flip_y_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_bone.flip_y_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var flip_y_keyframe_index = spine.Keyframe.find(flip_y_keyframes, time);
-				if (flip_y_keyframe_index !== -1)
-				{
-					var flip_y_keyframe0 = flip_y_keyframes[flip_y_keyframe_index];
-					// no tweening bone flip y
-					pose_bone.local_space.flip.y = (flip_y_keyframe0.flip)?(-1):(1);
-				}
+				var flip_y_keyframe0 = anim_bone.flip_y_keyframes[keyframe_index];
+				// no tweening bone flip y
+				pose_bone.local_space.flip.y = (flip_y_keyframe0.flip)?(-1):(1);
 			}
 		}
 	});
 
-	pose.bone_keys = data_bone_keys;
+	pose.bone_keys = data.bone_keys;
 
 	// ik constraints
 
-	var anim_ik_constraints = anim && anim.ik_constraints;
-
-	data.ik_constraint_keys.forEach(function (ik_constraint_key)
+	data.ikc_keys.forEach(function (ikc_key)
 	{
 		function clamp (n, lo, hi) { return (n < lo)?(lo):((n > hi)?(hi):(n)); }
 
-		var ik_constraint = data.ik_constraints[ik_constraint_key];
-		var ik_constraint_mix = ik_constraint.mix;
-		var ik_constraint_bend_positive = ik_constraint.bend_positive;
+		var ikc = data.ikcs[ikc_key];
+		var ikc_mix = ikc.mix;
+		var ikc_bend_positive = ikc.bend_positive;
 
-		var anim_ik_constraint = anim_ik_constraints && anim_ik_constraints[ik_constraint_key];
-		if (anim_ik_constraint)
+		var anim_ikc = anim && anim.ikcs[ikc_key];
+		if (anim_ikc)
 		{
-			var ik_constraint_keyframes = anim_ik_constraint.ik_constraint_keyframes;
-			if (ik_constraint_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_ikc.ikc_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var ik_constraint_keyframe_index = spine.Keyframe.find(ik_constraint_keyframes, time);
-				if (ik_constraint_keyframe_index !== -1)
+				var ikc_keyframe0 = anim_ikc.ikc_keyframes[keyframe_index];
+				var ikc_keyframe1 = anim_ikc.ikc_keyframes[keyframe_index + 1];
+				if (ikc_keyframe1)
 				{
-					var ik_constraint_keyframe0 = ik_constraint_keyframes[ik_constraint_keyframe_index];
-					var ik_constraint_keyframe1 = ik_constraint_keyframes[ik_constraint_keyframe_index + 1];
-					if (ik_constraint_keyframe1)
-					{
-						var pct = (time - ik_constraint_keyframe0.time) / (ik_constraint_keyframe1.time - ik_constraint_keyframe0.time);
-						pct = ik_constraint_keyframe0.curve.evaluate(pct);
-						ik_constraint_mix = spine.tween(ik_constraint_keyframe0.mix, ik_constraint_keyframe1.mix, pct);
-					}
-					else
-					{
-						ik_constraint_mix = ik_constraint_keyframe0.mix;
-					}
-					// no tweening ik bend direction
-					ik_constraint_bend_positive = ik_constraint_keyframe0.bend_positive;
+					var pct = ikc_keyframe0.curve.evaluate((time - ikc_keyframe0.time) / (ikc_keyframe1.time - ikc_keyframe0.time));
+					ikc_mix = spine.tween(ikc_keyframe0.mix, ikc_keyframe1.mix, pct);
 				}
+				else
+				{
+					ikc_mix = ikc_keyframe0.mix;
+				}
+				// no tweening ik bend direction
+				ikc_bend_positive = ikc_keyframe0.bend_positive;
 			}
 		}
 
-		var target = pose.bones[ik_constraint.target_key];
+		var target = pose.bones[ikc.target_key];
 		spine.Bone.flatten(target, pose.bones);
 		var target_x = target.world_space.position.x;
 		var target_y = target.world_space.position.y;
-		var alpha = ik_constraint_mix;
-		var bend_direction = (ik_constraint_bend_positive)?(1):(-1);
+		var alpha = ikc_mix;
+		var bend_direction = (ikc_bend_positive)?(1):(-1);
 
 		if (alpha === 0) { return; }
 
-		switch (ik_constraint.bone_keys.length)
+		switch (ikc.bone_keys.length)
 		{
 		case 1:
-			var bone = pose.bones[ik_constraint.bone_keys[0]];
+			var bone = pose.bones[ikc.bone_keys[0]];
 			spine.Bone.flatten(bone, pose.bones);
 			var parent_rotation = 0;
 			var bone_parent = pose.bones[bone.parent_key];
@@ -3379,9 +3351,9 @@ spine.Pose.prototype.strike = function ()
 			bone.local_space.rotation.rad = spine.tweenAngle(bone.local_space.rotation.rad, Math.atan2(target_y, target_x) - parent_rotation, alpha);
 			break;
 		case 2:
-			var parent = pose.bones[ik_constraint.bone_keys[0]];
+			var parent = pose.bones[ikc.bone_keys[0]];
 			spine.Bone.flatten(parent, pose.bones);
-			var child = pose.bones[ik_constraint.bone_keys[1]];
+			var child = pose.bones[ikc.bone_keys[1]];
 			spine.Bone.flatten(child, pose.bones);
 			var position = new spine.Vector();
 			var parent_parent = pose.bones[parent.parent_key];
@@ -3440,64 +3412,51 @@ spine.Pose.prototype.strike = function ()
 		spine.Bone.flatten(bone, pose.bones);
 	});
 
-	var data_slots = data && data.slots;
-	var data_slot_keys = data && data.slot_keys;
-	var anim_slots = anim && anim.slots;
-
-	data_slot_keys.forEach(function (slot_key)
+	data.slot_keys.forEach(function (slot_key)
 	{
-		var data_slot = data_slots[slot_key];
+		var data_slot = data.slots[slot_key];
 		var pose_slot = pose.slots[slot_key] || (pose.slots[slot_key] = new spine.Slot());
 
 		// start with a copy of the data slot
 		pose_slot.copy(data_slot);
 
 		// tween anim slot if keyframes are available
-		var anim_slot = anim_slots && anim_slots[slot_key];
+		var anim_slot = anim && anim.slots[slot_key];
 		if (anim_slot)
 		{
-			var color_keyframes = anim_slot.color_keyframes;
-			if (color_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_slot.color_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var color_keyframe_index = spine.Keyframe.find(color_keyframes, time);
-				if (color_keyframe_index !== -1)
+				var color_keyframe0 = anim_slot.color_keyframes[keyframe_index];
+				var color_keyframe1 = anim_slot.color_keyframes[keyframe_index + 1];
+				if (color_keyframe1)
 				{
-					var color_keyframe0 = color_keyframes[color_keyframe_index];
-					var color_keyframe1 = color_keyframes[color_keyframe_index + 1];
-					if (color_keyframe1)
-					{
-						var pct = (time - color_keyframe0.time) / (color_keyframe1.time - color_keyframe0.time);
-						pct = color_keyframe0.curve.evaluate(pct);
-						pose_slot.color.r = spine.tween(color_keyframe0.color.r, color_keyframe1.color.r, pct);
-						pose_slot.color.g = spine.tween(color_keyframe0.color.g, color_keyframe1.color.g, pct);
-						pose_slot.color.b = spine.tween(color_keyframe0.color.b, color_keyframe1.color.b, pct);
-						pose_slot.color.a = spine.tween(color_keyframe0.color.a, color_keyframe1.color.a, pct);
-					}
-					else
-					{
-						pose_slot.color.r = color_keyframe0.color.r;
-						pose_slot.color.g = color_keyframe0.color.g;
-						pose_slot.color.b = color_keyframe0.color.b;
-						pose_slot.color.a = color_keyframe0.color.a;
-					}
+					var pct = color_keyframe0.curve.evaluate((time - color_keyframe0.time) / (color_keyframe1.time - color_keyframe0.time));
+					pose_slot.color.r = spine.tween(color_keyframe0.color.r, color_keyframe1.color.r, pct);
+					pose_slot.color.g = spine.tween(color_keyframe0.color.g, color_keyframe1.color.g, pct);
+					pose_slot.color.b = spine.tween(color_keyframe0.color.b, color_keyframe1.color.b, pct);
+					pose_slot.color.a = spine.tween(color_keyframe0.color.a, color_keyframe1.color.a, pct);
+				}
+				else
+				{
+					pose_slot.color.r = color_keyframe0.color.r;
+					pose_slot.color.g = color_keyframe0.color.g;
+					pose_slot.color.b = color_keyframe0.color.b;
+					pose_slot.color.a = color_keyframe0.color.a;
 				}
 			}
 
-			var attachment_keyframes = anim_slot.attachment_keyframes;
-			if (attachment_keyframes)
+			var keyframe_index = spine.Keyframe.find(anim_slot.attachment_keyframes, time);
+			if (keyframe_index !== -1)
 			{
-				var attachment_keyframe_index = spine.Keyframe.find(attachment_keyframes, time);
-				if (attachment_keyframe_index !== -1)
-				{
-					var attachment_keyframe0 = attachment_keyframes[attachment_keyframe_index];
-					// no tweening attachments
-					pose_slot.attachment_key = attachment_keyframe0.name;
-				}
+				var attachment_keyframe0 = anim_slot.attachment_keyframes[keyframe_index];
+				// no tweening attachments
+				pose_slot.attachment_key = attachment_keyframe0.name;
 			}
 		}
 	});
 
-	pose.slot_keys = data_slot_keys;
+	pose.slot_keys = data.slot_keys;
 
 	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
@@ -3514,14 +3473,12 @@ spine.Pose.prototype.strike = function ()
 
 	if (anim)
 	{
-		var order_keyframe_index = spine.Keyframe.find(anim.order_keyframes, time);
-		if (order_keyframe_index !== -1)
+		var keyframe_index = spine.Keyframe.find(anim.order_keyframes, time);
+		if (keyframe_index !== -1)
 		{
-			pose.slot_keys = data_slot_keys.slice(0); // copy array before reordering
-
-			var order_keyframe = anim.order_keyframes[order_keyframe_index];
-			var slot_offsets = order_keyframe.slot_offsets;
-			slot_offsets.forEach(function (slot_offset)
+			var order_keyframe = anim.order_keyframes[keyframe_index];
+			pose.slot_keys = data.slot_keys.slice(0); // copy array before reordering
+			order_keyframe.slot_offsets.forEach(function (slot_offset)
 			{
 				var slot_index = pose.slot_keys.indexOf(slot_offset.slot);
 				if (slot_index !== -1)
@@ -3539,12 +3496,10 @@ spine.Pose.prototype.strike = function ()
 
 	if (anim)
 	{
-		var data_events = data && data.events;
-
 		var add_event = function (event_keyframe)
 		{
 			var pose_event = new spine.Event();
-			var data_event = data_events[event_keyframe.name];
+			var data_event = data.events[event_keyframe.name];
 			if (data_event)
 			{
 				pose_event.copy(data_event);
@@ -3557,27 +3512,27 @@ spine.Pose.prototype.strike = function ()
 
 		if (wrapped_min)
 		{
-			var event_keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.min_time);
-			if (event_keyframe_index !== -1)
+			var keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.min_time);
+			if (keyframe_index !== -1)
 			{
-				var event_keyframe = anim.event_keyframes[event_keyframe_index];
+				var event_keyframe = anim.event_keyframes[keyframe_index];
 				add_event(event_keyframe);
 			}
 		}
 		else if (wrapped_max)
 		{
-			var event_keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.max_time);
-			if (event_keyframe_index !== -1)
+			var keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.max_time);
+			if (keyframe_index !== -1)
 			{
-				var event_keyframe = anim.event_keyframes[event_keyframe_index];
+				var event_keyframe = anim.event_keyframes[keyframe_index];
 				add_event(event_keyframe);
 			}
 		}
 
-		var event_keyframe_index = spine.Keyframe.find(anim.event_keyframes, time);
-		if (event_keyframe_index !== -1)
+		var keyframe_index = spine.Keyframe.find(anim.event_keyframes, time);
+		if (keyframe_index !== -1)
 		{
-			var event_keyframe = anim.event_keyframes[event_keyframe_index];
+			var event_keyframe = anim.event_keyframes[keyframe_index];
 			if (((elapsed_time < 0) && ((time <= event_keyframe.time) && (event_keyframe.time <= prev_time))) || 
 				((elapsed_time > 0) && ((prev_time <= event_keyframe.time) && (event_keyframe.time <= time))))
 			{
