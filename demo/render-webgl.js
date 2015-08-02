@@ -451,7 +451,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 		mat3x3Identity(gl_tex_matrix);
 		mat3x3ApplyAtlasSiteTexMatrix(gl_tex_matrix, site, page);
 
-		vec4ApplyColor(gl_color, slot.color);
+		vec4CopyColor(gl_color, slot.color);
 
 		gl.enable(gl.BLEND);
 		switch (slot.blend)
@@ -491,8 +491,8 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 			gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-			glSetupAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
-			glSetupAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
+			glResetAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
+			glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
 			gl.bindTexture(gl.TEXTURE_2D, null);
 			break;
@@ -712,12 +712,21 @@ function vec4Identity (v)
 	return v;
 }
 
-function vec4ApplyColor (v, color)
+function vec4CopyColor (v, color)
 {
 	v[0] = color.r;
 	v[1] = color.g;
 	v[2] = color.b;
 	v[3] = color.a;
+	return v;
+}
+
+function vec4ApplyColor (v, color)
+{
+	v[0] *= color.r;
+	v[1] *= color.g;
+	v[2] *= color.b;
+	v[3] *= color.a;
 	return v;
 }
 
