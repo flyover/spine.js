@@ -911,7 +911,7 @@ function glMakeVertex (gl, type_array, size, buffer_type, buffer_draw)
 	else if (type_array instanceof Uint16Array) { vertex.type = gl.UNSIGNED_SHORT; }
 	else if (type_array instanceof Int32Array) { vertex.type = gl.INT; }
 	else if (type_array instanceof Uint32Array) { vertex.type = gl.UNSIGNED_INT; }
-	else { throw new Error(); }
+	else { vertex.type = gl.NONE; throw new Error(); }
 	vertex.size = size;
 	vertex.count = type_array.length / vertex.size;
 	vertex.type_array = type_array;
@@ -926,10 +926,10 @@ function glMakeVertex (gl, type_array, size, buffer_type, buffer_draw)
 function glSetupAttribute(gl, shader, format, vertex, count)
 {
 	count = count || 0;
+	gl.bindBuffer(vertex.buffer_type, vertex.buffer);
 	if (count > 0)
 	{
 		var stride = vertex.type_array.BYTES_PER_ELEMENT * vertex.size * count; // in bytes
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertex.buffer);
 		for (var index = 0; index < count; ++index)
 		{
 			var offset = vertex.type_array.BYTES_PER_ELEMENT * vertex.size * index; // in bytes
@@ -940,7 +940,6 @@ function glSetupAttribute(gl, shader, format, vertex, count)
 	}
 	else
 	{
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertex.buffer);
 		var attrib = shader.attribs[format];
 		gl.vertexAttribPointer(attrib, vertex.size, vertex.type, false, 0, 0);
 		gl.enableVertexAttribArray(attrib);
