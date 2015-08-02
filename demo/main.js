@@ -88,7 +88,7 @@ main.start = function ()
 	var camera_zoom = 0.5;
 
 	var enable_render_webgl = !!gl;
-	var enable_render_ctx2d = !!ctx && !render_webgl;
+	var enable_render_ctx2d = !!ctx && !enable_render_webgl;
 
 	add_checkbox_control("GL", enable_render_webgl, function (checked) { enable_render_webgl = checked; });
 	add_checkbox_control("2D", enable_render_ctx2d, function (checked) { enable_render_ctx2d = checked; });
@@ -237,14 +237,27 @@ main.start = function ()
 			messages.innerHTML = "skin: " + pose.skin_key + ", anim: " + pose.anim_key + "<br>" + file.path + file.json_url;
 		}
 
-		//pose.events.forEach(function (event) { console.log(event.name, event.int_value, event.float_value, event.string_value); });
-
 		if (ctx)
 		{
 			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);			
+		}
 
-			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-			
+		if (gl)
+		{
+			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+			gl.clearColor(0, 0, 0, 0);
+			gl.clear(gl.COLOR_BUFFER_BIT);
+		}
+
+		if (loading) { return; }
+
+		pose.strike();
+
+		//pose.events.forEach(function (event) { console.log("event", event.name, event.int_value, event.float_value, event.string_value); });
+
+		if (ctx)
+		{
 			// origin at center, x right, y up
 			ctx.translate(ctx.canvas.width/2, ctx.canvas.height/2); ctx.scale(1, -1);
 
@@ -256,49 +269,41 @@ main.start = function ()
 			ctx.translate(-camera_x, -camera_y);
 			ctx.scale(camera_zoom, camera_zoom);
 			ctx.lineWidth = 1 / camera_zoom;
+
+			if (enable_render_ctx2d)
+			{
+				render_ctx2d.drawPose(pose, atlas);
+			}
+
+			if (enable_render_debug_data)
+			{
+				render_ctx2d.drawDebugData(pose, atlas);
+			}
+
+			if (enable_render_debug_pose)
+			{
+				render_ctx2d.drawDebugPose(pose, atlas);
+			}
 		}
 
 		if (gl)
 		{
-			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-			gl.clearColor(0, 0, 0, 0);
-			gl.clear(gl.COLOR_BUFFER_BIT);
-
 			var gl_projection = render_webgl.gl_projection;
 			mat3x3Identity(gl_projection);
-			mat3x3Ortho(gl_projection, -canvas_gl.width/2, canvas_gl.width/2, -canvas_gl.height/2, canvas_gl.height/2);
+			mat3x3Ortho(gl_projection, -gl.canvas.width/2, gl.canvas.width/2, -gl.canvas.height/2, gl.canvas.height/2);
 
 			if (enable_render_ctx2d && enable_render_webgl)
 			{
-				mat3x3Translate(gl_projection, canvas_gl.width/4, 0);
+				mat3x3Translate(gl_projection, gl.canvas.width/4, 0);
 			}
 
 			mat3x3Translate(gl_projection, -camera_x, -camera_y);
 			mat3x3Scale(gl_projection, camera_zoom, camera_zoom);
-		}
 
-		if (loading) { return; }
-
-		pose.strike();
-
-		if (enable_render_webgl)
-		{
-			render_webgl.drawPose(pose, atlas);
-		}
-
-		if (enable_render_ctx2d)
-		{
-			render_ctx2d.drawPose(pose, atlas);
-		}
-
-		if (enable_render_debug_data)
-		{
-			render_ctx2d.drawDebugData(pose, atlas);
-		}
-
-		if (enable_render_debug_pose)
-		{
-			render_ctx2d.drawDebugPose(pose, atlas);
+			if (enable_render_webgl)
+			{
+				render_webgl.drawPose(pose, atlas);
+			}
 		}
 	}
 

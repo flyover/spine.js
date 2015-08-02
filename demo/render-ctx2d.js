@@ -10,9 +10,9 @@ renderCtx2D = function (ctx)
 	render.ctx = ctx;
 	render.images = {};
 	render.skin_info_map = {};
-	render.region_vertex_position = new Float32Array([ -1, -1, 1, -1, 1, 1, -1, 1 ]);
-	render.region_vertex_texcoord = new Float32Array([ 0, 1, 1, 1, 1, 0, 0, 0 ]);
-	render.region_vertex_triangle = new Uint16Array([ 0, 1, 2, 0, 2, 3 ]);
+	render.region_vertex_position = new Float32Array([ -1, -1,  1, -1,  1,  1, -1,  1 ]); // [ x, y ]
+	render.region_vertex_texcoord = new Float32Array([  0,  1,  1,  1,  1,  0,  0,  0 ]); // [ u, v ]
+	render.region_vertex_triangle = new Uint16Array([ 0, 1, 2, 0, 2, 3 ]); // [ i0, i1, i2 ]
 }
 
 /**
