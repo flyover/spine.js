@@ -753,10 +753,8 @@ function mat3x3Translate (m, x, y)
 	return m;
 }
 
-function mat3x3Rotate (m, angle)
+function mat3x3RotateCosSin (m, c, s)
 {
-	var c = Math.cos(angle);
-	var s = Math.sin(angle);
 	var m0 = m[0], m1 = m[1];
 	var m3 = m[3], m4 = m[4];
 	m[0] = m0 * c + m3 * s;
@@ -764,6 +762,11 @@ function mat3x3Rotate (m, angle)
 	m[3] = m3 * c - m0 * s;
 	m[4] = m4 * c - m1 * s;
 	return m;
+}
+
+function mat3x3Rotate (m, angle)
+{
+	return mat3x3RotateCosSin(m, Math.cos(angle), Math.sin(angle));
 }
 
 function mat3x3Scale (m, x, y)
@@ -801,7 +804,7 @@ function mat3x3ApplyAtlasSiteTexMatrix (m, site, page)
 			mat3x3Translate(m, site.x, site.y);
 			mat3x3Scale(m, site.h, site.w);
 			mat3x3Translate(m, 0, 1); // bottom-left corner
-			mat3x3Rotate(m, -Math.PI/2); // -90 degrees
+			mat3x3RotateCosSin(m, 0, -1); // -90 degrees
 		}
 		else
 		{
