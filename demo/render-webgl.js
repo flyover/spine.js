@@ -538,6 +538,8 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 			glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
 			gl.bindTexture(gl.TEXTURE_2D, null);
+
+			gl.useProgram(null);
 			break;
 		case 'mesh':
 			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
@@ -715,6 +717,8 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
 				gl.bindTexture(gl.TEXTURE_2D, null);
+
+				gl.useProgram(null);
 			}
 			else
 			{
@@ -743,6 +747,10 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				
 				glResetAttribute(gl, gl_shader, 'aVertexPosition{index}', gl_vertex.position, render.gl_skin_shader_position_count);
 				glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
+
+				gl.bindTexture(gl.TEXTURE_2D, null);
+
+				gl.useProgram(null);
 			}
 			break;
 		}
