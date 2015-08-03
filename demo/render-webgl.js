@@ -449,7 +449,8 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 
 		mat3x3Identity(gl_modelview);
 		mat3x3Identity(gl_tex_matrix);
-		mat3x3ApplyAtlasSiteTexMatrix(gl_tex_matrix, site, page);
+		mat3x3ApplyAtlasPageTexcoord(gl_tex_matrix, page);
+		mat3x3ApplyAtlasSiteTexcoord(gl_tex_matrix, site);
 
 		vec4CopyColor(gl_color, slot.color);
 
@@ -468,7 +469,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 		case 'region':
 			mat3x3ApplySpace(gl_modelview, attachment.world_space);
 			mat3x3Scale(gl_modelview, attachment.width/2, attachment.height/2);
-			mat3x3ApplyAtlasSiteModelview(gl_modelview, site, page);
+			mat3x3ApplyAtlasSitePosition(gl_modelview, site);
 
 			var gl_shader = render.gl_mesh_shader;
 			var gl_vertex = render.gl_region_vertex;
@@ -500,7 +501,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
 			var bone = pose.bones[slot.bone_key];
 			mat3x3ApplySpace(gl_modelview, bone.world_space);
-			mat3x3ApplyAtlasSiteModelview(gl_modelview, site, page);
+			mat3x3ApplyAtlasSitePosition(gl_modelview, site);
 
 			var anim = pose.data.anims[pose.anim_key];
 			var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
@@ -610,7 +611,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 					var modelview = render.gl_skin_shader_modelview_array.subarray(index * 9, (index + 1) * 9);
 					mat3x3Copy(modelview, gl_modelview);
 					mat3x3ApplySpace(modelview, bone.world_space);
-					mat3x3ApplyAtlasSiteModelview(modelview, site, page);
+					mat3x3ApplyAtlasSitePosition(modelview, site);
 				}
 			}
 
@@ -790,48 +791,54 @@ function mat3x3Transform (m, v, out)
 	var x = m[0]*v[0] + m[3]*v[1] + m[6];
 	var y = m[1]*v[0] + m[4]*v[1] + m[7];
 	var w = m[2]*v[0] + m[5]*v[1] + m[8];
-	out[0] = x / w;
-	out[1] = y / w;
+	var iw = (w)?(1/w):(1);
+	out[0] = x * iw;
+	out[1] = y * iw;
 	return out;
 }
 
 function mat3x3ApplySpace (m, space)
 {
-	mat3x3Translate(m, space.position.x, space.position.y);
-	mat3x3Rotate(m, space.rotation.rad * space.flip.x * space.flip.y);
-	mat3x3Scale(m, space.scale.x * space.flip.x, space.scale.y * space.flip.y);
-	return m;
-}
-
-function mat3x3ApplyAtlasSiteTexMatrix (m, site, page)
-{
-	if (site)
+	if (space)
 	{
-		if (site.rotate)
-		{
-			mat3x3Scale(m, 1 / page.w, 1 / page.h);
-			mat3x3Translate(m, site.x, site.y);
-			mat3x3Scale(m, site.h, site.w);
-			mat3x3Translate(m, 0, 1); // bottom-left corner
-			mat3x3RotateCosSin(m, 0, -1); // -90 degrees
-		}
-		else
-		{
-			mat3x3Scale(m, 1 / page.w, 1 / page.h);
-			mat3x3Translate(m, site.x, site.y);
-			mat3x3Scale(m, site.w, site.h);
-		}
+		mat3x3Translate(m, space.position.x, space.position.y);
+		mat3x3Rotate(m, space.rotation.rad * space.flip.x * space.flip.y);
+		mat3x3Scale(m, space.scale.x * space.flip.x, space.scale.y * space.flip.y);
 	}
 	return m;
 }
 
-function mat3x3ApplyAtlasSiteModelview (m, site, page)
+function mat3x3ApplyAtlasPageTexcoord (m, page)
+{
+	if (page)
+	{
+		mat3x3Scale(m, 1 / page.w, 1 / page.h);
+	}
+	return m;
+}
+
+function mat3x3ApplyAtlasSiteTexcoord (m, site)
 {
 	if (site)
 	{
-		mat3x3Scale(m, 1 / site.original_w, 1 / site.original_h);
-		mat3x3Translate(m, site.offset_x, site.offset_y);
+		mat3x3Translate(m, site.x, site.y);
+		if (site.rotate)
+		{
+			mat3x3Translate(m, 0, site.w); // bottom-left corner
+			mat3x3RotateCosSin(m, 0, -1); // -90 degrees
+		}
 		mat3x3Scale(m, site.w, site.h);
+	}
+	return m;
+}
+
+function mat3x3ApplyAtlasSitePosition (m, site)
+{
+	if (site)
+	{
+		mat3x3Scale(m, 1 / site.w, 1 / site.h);
+		mat3x3Translate(m, site.offset_x, site.offset_y);
+		mat3x3Scale(m, site.original_w, site.original_h);
 	}
 	return m;
 }
@@ -941,10 +948,11 @@ function glSetupAttribute(gl, shader, format, vertex, count)
 	gl.bindBuffer(vertex.buffer_type, vertex.buffer);
 	if (count > 0)
 	{
-		var stride = vertex.type_array.BYTES_PER_ELEMENT * vertex.size * count; // in bytes
+		var sizeof_vertex = vertex.type_array.BYTES_PER_ELEMENT * vertex.size; // in bytes
+		var stride = sizeof_vertex * count;
 		for (var index = 0; index < count; ++index)
 		{
-			var offset = vertex.type_array.BYTES_PER_ELEMENT * vertex.size * index; // in bytes
+			var offset = sizeof_vertex * index;
 			var attrib = shader.attribs[format.replace(/{index}/g, index)];
 			gl.vertexAttribPointer(attrib, vertex.size, vertex.type, false, stride, offset);
 			gl.enableVertexAttribArray(attrib);

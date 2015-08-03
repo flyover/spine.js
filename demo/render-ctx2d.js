@@ -90,17 +90,17 @@ renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 				var vertex_texcoord = slot_info.vertex_texcoord = new Float32Array(attachment.uvs);
 				var vertex_triangle = slot_info.vertex_triangle = new Uint16Array(attachment.triangles);
 				var position = new spine.Vector();
-				for (var vertex_index = 0, i = 0; vertex_index < vertex_count; ++vertex_index)
+				for (var vertex_index = 0, index = 0; vertex_index < vertex_count; ++vertex_index)
 				{
-					var blender_count = attachment.vertices[i++];
+					var blender_count = attachment.vertices[index++];
 					var setup_position_x = 0;
 					var setup_position_y = 0;
 					for (var blender_index = 0; blender_index < blender_count; ++blender_index)
 					{
-						var bone_index = attachment.vertices[i++];
-						var x = position.x = attachment.vertices[i++];
-						var y = position.y = attachment.vertices[i++];
-						var weight = attachment.vertices[i++];
+						var bone_index = attachment.vertices[index++];
+						var x = position.x = attachment.vertices[index++];
+						var y = position.y = attachment.vertices[index++];
+						var weight = attachment.vertices[index++];
 						var bone_key = pose.data.bone_keys[bone_index];
 						var bone = pose.data.bones[bone_key];
 						spine.Space.transform(bone.world_space, position, position);
@@ -190,25 +190,25 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 			var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
 			if (ffd_keyframe_index !== -1)
 			{
+				// ffd
+
+				var pct = 0;
 				var ffd_keyframe0 = ffd_keyframes[ffd_keyframe_index];
 				var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
 				if (ffd_keyframe1)
 				{
-					var pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
-					for (var i = 0; i < slot_info.vertex_position.length; ++i)
-					{
-						var v0 = ffd_keyframe0.vertices[i - ffd_keyframe0.offset] || 0;
-						var v1 = ffd_keyframe1.vertices[i - ffd_keyframe1.offset] || 0;
-						slot_info.vertex_position[i] = attachment.vertices[i] + spine.tween(v0, v1, pct);
-					}
+					pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
 				}
 				else
 				{
-					for (var i = 0; i < slot_info.vertex_position.length; ++i)
-					{
-						var v0 = ffd_keyframe0.vertices[i - ffd_keyframe0.offset] || 0;
-						slot_info.vertex_position[i] = attachment.vertices[i] + v0;
-					}
+					ffd_keyframe1 = ffd_keyframe0;
+				}
+
+				for (var index = 0; index < slot_info.vertex_position.length; ++index)
+				{
+					var v0 = ffd_keyframe0.vertices[index - ffd_keyframe0.offset] || 0;
+					var v1 = ffd_keyframe1.vertices[index - ffd_keyframe1.offset] || 0;
+					slot_info.vertex_position[index] = attachment.vertices[index] + spine.tween(v0, v1, pct);
 				}
 			}
 			break;
@@ -222,73 +222,48 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 			var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
 			if (ffd_keyframe_index !== -1)
 			{
+				// ffd
+
+				var pct = 0;
 				var ffd_keyframe0 = ffd_keyframes[ffd_keyframe_index];
 				var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
 				if (ffd_keyframe1)
 				{
-					// ffd with tweening
-
 					var pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
-
-					var vertex_blend_position = slot_info.vertex_blend_position;
-					var position = new spine.Vector();
-					for (var vertex_index = 0, i = 0, ffd_index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
-					{
-						var blender_count = attachment.vertices[i++];
-						var blend_position_x = 0;
-						var blend_position_y = 0;
-						for (var blender_index = 0; blender_index < blender_count; ++blender_index)
-						{
-							var bone_index = attachment.vertices[i++];
-							position.x = attachment.vertices[i++];
-							position.y = attachment.vertices[i++];
-							var weight = attachment.vertices[i++];
-							var bone_key = pose.bone_keys[bone_index];
-							var bone = pose.bones[bone_key];
-							var v0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
-							var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
-							position.x += spine.tween(v0, v1, pct); ++ffd_index;
-							var v0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
-							var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
-							position.y += spine.tween(v0, v1, pct); ++ffd_index;
-							spine.Space.transform(bone.world_space, position, position);
-							blend_position_x += position.x * weight;
-							blend_position_y += position.y * weight;
-						}
-						var vertex_position_offset = vertex_index * 2;
-						vertex_blend_position[vertex_position_offset++] = blend_position_x;
-						vertex_blend_position[vertex_position_offset++] = blend_position_y;
-					}
 				}
 				else
 				{
-					// ffd with no tweening
+					ffd_keyframe1 = ffd_keyframe0;
+				}
 
-					var vertex_blend_position = slot_info.vertex_blend_position;
-					var position = new spine.Vector();
-					for (var vertex_index = 0, i = 0, ffd_index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
+				var vertex_blend_position = slot_info.vertex_blend_position;
+				var position = new spine.Vector();
+				for (var vertex_index = 0, index = 0, ffd_index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
+				{
+					var blender_count = attachment.vertices[index++];
+					var blend_position_x = 0;
+					var blend_position_y = 0;
+					for (var blender_index = 0; blender_index < blender_count; ++blender_index)
 					{
-						var blender_count = attachment.vertices[i++];
-						var blend_position_x = 0;
-						var blend_position_y = 0;
-						for (var blender_index = 0; blender_index < blender_count; ++blender_index)
-						{
-							var bone_index = attachment.vertices[i++];
-							position.x = attachment.vertices[i++];
-							position.y = attachment.vertices[i++];
-							var weight = attachment.vertices[i++];
-							var bone_key = pose.bone_keys[bone_index];
-							var bone = pose.bones[bone_key];
-							position.x += ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0; ++ffd_index;
-							position.y += ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0; ++ffd_index;
-							spine.Space.transform(bone.world_space, position, position);
-							blend_position_x += position.x * weight;
-							blend_position_y += position.y * weight;
-						}
-						var vertex_position_offset = vertex_index * 2;
-						vertex_blend_position[vertex_position_offset++] = blend_position_x;
-						vertex_blend_position[vertex_position_offset++] = blend_position_y;
+						var bone_index = attachment.vertices[index++];
+						position.x = attachment.vertices[index++];
+						position.y = attachment.vertices[index++];
+						var weight = attachment.vertices[index++];
+						var bone_key = pose.bone_keys[bone_index];
+						var bone = pose.bones[bone_key];
+						var v0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
+						var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
+						position.x += spine.tween(v0, v1, pct); ++ffd_index;
+						var v0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
+						var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
+						position.y += spine.tween(v0, v1, pct); ++ffd_index;
+						spine.Space.transform(bone.world_space, position, position);
+						blend_position_x += position.x * weight;
+						blend_position_y += position.y * weight;
 					}
+					var vertex_position_offset = vertex_index * 2;
+					vertex_blend_position[vertex_position_offset++] = blend_position_x;
+					vertex_blend_position[vertex_position_offset++] = blend_position_y;
 				}
 			}
 			else
@@ -297,17 +272,17 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 
 				var vertex_blend_position = slot_info.vertex_blend_position;
 				var position = new spine.Vector();
-				for (var vertex_index = 0, i = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
+				for (var vertex_index = 0, index = 0; vertex_index < slot_info.vertex_count; ++vertex_index)
 				{
-					var blender_count = attachment.vertices[i++];
+					var blender_count = attachment.vertices[index++];
 					var blend_position_x = 0;
 					var blend_position_y = 0;
 					for (var blender_index = 0; blender_index < blender_count; ++blender_index)
 					{
-						var bone_index = attachment.vertices[i++];
-						position.x = attachment.vertices[i++];
-						position.y = attachment.vertices[i++];
-						var weight = attachment.vertices[i++];
+						var bone_index = attachment.vertices[index++];
+						position.x = attachment.vertices[index++];
+						position.y = attachment.vertices[index++];
+						var weight = attachment.vertices[index++];
 						var bone_key = pose.bone_keys[bone_index];
 						var bone = pose.bones[bone_key];
 						spine.Space.transform(bone.world_space, position, position);
@@ -341,54 +316,47 @@ renderCtx2D.prototype.drawPose = function (pose, atlas)
 		if (!attachment) { return; }
 		if (attachment.type === 'boundingbox') { return; }
 
-		var image = null;
 		var site = atlas && atlas.sites[attachment_key];
-		if (site)
+		var page = site && atlas.pages[site.page];
+		var image_key = (page && page.name) || attachment_key;
+		var image = render.images[image_key];
+
+		if (!image || !image.complete) { return; }
+
+		ctx.save();
+
+		switch (slot.blend)
 		{
-			var page = atlas.pages[site.page];
-			var image_key = page.name;
-			image = render.images[image_key];
+		default:
+		case 'normal': ctx.globalCompositeOperation = 'source-over'; break;
+		case 'additive': ctx.globalCompositeOperation = 'lighter'; break;
+		case 'multiply': ctx.globalCompositeOperation = 'multiply'; break;
+		case 'screen': ctx.globalCompositeOperation = 'screen'; break;
 		}
-		else
+
+		switch (attachment.type)
 		{
-			var image_key = attachment_key;
-			image = render.images[image_key];
+		case 'region':
+			applySpace(ctx, attachment.world_space);
+			applyAtlasSitePosition(ctx, site);
+			ctx.scale(attachment.width/2, attachment.height/2);
+			drawImageMesh(ctx, render.region_vertex_triangle, render.region_vertex_position, render.region_vertex_texcoord, image, site, page);
+			break;
+		case 'mesh':
+			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			var bone = pose.bones[slot.bone_key];
+			applySpace(ctx, bone.world_space);
+			applyAtlasSitePosition(ctx, site);
+			drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, slot_info.vertex_texcoord, image, site, page);
+			break;
+		case 'skinnedmesh':
+			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			applyAtlasSitePosition(ctx, site);
+			drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, slot_info.vertex_texcoord, image, site, page);
+			break;
 		}
 
-		if (image && image.complete)
-		{
-			ctx.save();
-
-			switch (slot.blend)
-			{
-			default:
-			case 'normal': ctx.globalCompositeOperation = 'source-over'; break;
-			case 'additive': ctx.globalCompositeOperation = 'lighter'; break;
-			case 'multiply': ctx.globalCompositeOperation = 'multiply'; break;
-			case 'screen': ctx.globalCompositeOperation = 'screen'; break;
-			}
-
-			switch (attachment.type)
-			{
-			case 'region':
-				applySpace(ctx, attachment.world_space);
-				ctx.scale(attachment.width/2, attachment.height/2);
-				drawImageMesh(ctx, render.region_vertex_triangle, render.region_vertex_position, render.region_vertex_texcoord, image, site);
-				break;
-			case 'mesh':
-				var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-				var bone = pose.bones[slot.bone_key];
-				applySpace(ctx, bone.world_space);
-				drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, slot_info.vertex_texcoord, image, site);
-				break;
-			case 'skinnedmesh':
-				var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-				drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, slot_info.vertex_texcoord, image, site);
-				break;
-			}
-
-			ctx.restore();
-		}
+		ctx.restore();
 	});
 }
 
@@ -408,18 +376,21 @@ renderCtx2D.prototype.drawDebugPose = function (pose, atlas)
 	{
 		if (!attachment) { return; }
 
+		var site = atlas && atlas.sites[attachment_key];
+
 		ctx.save();
 
 		switch (attachment.type)
 		{
 		case 'region':
 			applySpace(ctx, attachment.world_space);
-			var w = attachment.width;
-			var h = attachment.height;
+			applyAtlasSitePosition(ctx, site);
+			ctx.beginPath();
+			ctx.rect(-attachment.width/2, -attachment.height/2, attachment.width, attachment.height);
 			ctx.fillStyle = 'rgba(127,127,127,0.25)';
-			ctx.fillRect(-w/2, -h/2, w, h);
+			ctx.fill();
 			ctx.strokeStyle = 'rgba(127,127,127,1.0)';
-			ctx.strokeRect(-w/2, -h/2, w, h);
+			ctx.stroke();
 			break;
 		case 'boundingbox':
 			var bone = pose.bones[slot.bone_key];
@@ -431,17 +402,19 @@ renderCtx2D.prototype.drawDebugPose = function (pose, atlas)
 				if (index & 1) { ctx.lineTo(x, value); } else { x = value; }
 			});
 			ctx.closePath();
-			ctx.strokeStyle = 'rgba(127,127,127,1.0)';
+			ctx.strokeStyle = 'yellow';
 			ctx.stroke();
 			break;
 		case 'mesh':
 			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
 			var bone = pose.bones[slot.bone_key];
 			applySpace(ctx, bone.world_space);
+			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		case 'skinnedmesh':
 			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		}
@@ -474,20 +447,21 @@ renderCtx2D.prototype.drawDebugData = function (pose, atlas)
 	{
 		if (!attachment) { return; }
 
+		var site = atlas && atlas.sites[attachment_key];
+
 		ctx.save();
 
 		switch (attachment.type)
 		{
 		case 'region':
-			var bone = pose.data.bones[slot.bone_key];
-			applySpace(ctx, bone.world_space);
-			applySpace(ctx, attachment.local_space);
-			var w = attachment.width;
-			var h = attachment.height;
+			applySpace(ctx, attachment.world_space);
+			applyAtlasSitePosition(ctx, site);
+			ctx.beginPath();
+			ctx.rect(-attachment.width/2, -attachment.height/2, attachment.width, attachment.height);
 			ctx.fillStyle = 'rgba(127,127,127,0.25)';
-			ctx.fillRect(-w/2, -h/2, w, h);
+			ctx.fill();
 			ctx.strokeStyle = 'rgba(127,127,127,1.0)';
-			ctx.strokeRect(-w/2, -h/2, w, h);
+			ctx.stroke();
 			break;
 		case 'boundingbox':
 			var bone = pose.data.bones[slot.bone_key];
@@ -499,21 +473,19 @@ renderCtx2D.prototype.drawDebugData = function (pose, atlas)
 				if (index & 1) { ctx.lineTo(x, value); } else { x = value; }
 			});
 			ctx.closePath();
-			ctx.strokeStyle = 'rgba(127,127,127,1.0)';
+			ctx.strokeStyle = 'yellow';
 			ctx.stroke();
 			break;
 		case 'mesh':
-			var skin_info = render.skin_info_map[pose.skin_key];
-			var slot_info_map = skin_info.slot_info_map;
-			var slot_info = slot_info_map[slot_key];
+			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
 			var bone = pose.data.bones[slot.bone_key];
 			applySpace(ctx, bone.world_space);
+			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		case 'skinnedmesh':
-			var skin_info = render.skin_info_map[pose.skin_key];
-			var slot_info_map = skin_info.slot_info_map;
-			var slot_info = slot_info_map[slot_key];
+			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_setup_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		}
@@ -534,16 +506,30 @@ renderCtx2D.prototype.drawDebugData = function (pose, atlas)
 
 function applySpace (ctx, space)
 {
-	ctx.translate(space.position.x, space.position.y);
-	ctx.rotate(space.rotation.rad * space.flip.x * space.flip.y);
-	ctx.scale(space.scale.x * space.flip.x, space.scale.y * space.flip.y);
+	if (space)
+	{
+		ctx.translate(space.position.x, space.position.y);
+		ctx.rotate(space.rotation.rad * space.flip.x * space.flip.y);
+		ctx.scale(space.scale.x * space.flip.x, space.scale.y * space.flip.y);
+	}
+}
+
+function applyAtlasSitePosition (ctx, site)
+{
+	if (site)
+	{
+		ctx.scale(1 / site.w, 1 / site.h);
+		ctx.translate(site.offset_x, site.offset_y);
+		ctx.scale(site.original_w, site.original_h);
+	}
 }
 
 function drawCircle (ctx, color, scale)
 {
+	scale = scale || 1;
 	ctx.beginPath();
 	ctx.arc(0, 0, 12*scale, 0, 2*Math.PI, false);
-	ctx.strokeStyle = color;
+	ctx.strokeStyle = color || 'grey';
 	ctx.stroke();
 }
 
@@ -566,18 +552,21 @@ function drawPoint (ctx, color, scale)
 	ctx.stroke();
 }
 
-function drawMesh(ctx, triangles, positions, stroke_style, fill_style)
+function drawMesh (ctx, triangles, positions, stroke_style, fill_style)
 {
 	ctx.beginPath();
-	var sx = 0, sy = 0;
-	for (var index = 0; index < triangles.length; index++)
+	for (var index = 0; index < triangles.length; )
 	{
-		var value = triangles[index];
-		var ix = value*2, iy = ix+1;
-		var x = positions[ix];
-		var y = positions[iy];
-		if ((index % 3) === 0) { ctx.moveTo(x, y); sx = x; sy = y; } else { ctx.lineTo(x, y); }
-		if ((index % 3) === 2) { ctx.lineTo(sx, sy); }
+		var triangle = triangles[index++]*2;
+		var x0 = positions[triangle], y0 = positions[triangle+1];
+		var triangle = triangles[index++]*2;
+		var x1 = positions[triangle], y1 = positions[triangle+1];
+		var triangle = triangles[index++]*2;
+		var x2 = positions[triangle], y2 = positions[triangle+1];
+		ctx.moveTo(x0, y0);
+		ctx.lineTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.lineTo(x0, y0);
 	};
 	if (fill_style)
 	{
@@ -588,51 +577,34 @@ function drawMesh(ctx, triangles, positions, stroke_style, fill_style)
 	ctx.stroke();
 }
 
-function drawImageMesh(ctx, triangles, positions, texcoords, image, site)
+function drawImageMesh (ctx, triangles, positions, texcoords, image, site, page)
 {
-	if (site)
-	{
-		var tex_matrix = new Float32Array(9);
-		var site_texcoord = new Float32Array(2);
-
-		if (site.rotate)
-		{
-			mat3x3Identity(tex_matrix);
-			mat3x3Translate(tex_matrix, site.x, site.y);
-			mat3x3Scale(tex_matrix, site.h, site.w);
-			mat3x3Translate(tex_matrix, 0, 1); // bottom-left corner
-			mat3x3Rotate(tex_matrix, -Math.PI/2); // -90 degrees
-		}
-		else
-		{
-			mat3x3Identity(tex_matrix);
-			mat3x3Translate(tex_matrix, site.x, site.y);
-			mat3x3Scale(tex_matrix, site.w, site.h);
-		}
-	}
+	var site_texmatrix = new Float32Array(9);
+	var site_texcoord = new Float32Array(2);
+	mat3x3Identity(site_texmatrix);
+	mat3x3Scale(site_texmatrix, image.width, image.height);
+	mat3x3ApplyAtlasPageTexcoord(site_texmatrix, page);
+	mat3x3ApplyAtlasSiteTexcoord(site_texmatrix, site);
 
 	/// http://www.irrlicht3d.org/pivot/entry.php?id=1329
-	for (var i = 0; i < triangles.length; )
+	for (var index = 0; index < triangles.length; )
 	{
-		var triangle = triangles[i++]*2;
+		var triangle = triangles[index++]*2;
 		var position = positions.subarray(triangle, triangle+2);
 		var x0 = position[0], y0 = position[1];
-		var texcoord = texcoords.subarray(triangle, triangle+2);
-		if (site) { texcoord = mat3x3Transform(tex_matrix, texcoord, site_texcoord); }
+		var texcoord = mat3x3Transform(site_texmatrix, texcoords.subarray(triangle, triangle+2), site_texcoord);
 		var u0 = texcoord[0], v0 = texcoord[1];
 
-		var triangle = triangles[i++]*2;
+		var triangle = triangles[index++]*2;
 		var position = positions.subarray(triangle, triangle+2);
 		var x1 = position[0], y1 = position[1];
-		var texcoord = texcoords.subarray(triangle, triangle+2);
-		if (site) { texcoord = mat3x3Transform(tex_matrix, texcoord, site_texcoord); }
+		var texcoord = mat3x3Transform(site_texmatrix, texcoords.subarray(triangle, triangle+2), site_texcoord);
 		var u1 = texcoord[0], v1 = texcoord[1];
 
-		var triangle = triangles[i++]*2;
+		var triangle = triangles[index++]*2;
 		var position = positions.subarray(triangle, triangle+2);
 		var x2 = position[0], y2 = position[1];
-		var texcoord = texcoords.subarray(triangle, triangle+2);
-		if (site) { texcoord = mat3x3Transform(tex_matrix, texcoord, site_texcoord); }
+		var texcoord = mat3x3Transform(site_texmatrix, texcoords.subarray(triangle, triangle+2), site_texcoord);
 		var u2 = texcoord[0], v2 = texcoord[1];
 
 		ctx.save();
@@ -651,8 +623,8 @@ function drawImageMesh(ctx, triangles, positions, texcoords, image, site)
 		var b = id * (v2*y1 - v1*y2);
 		var c = id * (u1*x2 - u2*x1);
 		var d = id * (u1*y2 - u2*y1);
-		var e = x0 - a*u0 - c*v0;
-		var f = y0 - b*u0 - d*v0;
+		var e = x0 - (a*u0 + c*v0);
+		var f = y0 - (b*u0 + d*v0);
 		ctx.transform(a, b, c, d, e, f);
 		ctx.drawImage(image, 0, 0);
 		ctx.restore();
