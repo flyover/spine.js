@@ -2217,7 +2217,7 @@ spine.SlotOffset = function ()
 }
 
 /** @type {string} */
-spine.SlotOffset.prototype.slot = "";
+spine.SlotOffset.prototype.slot_key = "";
 /** @type {number} */
 spine.SlotOffset.prototype.offset = 0;
 
@@ -2227,7 +2227,7 @@ spine.SlotOffset.prototype.offset = 0;
  */
 spine.SlotOffset.prototype.load = function (json)
 {
-	this.slot = spine.loadString(json, 'slot', "");
+	this.slot_key = spine.loadString(json, 'slot', "");
 	this.offset = spine.loadInt(json, 'offset', 0);
 	return this;
 }
@@ -2263,7 +2263,7 @@ spine.OrderKeyframe.prototype.load = function (json)
 		switch (key)
 		{
 		case 'offsets':
-			json['offsets'].forEach(function (offset)
+			json[key].forEach(function (offset)
 			{
 				order_keyframe.slot_offsets.push(new spine.SlotOffset().load(offset));
 			});
@@ -3461,14 +3461,10 @@ spine.Pose.prototype.strike = function ()
 	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
 		if (!attachment) { return; }
+		if (attachment.type !== 'region') { return; }
 
-		switch (attachment.type)
-		{
-		case 'region':
-			var bone = pose.bones[slot.bone_key];
-			spine.Space.combine(bone.world_space, attachment.local_space, attachment.world_space);
-			break;
-		}
+		var bone = pose.bones[slot.bone_key];
+		spine.Space.combine(bone.world_space, attachment.local_space, attachment.world_space);
 	});
 
 	if (anim)
@@ -3480,13 +3476,13 @@ spine.Pose.prototype.strike = function ()
 			pose.slot_keys = data.slot_keys.slice(0); // copy array before reordering
 			order_keyframe.slot_offsets.forEach(function (slot_offset)
 			{
-				var slot_index = pose.slot_keys.indexOf(slot_offset.slot);
+				var slot_index = pose.slot_keys.indexOf(slot_offset.slot_key);
 				if (slot_index !== -1)
 				{
 					// delete old position
 					pose.slot_keys.splice(slot_index, 1);
 					// insert new position
-					pose.slot_keys.splice(slot_index + slot_offset.offset, 0, slot_offset.slot);
+					pose.slot_keys.splice(slot_index + slot_offset.offset, 0, slot_offset.slot_key);
 				}
 			});
 		}
