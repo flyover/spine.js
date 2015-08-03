@@ -131,10 +131,10 @@ renderWebGL = function (gl)
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  */
-renderWebGL.prototype.dropPose = function (pose, atlas)
+renderWebGL.prototype.dropPose = function (spine_pose, atlas_data)
 {
 	var render = this;
 	var gl = render.gl;
@@ -198,23 +198,23 @@ renderWebGL.prototype.dropPose = function (pose, atlas)
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  * @param {string} file_path
  * @param {string} file_atlas_url
  */
-renderWebGL.prototype.loadPose = function (pose, atlas, file_path, file_atlas_url)
+renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, file_path, file_atlas_url)
 {
 	var render = this;
 	var gl = render.gl;
 	if (!gl) { return; }
 
-	pose.data.iterateSkins(function (skin_key, skin)
+	spine_pose.data.iterateSkins(function (skin_key, skin)
 	{
 		var skin_info = render.skin_info_map[skin_key] = {};
 		var slot_info_map = skin_info.slot_info_map = {};
 
-		pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
+		spine_pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
 		{
 			if (!attachment) { return; }
 
@@ -232,7 +232,7 @@ renderWebGL.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 				gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
 				var anim_ffd_attachments = slot_info.anim_ffd_attachments = {};
-				pose.data.iterateAnims(function (anim_key, anim)
+				spine_pose.data.iterateAnims(function (anim_key, anim)
 				{
 					var anim_ffd = anim.ffds && anim.ffds[skin_key];
 					var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
@@ -320,7 +320,7 @@ renderWebGL.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 				gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
 				var anim_ffd_attachments = slot_info.anim_ffd_attachments = {};
-				pose.data.iterateAnims(function (anim_key, anim)
+				spine_pose.data.iterateAnims(function (anim_key, anim)
 				{
 					var anim_ffd = anim.ffds && anim.ffds[skin_key];
 					var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
@@ -356,11 +356,11 @@ renderWebGL.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 		});
 	});
 
-	if (atlas)
+	if (atlas_data)
 	{
 		// load atlas page images
 		var dir_path = file_atlas_url.slice(0, file_atlas_url.lastIndexOf('/'));
-		atlas.pages.forEach(function (page)
+		atlas_data.pages.forEach(function (page)
 		{
 			var image_key = page.name;
 			var image_url = dir_path + "/" + image_key;
@@ -370,24 +370,65 @@ renderWebGL.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 				{
 					console.log("error loading:", image.src);
 				}
+
 				page.w = page.w || image.width;
 				page.h = page.h || image.height;
+
+				if (page.format !== 'RGBA8888')
+				{
+					throw new Error(page.format);
+				}
+
+				var gl_min_filter = gl.NONE;
+				switch (page.min_filter)
+				{
+				case 'linear': gl_min_filter = gl.LINEAR; break;
+				default: case 'nearest': gl_min_filter = gl.NEAREST; break;
+				case 'nearest-mipmap-nearest': gl_min_filter = gl.NEAREST_MIPMAP_NEAREST; break;
+				case 'linear-mipmap-nearest': gl_min_filter = gl.LINEAR_MIPMAP_NEAREST; break;
+				case 'nearest-mipmap-linear': gl_min_filter = gl.NEAREST_MIPMAP_LINEAR; break;
+				case 'linear-mipmap-linear': gl_min_filter = gl.LINEAR_MIPMAP_LINEAR; break;
+				}
+
+				var gl_mag_filter = gl.NONE;
+				switch (page.mag_filter)
+				{
+				case 'nearest': gl_mag_filter = gl.NEAREST; break;
+				default: case 'linear': gl_mag_filter = gl.LINEAR; break;
+				}
+
+				var gl_wrap_s = gl.NONE;
+				switch (page.wrap_s)
+				{
+				case 'repeat': gl_wrap_s = gl.REPEAT; break;
+				default: case 'clamp-to-edge': gl_wrap_s = gl.CLAMP_TO_EDGE; break;
+				case 'mirrored-repeat': gl_wrap_s = gl.MIRRORED_REPEAT; break;
+				}
+
+				var gl_wrap_t = gl.NONE;
+				switch (page.wrap_t)
+				{
+				case 'repeat': gl_wrap_t = gl.REPEAT; break;
+				default: case 'clamp-to-edge': gl_wrap_t = gl.CLAMP_TO_EDGE; break;
+				case 'mirrored-repeat': gl_wrap_t = gl.MIRRORED_REPEAT; break;
+				}
+
 				var gl_texture = render.gl_textures[image_key] = gl.createTexture();
 				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl_min_filter);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl_mag_filter);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl_wrap_s);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl_wrap_t);
 			}})(page));
 		});
 	}
 	else
 	{
 		// load attachment images
-		pose.data.iterateSkins(function (skin_key, skin)
+		spine_pose.data.iterateSkins(function (skin_key, skin)
 		{
-			pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
+			spine_pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
 			{
 				if (!attachment) { return; }
 
@@ -397,13 +438,14 @@ renderWebGL.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 				case 'mesh':
 				case 'skinnedmesh':
 					var image_key = attachment_key;
-					var image_url = file_path + pose.data.skeleton.images + image_key + ".png";
+					var image_url = file_path + spine_pose.data.skeleton.images + image_key + ".png";
 					var image = loadImage(image_url, function (err, image)
 					{
 						if (err)
 						{
 							console.log("error loading:", image.src);
 						}
+
 						var gl_texture = render.gl_textures[image_key] = gl.createTexture();
 						gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -421,10 +463,10 @@ renderWebGL.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  */
-renderWebGL.prototype.drawPose = function (pose, atlas)
+renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 {
 	var render = this;
 	var gl = render.gl;
@@ -435,13 +477,13 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 	var gl_tex_matrix = render.gl_tex_matrix;
 	var gl_color = render.gl_color;
 
-	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
+	spine_pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
 		if (!attachment) { return; }
 		if (attachment.type === 'boundingbox') { return; }
 
-		var site = atlas && atlas.sites[attachment_key];
-		var page = site && atlas.pages[site.page];
+		var site = atlas_data && atlas_data.sites[attachment_key];
+		var page = site && atlas_data.pages[site.page];
 		var image_key = (page && page.name) || attachment_key;
 		var gl_texture = render.gl_textures[image_key];
 
@@ -498,17 +540,17 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 			gl.bindTexture(gl.TEXTURE_2D, null);
 			break;
 		case 'mesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-			var bone = pose.bones[slot.bone_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var bone = spine_pose.bones[slot.bone_key];
 			mat3x3ApplySpace(gl_modelview, bone.world_space);
 			mat3x3ApplyAtlasSitePosition(gl_modelview, site);
 
-			var anim = pose.data.anims[pose.anim_key];
-			var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
+			var anim = spine_pose.data.anims[spine_pose.anim_key];
+			var anim_ffd = anim && anim.ffds && anim.ffds[spine_pose.skin_key];
 			var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 			var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
 			var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
-			var ffd_keyframe0_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+			var ffd_keyframe0_index = spine.Keyframe.find(ffd_keyframes, spine_pose.time);
 			if (ffd_keyframe0_index !== -1)
 			{
 				// ffd
@@ -519,7 +561,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 				var ffd_keyframe1 = ffd_keyframes[ffd_keyframe1_index];
 				if (ffd_keyframe1)
 				{
-					pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
+					pct = ffd_keyframe0.curve.evaluate((spine_pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
 				}
 				else
 				{
@@ -527,7 +569,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 					ffd_keyframe1 = ffd_keyframes[ffd_keyframe1_index];
 				}
 
-				var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
+				var anim_ffd_attachment = slot_info.anim_ffd_attachments[spine_pose.anim_key];
 				var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe0_index];
 				var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe1_index];
 
@@ -598,14 +640,14 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 			}
 			break;
 		case 'skinnedmesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
 			// update skin shader modelview array
 			var blend_bone_index_array = slot_info.blend_bone_index_array;
 			for (var index = 0; index < blend_bone_index_array.length; ++index)
 			{
 				var bone_index = blend_bone_index_array[index];
-				var bone_key = pose.bone_keys[bone_index];
-				var bone = pose.bones[bone_key];
+				var bone_key = spine_pose.bone_keys[bone_index];
+				var bone = spine_pose.bones[bone_key];
 				if (index < render.gl_skin_shader_modelview_count)
 				{
 					var modelview = render.gl_skin_shader_modelview_array.subarray(index * 9, (index + 1) * 9);
@@ -615,12 +657,12 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 				}
 			}
 
-			var anim = pose.data.anims[pose.anim_key];
-			var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
+			var anim = spine_pose.data.anims[spine_pose.anim_key];
+			var anim_ffd = anim && anim.ffds && anim.ffds[spine_pose.skin_key];
 			var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 			var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
 			var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
-			var ffd_keyframe0_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+			var ffd_keyframe0_index = spine.Keyframe.find(ffd_keyframes, spine_pose.time);
 			if (ffd_keyframe0_index !== -1)
 			{
 				// ffd
@@ -631,7 +673,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 				var ffd_keyframe1 = ffd_keyframes[ffd_keyframe1_index];
 				if (ffd_keyframe1)
 				{
-					pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
+					pct = ffd_keyframe0.curve.evaluate((spine_pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
 				}
 				else
 				{
@@ -639,7 +681,7 @@ renderWebGL.prototype.drawPose = function (pose, atlas)
 					ffd_keyframe1 = ffd_keyframes[ffd_keyframe1_index];
 				}
 
-				var anim_ffd_attachment = slot_info.anim_ffd_attachments[pose.anim_key];
+				var anim_ffd_attachment = slot_info.anim_ffd_attachments[spine_pose.anim_key];
 				var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe0_index];
 				var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe1_index];
 

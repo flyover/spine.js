@@ -17,10 +17,10 @@ renderCtx2D = function (ctx)
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  */
-renderCtx2D.prototype.dropPose = function (pose, atlas)
+renderCtx2D.prototype.dropPose = function (spine_pose, atlas_data)
 {
 	var render = this;
 
@@ -35,21 +35,21 @@ renderCtx2D.prototype.dropPose = function (pose, atlas)
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  * @param {string} file_path
  * @param {string} file_atlas_url
  */
-renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_url)
+renderCtx2D.prototype.loadPose = function (spine_pose, atlas_data, file_path, file_atlas_url)
 {
 	var render = this;
 
-	pose.data.iterateSkins(function (skin_key, skin)
+	spine_pose.data.iterateSkins(function (skin_key, skin)
 	{
 		var skin_info = render.skin_info_map[skin_key] = {};
 		var slot_info_map = skin_info.slot_info_map = {};
 
-		pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
+		spine_pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
 		{
 			if (!attachment) { return; }
 
@@ -63,7 +63,7 @@ renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 				var vertex_texcoord = slot_info.vertex_texcoord = new Float32Array(attachment.uvs);
 				var vertex_triangle = slot_info.vertex_triangle = new Uint16Array(attachment.triangles);
 				var anim_ffd_attachments = slot_info.anim_ffd_attachments = {};
-				pose.data.iterateAnims(function (anim_key, anim)
+				spine_pose.data.iterateAnims(function (anim_key, anim)
 				{
 					var anim_ffd = anim.ffds && anim.ffds[skin_key];
 					var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
@@ -101,8 +101,8 @@ renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 						var x = position.x = attachment.vertices[index++];
 						var y = position.y = attachment.vertices[index++];
 						var weight = attachment.vertices[index++];
-						var bone_key = pose.data.bone_keys[bone_index];
-						var bone = pose.data.bones[bone_key];
+						var bone_key = spine_pose.data.bone_keys[bone_index];
+						var bone = spine_pose.data.bones[bone_key];
 						spine.Space.transform(bone.world_space, position, position);
 						setup_position_x += position.x * weight;
 						setup_position_y += position.y * weight;
@@ -117,11 +117,11 @@ renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 		});
 	});
 
-	if (atlas)
+	if (atlas_data)
 	{
 		// load atlas page images
 		var dir_path = file_atlas_url.slice(0, file_atlas_url.lastIndexOf('/'));
-		atlas.pages.forEach(function (page)
+		atlas_data.pages.forEach(function (page)
 		{
 			var image_key = page.name;
 			var image_url = dir_path + "/" + image_key;
@@ -139,9 +139,9 @@ renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 	else
 	{
 		// load attachment images
-		pose.data.iterateSkins(function (skin_key, skin)
+		spine_pose.data.iterateSkins(function (skin_key, skin)
 		{
-			pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
+			spine_pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
 			{
 				if (!attachment) { return; }
 
@@ -151,7 +151,7 @@ renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 				case 'mesh':
 				case 'skinnedmesh':
 					var image_key = attachment_key;
-					var image_url = file_path + pose.data.skeleton.images + image_key + ".png";
+					var image_url = file_path + spine_pose.data.skeleton.images + image_key + ".png";
 					render.images[image_key] = render.images[image_key] || loadImage(image_url, function (err, image)
 					{
 						if (err)
@@ -168,26 +168,26 @@ renderCtx2D.prototype.loadPose = function (pose, atlas, file_path, file_atlas_ur
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  */
-renderCtx2D.prototype.updatePose = function (pose, atlas)
+renderCtx2D.prototype.updatePose = function (spine_pose, atlas_data)
 {
 	var render = this;
 
-	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
+	spine_pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
 		if (!attachment) { return; }
 		switch (attachment.type)
 		{
 		case 'mesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-			var anim = pose.data.anims[pose.anim_key];
-			var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var anim = spine_pose.data.anims[spine_pose.anim_key];
+			var anim_ffd = anim && anim.ffds && anim.ffds[spine_pose.skin_key];
 			var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 			var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
 			var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
-			var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+			var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, spine_pose.time);
 			if (ffd_keyframe_index !== -1)
 			{
 				// ffd
@@ -197,7 +197,7 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 				var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
 				if (ffd_keyframe1)
 				{
-					pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
+					pct = ffd_keyframe0.curve.evaluate((spine_pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
 				}
 				else
 				{
@@ -213,13 +213,13 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 			}
 			break;
 		case 'skinnedmesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-			var anim = pose.data.anims[pose.anim_key];
-			var anim_ffd = anim && anim.ffds && anim.ffds[pose.skin_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var anim = spine_pose.data.anims[spine_pose.anim_key];
+			var anim_ffd = anim && anim.ffds && anim.ffds[spine_pose.skin_key];
 			var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
 			var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
 			var ffd_keyframes = ffd_attachment && ffd_attachment.ffd_keyframes;
-			var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, pose.time);
+			var ffd_keyframe_index = spine.Keyframe.find(ffd_keyframes, spine_pose.time);
 			if (ffd_keyframe_index !== -1)
 			{
 				// ffd
@@ -229,7 +229,7 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 				var ffd_keyframe1 = ffd_keyframes[ffd_keyframe_index + 1];
 				if (ffd_keyframe1)
 				{
-					var pct = ffd_keyframe0.curve.evaluate((pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
+					var pct = ffd_keyframe0.curve.evaluate((spine_pose.time - ffd_keyframe0.time) / (ffd_keyframe1.time - ffd_keyframe0.time));
 				}
 				else
 				{
@@ -249,8 +249,8 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 						position.x = attachment.vertices[index++];
 						position.y = attachment.vertices[index++];
 						var weight = attachment.vertices[index++];
-						var bone_key = pose.bone_keys[bone_index];
-						var bone = pose.bones[bone_key];
+						var bone_key = spine_pose.bone_keys[bone_index];
+						var bone = spine_pose.bones[bone_key];
 						var v0 = ffd_keyframe0.vertices[ffd_index - ffd_keyframe0.offset] || 0;
 						var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
 						position.x += spine.tween(v0, v1, pct); ++ffd_index;
@@ -283,8 +283,8 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 						position.x = attachment.vertices[index++];
 						position.y = attachment.vertices[index++];
 						var weight = attachment.vertices[index++];
-						var bone_key = pose.bone_keys[bone_index];
-						var bone = pose.bones[bone_key];
+						var bone_key = spine_pose.bone_keys[bone_index];
+						var bone = spine_pose.bones[bone_key];
 						spine.Space.transform(bone.world_space, position, position);
 						blend_position_x += position.x * weight;
 						blend_position_y += position.y * weight;
@@ -301,23 +301,23 @@ renderCtx2D.prototype.updatePose = function (pose, atlas)
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  */
-renderCtx2D.prototype.drawPose = function (pose, atlas)
+renderCtx2D.prototype.drawPose = function (spine_pose, atlas_data)
 {
 	var render = this;
 	var ctx = render.ctx;
 
-	render.updatePose(pose, atlas);
+	render.updatePose(spine_pose, atlas_data);
 
-	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
+	spine_pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
 		if (!attachment) { return; }
 		if (attachment.type === 'boundingbox') { return; }
 
-		var site = atlas && atlas.sites[attachment_key];
-		var page = site && atlas.pages[site.page];
+		var site = atlas_data && atlas_data.sites[attachment_key];
+		var page = site && atlas_data.pages[site.page];
 		var image_key = (page && page.name) || attachment_key;
 		var image = render.images[image_key];
 
@@ -343,14 +343,14 @@ renderCtx2D.prototype.drawPose = function (pose, atlas)
 			drawImageMesh(ctx, render.region_vertex_triangle, render.region_vertex_position, render.region_vertex_texcoord, image, site, page);
 			break;
 		case 'mesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-			var bone = pose.bones[slot.bone_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var bone = spine_pose.bones[slot.bone_key];
 			applySpace(ctx, bone.world_space);
 			applyAtlasSitePosition(ctx, site);
 			drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, slot_info.vertex_texcoord, image, site, page);
 			break;
 		case 'skinnedmesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
 			applyAtlasSitePosition(ctx, site);
 			drawImageMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, slot_info.vertex_texcoord, image, site, page);
 			break;
@@ -362,21 +362,21 @@ renderCtx2D.prototype.drawPose = function (pose, atlas)
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  */
-renderCtx2D.prototype.drawDebugPose = function (pose, atlas)
+renderCtx2D.prototype.drawDebugPose = function (spine_pose, atlas_data)
 {
 	var render = this;
 	var ctx = render.ctx;
 	
-	render.updatePose(pose, atlas);
+	render.updatePose(spine_pose, atlas_data);
 
-	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
+	spine_pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
 		if (!attachment) { return; }
 
-		var site = atlas && atlas.sites[attachment_key];
+		var site = atlas_data && atlas_data.sites[attachment_key];
 
 		ctx.save();
 
@@ -393,7 +393,7 @@ renderCtx2D.prototype.drawDebugPose = function (pose, atlas)
 			ctx.stroke();
 			break;
 		case 'boundingbox':
-			var bone = pose.bones[slot.bone_key];
+			var bone = spine_pose.bones[slot.bone_key];
 			applySpace(ctx, bone.world_space);
 			ctx.beginPath();
 			var x = 0;
@@ -406,14 +406,14 @@ renderCtx2D.prototype.drawDebugPose = function (pose, atlas)
 			ctx.stroke();
 			break;
 		case 'mesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-			var bone = pose.bones[slot.bone_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var bone = spine_pose.bones[slot.bone_key];
 			applySpace(ctx, bone.world_space);
 			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		case 'skinnedmesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
 			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_blend_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
@@ -422,7 +422,7 @@ renderCtx2D.prototype.drawDebugPose = function (pose, atlas)
 		ctx.restore();
 	});
 
-	pose.iterateBones(function (bone_key, bone)
+	spine_pose.iterateBones(function (bone_key, bone)
 	{
 		ctx.save();
 		applySpace(ctx, bone.world_space);
@@ -430,24 +430,24 @@ renderCtx2D.prototype.drawDebugPose = function (pose, atlas)
 		ctx.restore();
 	});
 
-	drawIkConstraints(ctx, pose.data, pose.bones);
+	drawIkConstraints(ctx, spine_pose.data, spine_pose.bones);
 }
 
 /**
  * @return {void}
- * @param {spine.Pose} pose
- * @param {spine.Atlas} atlas
+ * @param {spine.Pose} spine_pose
+ * @param {atlas.Data} atlas_data
  */
-renderCtx2D.prototype.drawDebugData = function (pose, atlas)
+renderCtx2D.prototype.drawDebugData = function (spine_pose, atlas_data)
 {
 	var render = this;
 	var ctx = render.ctx;
 
-	pose.data.iterateAttachments(pose.skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
+	spine_pose.data.iterateAttachments(spine_pose.skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
 		if (!attachment) { return; }
 
-		var site = atlas && atlas.sites[attachment_key];
+		var site = atlas_data && atlas_data.sites[attachment_key];
 
 		ctx.save();
 
@@ -464,7 +464,7 @@ renderCtx2D.prototype.drawDebugData = function (pose, atlas)
 			ctx.stroke();
 			break;
 		case 'boundingbox':
-			var bone = pose.data.bones[slot.bone_key];
+			var bone = spine_pose.data.bones[slot.bone_key];
 			applySpace(ctx, bone.world_space);
 			ctx.beginPath();
 			var x = 0;
@@ -477,14 +477,14 @@ renderCtx2D.prototype.drawDebugData = function (pose, atlas)
 			ctx.stroke();
 			break;
 		case 'mesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
-			var bone = pose.data.bones[slot.bone_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var bone = spine_pose.data.bones[slot.bone_key];
 			applySpace(ctx, bone.world_space);
 			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		case 'skinnedmesh':
-			var slot_info = render.skin_info_map[pose.skin_key].slot_info_map[slot_key];
+			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
 			applyAtlasSitePosition(ctx, site);
 			drawMesh(ctx, slot_info.vertex_triangle, slot_info.vertex_setup_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
@@ -493,7 +493,7 @@ renderCtx2D.prototype.drawDebugData = function (pose, atlas)
 		ctx.restore();
 	});
 
-	pose.data.iterateBones(function (bone_key, bone)
+	spine_pose.data.iterateBones(function (bone_key, bone)
 	{
 		ctx.save();
 		applySpace(ctx, bone.world_space);
@@ -501,7 +501,7 @@ renderCtx2D.prototype.drawDebugData = function (pose, atlas)
 		ctx.restore();
 	});
 
-	drawIkConstraints(ctx, pose.data, pose.data.bones);
+	drawIkConstraints(ctx, spine_pose.data, spine_pose.data.bones);
 }
 
 function applySpace (ctx, space)

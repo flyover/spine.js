@@ -1,6 +1,7 @@
 goog.provide('main');
 
 goog.require('spine');
+goog.require('atlas');
 goog.require('renderCtx2D');
 goog.require('renderWebGL');
 
@@ -99,8 +100,8 @@ main.start = function ()
 	add_checkbox_control("2D Debug Data", enable_render_debug_data, function (checked) { enable_render_debug_data = checked; });
 	add_checkbox_control("2D Debug Pose", enable_render_debug_pose, function (checked) { enable_render_debug_pose = checked; });
 
-	var pose = null;
-	var atlas = null;
+	var spine_pose = null;
+	var atlas_data = null;
 
 	var anim_time = 0;
 	var anim_length = 0;
@@ -109,11 +110,11 @@ main.start = function ()
 
 	var loadFile = function (file, callback)
 	{
-		render_ctx2d.dropPose(pose, atlas);
-		render_webgl.dropPose(pose, atlas);
+		render_ctx2d.dropPose(spine_pose, atlas_data);
+		render_webgl.dropPose(spine_pose, atlas_data);
 
-		pose = null;
-		atlas = null;
+		spine_pose = null;
+		atlas_data = null;
 
 		var file_path = file.path;
 		var file_json_url = file_path + file.json_url;
@@ -127,17 +128,17 @@ main.start = function ()
 				return;
 			}
 
-			pose = new spine.Pose(new spine.Data().load(JSON.parse(json_text)));
+			spine_pose = new spine.Pose(new spine.Data().load(JSON.parse(json_text)));
 
 			loadText(file_atlas_url, function (err, atlas_text)
 			{
 				if (!err && atlas_text)
 				{
-					atlas = new spine.Atlas().import(atlas_text);
+					atlas_data = new atlas.Data().import(atlas_text);
 				}
 
-				render_ctx2d.loadPose(pose, atlas, file_path, file_atlas_url);
-				render_webgl.loadPose(pose, atlas, file_path, file_atlas_url);
+				render_ctx2d.loadPose(spine_pose, atlas_data, file_path, file_atlas_url);
+				render_webgl.loadPose(spine_pose, atlas_data, file_path, file_atlas_url);
 
 				callback();
 			});
@@ -180,10 +181,10 @@ main.start = function ()
 	loading = true; loadFile(file, function ()
 	{
 		loading = false;
-		pose.setSkin(pose.data.skin_keys[skin_index = 0]);
-		pose.setAnim(pose.data.anim_keys[anim_index = 0]);
-		pose.setTime(anim_time = 0);
-		anim_length = pose.curAnimLength() || 1000;
+		spine_pose.setSkin(spine_pose.data.skin_keys[skin_index = 0]);
+		spine_pose.setAnim(spine_pose.data.anim_keys[anim_index = 0]);
+		spine_pose.setTime(anim_time = 0);
+		anim_length = spine_pose.curAnimLength() || 1000;
 	});
 
 	var prev_time = 0;
@@ -196,16 +197,16 @@ main.start = function ()
 
 		if (!loading)
 		{
-			pose.update(dt * anim_rate);
+			spine_pose.update(dt * anim_rate);
 
 			anim_time += dt * anim_rate;
 
 			if (anim_time >= (anim_length * anim_repeat))
 			{
-				if (++anim_index >= pose.data.anim_keys.length)
+				if (++anim_index >= spine_pose.data.anim_keys.length)
 				{
 					anim_index = 0;
-					if (++skin_index >= pose.data.skin_keys.length)
+					if (++skin_index >= spine_pose.data.skin_keys.length)
 					{
 						skin_index = 0;
 						if (files.length > 1)
@@ -219,22 +220,22 @@ main.start = function ()
 							loading = true; loadFile(file, function ()
 							{
 								loading = false;
-								pose.setSkin(pose.data.skin_keys[skin_index = 0]);
-								pose.setAnim(pose.data.anim_keys[anim_index = 0]);
-								pose.setTime(anim_time = 0);
-								anim_length = pose.curAnimLength() || 1000;
+								spine_pose.setSkin(spine_pose.data.skin_keys[skin_index = 0]);
+								spine_pose.setAnim(spine_pose.data.anim_keys[anim_index = 0]);
+								spine_pose.setTime(anim_time = 0);
+								anim_length = spine_pose.curAnimLength() || 1000;
 							});
 							return;
 						}
 					}
-					pose.setSkin(pose.data.skin_keys[skin_index]);
+					spine_pose.setSkin(spine_pose.data.skin_keys[skin_index]);
 				}
-				pose.setAnim(pose.data.anim_keys[anim_index]);
-				pose.setTime(anim_time = 0);
-				anim_length = pose.curAnimLength() || 1000;
+				spine_pose.setAnim(spine_pose.data.anim_keys[anim_index]);
+				spine_pose.setTime(anim_time = 0);
+				anim_length = spine_pose.curAnimLength() || 1000;
 			}
 
-			messages.innerHTML = "skin: " + pose.skin_key + ", anim: " + pose.anim_key + "<br>" + file.path + file.json_url;
+			messages.innerHTML = "skin: " + spine_pose.skin_key + ", anim: " + spine_pose.anim_key + "<br>" + file.path + file.json_url;
 		}
 
 		if (ctx)
@@ -252,9 +253,9 @@ main.start = function ()
 
 		if (loading) { return; }
 
-		pose.strike();
+		spine_pose.strike();
 
-		//pose.events.forEach(function (event) { console.log("event", event.name, event.int_value, event.float_value, event.string_value); });
+		//spine_pose.events.forEach(function (event) { console.log("event", event.name, event.int_value, event.float_value, event.string_value); });
 
 		if (ctx)
 		{
@@ -272,17 +273,17 @@ main.start = function ()
 
 			if (enable_render_ctx2d)
 			{
-				render_ctx2d.drawPose(pose, atlas);
+				render_ctx2d.drawPose(spine_pose, atlas_data);
 			}
 
 			if (enable_render_debug_data)
 			{
-				render_ctx2d.drawDebugData(pose, atlas);
+				render_ctx2d.drawDebugData(spine_pose, atlas_data);
 			}
 
 			if (enable_render_debug_pose)
 			{
-				render_ctx2d.drawDebugPose(pose, atlas);
+				render_ctx2d.drawDebugPose(spine_pose, atlas_data);
 			}
 		}
 
@@ -302,7 +303,7 @@ main.start = function ()
 
 			if (enable_render_webgl)
 			{
-				render_webgl.drawPose(pose, atlas);
+				render_webgl.drawPose(spine_pose, atlas_data);
 			}
 		}
 	}
