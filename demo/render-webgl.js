@@ -156,39 +156,45 @@ renderWebGL.prototype.dropPose = function (spine_pose, atlas_data)
 		for (var slot_key in slot_info_map)
 		{
 			var slot_info = slot_info_map[slot_key];
-			switch (slot_info.type)
+			var attachment_info_map = slot_info.attachment_info_map;
+			for (var attachment_key in attachment_info_map)
 			{
-			case 'mesh':
-				var gl_vertex = slot_info.gl_vertex;
-				gl.deleteBuffer(gl_vertex.position.buffer);
-				gl.deleteBuffer(gl_vertex.texcoord.buffer);
-				gl.deleteBuffer(gl_vertex.triangle.buffer);
-				for (var anim_key in slot_info.anim_ffd_attachments)
+				var attachment_info = attachment_info_map[attachment_key];
+
+				switch (attachment_info.type)
 				{
-					var anim_ffd_attachment = slot_info.anim_ffd_attachments[anim_key];
-					anim_ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe)
+				case 'mesh':
+					var gl_vertex = attachment_info.gl_vertex;
+					gl.deleteBuffer(gl_vertex.position.buffer);
+					gl.deleteBuffer(gl_vertex.texcoord.buffer);
+					gl.deleteBuffer(gl_vertex.triangle.buffer);
+					for (var anim_key in attachment_info.anim_ffd_attachments)
 					{
-						gl.deleteBuffer(ffd_keyframe.gl_vertex.buffer);
-					});
-				}
-				break;
-			case 'skinnedmesh':
-				var gl_vertex = slot_info.gl_vertex;
-				gl.deleteBuffer(gl_vertex.position.buffer);
-				gl.deleteBuffer(gl_vertex.texcoord.buffer);
-				gl.deleteBuffer(gl_vertex.triangle.buffer);
-				for (var anim_key in slot_info.anim_ffd_attachments)
-				{
-					var anim_ffd_attachment = slot_info.anim_ffd_attachments[anim_key];
-					anim_ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe)
+						var anim_ffd_attachment = attachment_info.anim_ffd_attachments[anim_key];
+						anim_ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe)
+						{
+							gl.deleteBuffer(ffd_keyframe.gl_vertex.buffer);
+						});
+					}
+					break;
+				case 'skinnedmesh':
+					var gl_vertex = attachment_info.gl_vertex;
+					gl.deleteBuffer(gl_vertex.position.buffer);
+					gl.deleteBuffer(gl_vertex.texcoord.buffer);
+					gl.deleteBuffer(gl_vertex.triangle.buffer);
+					for (var anim_key in attachment_info.anim_ffd_attachments)
 					{
-						gl.deleteBuffer(ffd_keyframe.gl_vertex.buffer);
-					});
+						var anim_ffd_attachment = attachment_info.anim_ffd_attachments[anim_key];
+						anim_ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe)
+						{
+							gl.deleteBuffer(ffd_keyframe.gl_vertex.buffer);
+						});
+					}
+					break;
+				default:
+					console.log("TODO", skin_key, slot_key, attachment_key, attachment_info.type);
+					break;
 				}
-				break;
-			default:
-				console.log("TODO", skin_key, slot_key, slot_info.type);
-				break;
 			}
 		}
 	}
@@ -200,10 +206,9 @@ renderWebGL.prototype.dropPose = function (spine_pose, atlas_data)
  * @return {void}
  * @param {spine.Pose} spine_pose
  * @param {atlas.Data} atlas_data
- * @param {string} file_path
- * @param {string} file_atlas_url
+ * @param {Object.<string,HTMLImageElement>} images
  */
-renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, file_path, file_atlas_url)
+renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 {
 	var render = this;
 	var gl = render.gl;
@@ -221,17 +226,19 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, file_path, fi
 			switch (attachment.type)
 			{
 			case 'mesh':
-				var slot_info = slot_info_map[slot_key] = {};
-				slot_info.type = attachment.type;
-				var vertex_count = slot_info.vertex_count = attachment.vertices.length / 2;
-				var vertex_position = slot_info.vertex_position = new Float32Array(attachment.vertices);
-				var vertex_texcoord = slot_info.vertex_texcoord = new Float32Array(attachment.uvs);
-				var vertex_triangle = slot_info.vertex_triangle = new Uint16Array(attachment.triangles);
-				var gl_vertex = slot_info.gl_vertex = {};
+				var slot_info = slot_info_map[slot_key] = slot_info_map[slot_key] || {};
+				var attachment_info_map = slot_info.attachment_info_map = slot_info.attachment_info_map || {};
+				var attachment_info = attachment_info_map[attachment_key] = {};
+				attachment_info.type = attachment.type;
+				var vertex_count = attachment_info.vertex_count = attachment.vertices.length / 2;
+				var vertex_position = attachment_info.vertex_position = new Float32Array(attachment.vertices);
+				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
+				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
+				var gl_vertex = attachment_info.gl_vertex = {};
 				gl_vertex.position = glMakeVertex(gl, vertex_position, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
-				var anim_ffd_attachments = slot_info.anim_ffd_attachments = {};
+				var anim_ffd_attachments = attachment_info.anim_ffd_attachments = {};
 				spine_pose.data.iterateAnims(function (anim_key, anim)
 				{
 					var anim_ffd = anim.ffds && anim.ffds[skin_key];
@@ -252,13 +259,15 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, file_path, fi
 				});
 				break;
 			case 'skinnedmesh':
-				var slot_info = slot_info_map[slot_key] = {};
-				slot_info.type = attachment.type;
-				var vertex_count = slot_info.vertex_count = attachment.uvs.length / 2;
-				var vertex_position = slot_info.vertex_position = new Float32Array(4 * render.gl_skin_shader_position_count * vertex_count);
-				var vertex_texcoord = slot_info.vertex_texcoord = new Float32Array(attachment.uvs);
-				var vertex_triangle = slot_info.vertex_triangle = new Uint16Array(attachment.triangles);
-				var blend_bone_index_array = slot_info.blend_bone_index_array = [];
+				var slot_info = slot_info_map[slot_key] = slot_info_map[slot_key] || {};
+				var attachment_info_map = slot_info.attachment_info_map = slot_info.attachment_info_map || {};
+				var attachment_info = attachment_info_map[attachment_key] = {};
+				attachment_info.type = attachment.type;
+				var vertex_count = attachment_info.vertex_count = attachment.uvs.length / 2;
+				var vertex_position = attachment_info.vertex_position = new Float32Array(4 * render.gl_skin_shader_position_count * vertex_count);
+				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
+				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
+				var blend_bone_index_array = attachment_info.blend_bone_index_array = [];
 				for (var vertex_index = 0, index = 0; vertex_index < vertex_count; ++vertex_index)
 				{
 					var blender_count = attachment.vertices[index++];
@@ -315,11 +324,11 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, file_path, fi
 						vertex_position[vertex_position_offset++] = blend.weight;
 					});
 				}
-				var gl_vertex = slot_info.gl_vertex = {};
+				var gl_vertex = attachment_info.gl_vertex = {};
 				gl_vertex.position = glMakeVertex(gl, vertex_position, 4, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
-				var anim_ffd_attachments = slot_info.anim_ffd_attachments = {};
+				var anim_ffd_attachments = attachment_info.anim_ffd_attachments = {};
 				spine_pose.data.iterateAnims(function (anim_key, anim)
 				{
 					var anim_ffd = anim.ffds && anim.ffds[skin_key];
@@ -359,68 +368,56 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, file_path, fi
 	if (atlas_data)
 	{
 		// load atlas page images
-		var dir_path = file_atlas_url.slice(0, file_atlas_url.lastIndexOf('/'));
 		atlas_data.pages.forEach(function (page)
 		{
-			var image_key = page.name;
-			var image_url = dir_path + "/" + image_key;
-			var image = loadImage(image_url, (function (page) { return function (err, image)
+			if (page.format !== 'RGBA8888')
 			{
-				if (err)
-				{
-					console.log("error loading:", image.src);
-				}
+				throw new Error(page.format);
+			}
 
-				page.w = page.w || image.width;
-				page.h = page.h || image.height;
+			var gl_min_filter = gl.NONE;
+			switch (page.min_filter)
+			{
+			case 'linear': gl_min_filter = gl.LINEAR; break;
+			default: case 'nearest': gl_min_filter = gl.NEAREST; break;
+			case 'nearest-mipmap-nearest': gl_min_filter = gl.NEAREST_MIPMAP_NEAREST; break;
+			case 'linear-mipmap-nearest': gl_min_filter = gl.LINEAR_MIPMAP_NEAREST; break;
+			case 'nearest-mipmap-linear': gl_min_filter = gl.NEAREST_MIPMAP_LINEAR; break;
+			case 'linear-mipmap-linear': gl_min_filter = gl.LINEAR_MIPMAP_LINEAR; break;
+			}
 
-				if (page.format !== 'RGBA8888')
-				{
-					throw new Error(page.format);
-				}
+			var gl_mag_filter = gl.NONE;
+			switch (page.mag_filter)
+			{
+			case 'nearest': gl_mag_filter = gl.NEAREST; break;
+			default: case 'linear': gl_mag_filter = gl.LINEAR; break;
+			}
 
-				var gl_min_filter = gl.NONE;
-				switch (page.min_filter)
-				{
-				case 'linear': gl_min_filter = gl.LINEAR; break;
-				default: case 'nearest': gl_min_filter = gl.NEAREST; break;
-				case 'nearest-mipmap-nearest': gl_min_filter = gl.NEAREST_MIPMAP_NEAREST; break;
-				case 'linear-mipmap-nearest': gl_min_filter = gl.LINEAR_MIPMAP_NEAREST; break;
-				case 'nearest-mipmap-linear': gl_min_filter = gl.NEAREST_MIPMAP_LINEAR; break;
-				case 'linear-mipmap-linear': gl_min_filter = gl.LINEAR_MIPMAP_LINEAR; break;
-				}
+			var gl_wrap_s = gl.NONE;
+			switch (page.wrap_s)
+			{
+			case 'repeat': gl_wrap_s = gl.REPEAT; break;
+			default: case 'clamp-to-edge': gl_wrap_s = gl.CLAMP_TO_EDGE; break;
+			case 'mirrored-repeat': gl_wrap_s = gl.MIRRORED_REPEAT; break;
+			}
 
-				var gl_mag_filter = gl.NONE;
-				switch (page.mag_filter)
-				{
-				case 'nearest': gl_mag_filter = gl.NEAREST; break;
-				default: case 'linear': gl_mag_filter = gl.LINEAR; break;
-				}
+			var gl_wrap_t = gl.NONE;
+			switch (page.wrap_t)
+			{
+			case 'repeat': gl_wrap_t = gl.REPEAT; break;
+			default: case 'clamp-to-edge': gl_wrap_t = gl.CLAMP_TO_EDGE; break;
+			case 'mirrored-repeat': gl_wrap_t = gl.MIRRORED_REPEAT; break;
+			}
 
-				var gl_wrap_s = gl.NONE;
-				switch (page.wrap_s)
-				{
-				case 'repeat': gl_wrap_s = gl.REPEAT; break;
-				default: case 'clamp-to-edge': gl_wrap_s = gl.CLAMP_TO_EDGE; break;
-				case 'mirrored-repeat': gl_wrap_s = gl.MIRRORED_REPEAT; break;
-				}
-
-				var gl_wrap_t = gl.NONE;
-				switch (page.wrap_t)
-				{
-				case 'repeat': gl_wrap_t = gl.REPEAT; break;
-				default: case 'clamp-to-edge': gl_wrap_t = gl.CLAMP_TO_EDGE; break;
-				case 'mirrored-repeat': gl_wrap_t = gl.MIRRORED_REPEAT; break;
-				}
-
-				var gl_texture = render.gl_textures[image_key] = gl.createTexture();
-				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl_min_filter);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl_mag_filter);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl_wrap_s);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl_wrap_t);
-			}})(page));
+			var image_key = page.name;
+			var image = images[image_key];
+			var gl_texture = render.gl_textures[image_key] = gl.createTexture();
+			gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl_min_filter);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl_mag_filter);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl_wrap_s);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl_wrap_t);
 		});
 	}
 	else
@@ -438,22 +435,14 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, file_path, fi
 				case 'mesh':
 				case 'skinnedmesh':
 					var image_key = attachment_key;
-					var image_url = file_path + spine_pose.data.skeleton.images + image_key + ".png";
-					var image = loadImage(image_url, function (err, image)
-					{
-						if (err)
-						{
-							console.log("error loading:", image.src);
-						}
-
-						var gl_texture = render.gl_textures[image_key] = gl.createTexture();
-						gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-					});
+					var image = images[image_key];
+					var gl_texture = render.gl_textures[image_key] = gl.createTexture();
+					gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 					break;
 				}
 			});
@@ -542,7 +531,9 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 			gl.useProgram(null);
 			break;
 		case 'mesh':
-			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var skin_info = render.skin_info_map[spine_pose.skin_key], default_skin_info = render.skin_info_map['default'];
+			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
+			var attachment_info = slot_info.attachment_info_map[attachment_key];
 			var bone = spine_pose.bones[slot.bone_key];
 			mat3x3ApplySpace(gl_modelview, bone.world_space);
 			mat3x3ApplyAtlasSitePosition(gl_modelview, site);
@@ -571,12 +562,12 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 					ffd_keyframe1 = ffd_keyframes[ffd_keyframe1_index];
 				}
 
-				var anim_ffd_attachment = slot_info.anim_ffd_attachments[spine_pose.anim_key];
+				var anim_ffd_attachment = attachment_info.anim_ffd_attachments[spine_pose.anim_key];
 				var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe0_index];
 				var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe1_index];
 
 				var gl_shader = render.gl_ffd_mesh_shader;
-				var gl_vertex = slot_info.gl_vertex;
+				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
 				
@@ -613,7 +604,7 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				// no ffd
 			
 				var gl_shader = render.gl_mesh_shader;
-				var gl_vertex = slot_info.gl_vertex;
+				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
 				
@@ -642,9 +633,11 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 			}
 			break;
 		case 'skinnedmesh':
-			var slot_info = render.skin_info_map[spine_pose.skin_key].slot_info_map[slot_key];
+			var skin_info = render.skin_info_map[spine_pose.skin_key], default_skin_info = render.skin_info_map['default'];
+			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
+			var attachment_info = slot_info.attachment_info_map[attachment_key];
 			// update skin shader modelview array
-			var blend_bone_index_array = slot_info.blend_bone_index_array;
+			var blend_bone_index_array = attachment_info.blend_bone_index_array;
 			for (var index = 0; index < blend_bone_index_array.length; ++index)
 			{
 				var bone_index = blend_bone_index_array[index];
@@ -683,12 +676,12 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 					ffd_keyframe1 = ffd_keyframes[ffd_keyframe1_index];
 				}
 
-				var anim_ffd_attachment = slot_info.anim_ffd_attachments[spine_pose.anim_key];
+				var anim_ffd_attachment = attachment_info.anim_ffd_attachments[spine_pose.anim_key];
 				var anim_ffd_keyframe0 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe0_index];
 				var anim_ffd_keyframe1 = anim_ffd_attachment.ffd_keyframes[ffd_keyframe1_index];
 
 				var gl_shader = render.gl_ffd_skin_shader;
-				var gl_vertex = slot_info.gl_vertex;
+				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
 				
@@ -725,7 +718,7 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				// no ffd
 
 				var gl_shader = render.gl_skin_shader;
-				var gl_vertex = slot_info.gl_vertex;
+				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
 				

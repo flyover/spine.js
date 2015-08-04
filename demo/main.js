@@ -132,15 +132,76 @@ main.start = function ()
 
 			loadText(file_atlas_url, function (err, atlas_text)
 			{
+				var images = {};
+
+				var counter = 0;
+				var counter_inc = function () { counter++; }
+				var counter_dec = function ()
+				{
+					if (--counter === 0)
+					{
+						render_ctx2d.loadPose(spine_pose, atlas_data, images);
+						render_webgl.loadPose(spine_pose, atlas_data, images);
+						callback();
+					}
+				}
+
+				counter_inc();
+
 				if (!err && atlas_text)
 				{
 					atlas_data = new atlas.Data().import(atlas_text);
+
+					// load atlas page images
+					var dir_path = file_atlas_url.slice(0, file_atlas_url.lastIndexOf('/'));
+					atlas_data.pages.forEach(function (page)
+					{
+						var image_key = page.name;
+						var image_url = dir_path + "/" + image_key;
+						counter_inc();
+						var image = images[image_key] = loadImage(image_url, (function (page) { return function (err, image)
+						{
+							if (err)
+							{
+								console.log("error loading:", image.src);
+							}
+							page.w = page.w || image.width;
+							page.h = page.h || image.height;
+							counter_dec();
+						}})(page));
+					});
+				}
+				else
+				{
+					// load attachment images
+					spine_pose.data.iterateSkins(function (skin_key, skin)
+					{
+						skin.iterateAttachments(function (slot_key, skin_slot, attachment_key, attachment)
+						{
+							if (!attachment) { return; }
+							switch (attachment.type)
+							{
+							case 'region':
+							case 'mesh':
+							case 'skinnedmesh':
+								var image_key = attachment_key;
+								var image_url = file_path + spine_pose.data.skeleton.images + image_key + ".png";
+								counter_inc();
+								var image = images[image_key] = loadImage(image_url, function (err, image)
+								{
+									if (err)
+									{
+										console.log("error loading:", image.src);
+									}
+									counter_dec();
+								});
+								break;
+							}
+						});
+					});
 				}
 
-				render_ctx2d.loadPose(spine_pose, atlas_data, file_path, file_atlas_url);
-				render_webgl.loadPose(spine_pose, atlas_data, file_path, file_atlas_url);
-
-				callback();
+				counter_dec();
 			});
 		});
 	}
