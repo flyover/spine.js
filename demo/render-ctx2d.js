@@ -283,26 +283,26 @@ renderCtx2D.prototype.drawPose = function (spine_pose, atlas_data)
 		switch (attachment.type)
 		{
 		case 'region':
-			applySpace(ctx, attachment.world_space);
-			applyAtlasSitePosition(ctx, site);
+			ctxApplySpace(ctx, attachment.world_space);
+			ctxApplyAtlasSitePosition(ctx, site);
 			ctx.scale(attachment.width/2, attachment.height/2);
-			drawImageMesh(ctx, render.region_vertex_triangle, render.region_vertex_position, render.region_vertex_texcoord, image, site, page);
+			ctxDrawImageMesh(ctx, render.region_vertex_triangle, render.region_vertex_position, render.region_vertex_texcoord, image, site, page);
 			break;
 		case 'mesh':
 			var skin_info = render.skin_info_map[spine_pose.skin_key], default_skin_info = render.skin_info_map['default'];
 			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
 			var attachment_info = slot_info.attachment_info_map[attachment_key];
 			var bone = spine_pose.bones[slot.bone_key];
-			applySpace(ctx, bone.world_space);
-			applyAtlasSitePosition(ctx, site);
-			drawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, attachment_info.vertex_texcoord, image, site, page);
+			ctxApplySpace(ctx, bone.world_space);
+			ctxApplyAtlasSitePosition(ctx, site);
+			ctxDrawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, attachment_info.vertex_texcoord, image, site, page);
 			break;
 		case 'skinnedmesh':
 			var skin_info = render.skin_info_map[spine_pose.skin_key], default_skin_info = render.skin_info_map['default'];
 			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
 			var attachment_info = slot_info.attachment_info_map[attachment_key];
-			applyAtlasSitePosition(ctx, site);
-			drawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_blend_position, attachment_info.vertex_texcoord, image, site, page);
+			ctxApplyAtlasSitePosition(ctx, site);
+			ctxDrawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_blend_position, attachment_info.vertex_texcoord, image, site, page);
 			break;
 		}
 
@@ -333,8 +333,8 @@ renderCtx2D.prototype.drawDebugPose = function (spine_pose, atlas_data)
 		switch (attachment.type)
 		{
 		case 'region':
-			applySpace(ctx, attachment.world_space);
-			applyAtlasSitePosition(ctx, site);
+			ctxApplySpace(ctx, attachment.world_space);
+			ctxApplyAtlasSitePosition(ctx, site);
 			ctx.beginPath();
 			ctx.rect(-attachment.width/2, -attachment.height/2, attachment.width, attachment.height);
 			ctx.fillStyle = 'rgba(127,127,127,0.25)';
@@ -344,7 +344,7 @@ renderCtx2D.prototype.drawDebugPose = function (spine_pose, atlas_data)
 			break;
 		case 'boundingbox':
 			var bone = spine_pose.bones[slot.bone_key];
-			applySpace(ctx, bone.world_space);
+			ctxApplySpace(ctx, bone.world_space);
 			ctx.beginPath();
 			var x = 0;
 			attachment.vertices.forEach(function (value, index)
@@ -360,16 +360,16 @@ renderCtx2D.prototype.drawDebugPose = function (spine_pose, atlas_data)
 			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
 			var attachment_info = slot_info.attachment_info_map[attachment_key];
 			var bone = spine_pose.bones[slot.bone_key];
-			applySpace(ctx, bone.world_space);
-			applyAtlasSitePosition(ctx, site);
-			drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+			ctxApplySpace(ctx, bone.world_space);
+			ctxApplyAtlasSitePosition(ctx, site);
+			ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		case 'skinnedmesh':
 			var skin_info = render.skin_info_map[spine_pose.skin_key], default_skin_info = render.skin_info_map['default'];
 			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
 			var attachment_info = slot_info.attachment_info_map[attachment_key];
-			applyAtlasSitePosition(ctx, site);
-			drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_blend_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+			ctxApplyAtlasSitePosition(ctx, site);
+			ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_blend_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		}
 
@@ -379,12 +379,12 @@ renderCtx2D.prototype.drawDebugPose = function (spine_pose, atlas_data)
 	spine_pose.iterateBones(function (bone_key, bone)
 	{
 		ctx.save();
-		applySpace(ctx, bone.world_space);
-		drawPoint(ctx);
+		ctxApplySpace(ctx, bone.world_space);
+		ctxDrawPoint(ctx);
 		ctx.restore();
 	});
 
-	drawIkConstraints(ctx, spine_pose.data, spine_pose.bones);
+	ctxDrawIkConstraints(ctx, spine_pose.data, spine_pose.bones);
 }
 
 /**
@@ -408,8 +408,8 @@ renderCtx2D.prototype.drawDebugData = function (spine_pose, atlas_data)
 		switch (attachment.type)
 		{
 		case 'region':
-			applySpace(ctx, attachment.world_space);
-			applyAtlasSitePosition(ctx, site);
+			ctxApplySpace(ctx, attachment.world_space);
+			ctxApplyAtlasSitePosition(ctx, site);
 			ctx.beginPath();
 			ctx.rect(-attachment.width/2, -attachment.height/2, attachment.width, attachment.height);
 			ctx.fillStyle = 'rgba(127,127,127,0.25)';
@@ -419,7 +419,7 @@ renderCtx2D.prototype.drawDebugData = function (spine_pose, atlas_data)
 			break;
 		case 'boundingbox':
 			var bone = spine_pose.data.bones[slot.bone_key];
-			applySpace(ctx, bone.world_space);
+			ctxApplySpace(ctx, bone.world_space);
 			ctx.beginPath();
 			var x = 0;
 			attachment.vertices.forEach(function (value, index)
@@ -435,16 +435,16 @@ renderCtx2D.prototype.drawDebugData = function (spine_pose, atlas_data)
 			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
 			var attachment_info = slot_info.attachment_info_map[attachment_key];
 			var bone = spine_pose.data.bones[slot.bone_key];
-			applySpace(ctx, bone.world_space);
-			applyAtlasSitePosition(ctx, site);
-			drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+			ctxApplySpace(ctx, bone.world_space);
+			ctxApplyAtlasSitePosition(ctx, site);
+			ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		case 'skinnedmesh':
 			var skin_info = render.skin_info_map[spine_pose.skin_key], default_skin_info = render.skin_info_map['default'];
 			var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
 			var attachment_info = slot_info.attachment_info_map[attachment_key];
-			applyAtlasSitePosition(ctx, site);
-			drawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_setup_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
+			ctxApplyAtlasSitePosition(ctx, site);
+			ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_setup_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
 			break;
 		}
 
@@ -454,15 +454,15 @@ renderCtx2D.prototype.drawDebugData = function (spine_pose, atlas_data)
 	spine_pose.data.iterateBones(function (bone_key, bone)
 	{
 		ctx.save();
-		applySpace(ctx, bone.world_space);
-		drawPoint(ctx);
+		ctxApplySpace(ctx, bone.world_space);
+		ctxDrawPoint(ctx);
 		ctx.restore();
 	});
 
-	drawIkConstraints(ctx, spine_pose.data, spine_pose.data.bones);
+	ctxDrawIkConstraints(ctx, spine_pose.data, spine_pose.data.bones);
 }
 
-function applySpace (ctx, space)
+function ctxApplySpace (ctx, space)
 {
 	if (space)
 	{
@@ -472,7 +472,7 @@ function applySpace (ctx, space)
 	}
 }
 
-function applyAtlasSitePosition (ctx, site)
+function ctxApplyAtlasSitePosition (ctx, site)
 {
 	if (site)
 	{
@@ -482,7 +482,7 @@ function applyAtlasSitePosition (ctx, site)
 	}
 }
 
-function drawCircle (ctx, color, scale)
+function ctxDrawCircle (ctx, color, scale)
 {
 	scale = scale || 1;
 	ctx.beginPath();
@@ -491,7 +491,7 @@ function drawCircle (ctx, color, scale)
 	ctx.stroke();
 }
 
-function drawPoint (ctx, color, scale)
+function ctxDrawPoint (ctx, color, scale)
 {
 	scale = scale || 1;
 	ctx.beginPath();
@@ -510,7 +510,7 @@ function drawPoint (ctx, color, scale)
 	ctx.stroke();
 }
 
-function drawMesh (ctx, triangles, positions, stroke_style, fill_style)
+function ctxDrawMesh (ctx, triangles, positions, stroke_style, fill_style)
 {
 	ctx.beginPath();
 	for (var index = 0; index < triangles.length; )
@@ -535,7 +535,7 @@ function drawMesh (ctx, triangles, positions, stroke_style, fill_style)
 	ctx.stroke();
 }
 
-function drawImageMesh (ctx, triangles, positions, texcoords, image, site, page)
+function ctxDrawImageMesh (ctx, triangles, positions, texcoords, image, site, page)
 {
 	var site_texmatrix = new Float32Array(9);
 	var site_texcoord = new Float32Array(2);
@@ -589,7 +589,7 @@ function drawImageMesh (ctx, triangles, positions, texcoords, image, site, page)
 	}
 }
 
-function drawIkConstraints (ctx, data, bones)
+function ctxDrawIkConstraints (ctx, data, bones)
 {
 	data.ikc_keys.forEach(function (ikc_key)
 	{
@@ -607,13 +607,13 @@ function drawIkConstraints (ctx, data, bones)
 			ctx.stroke();
 
 			ctx.save();
-			applySpace(ctx, target.world_space);
-			drawCircle(ctx, 'yellow', 1.5);
+			ctxApplySpace(ctx, target.world_space);
+			ctxDrawCircle(ctx, 'yellow', 1.5);
 			ctx.restore();
 			
 			ctx.save();
-			applySpace(ctx, bone.world_space);
-			drawCircle(ctx, 'yellow', 0.5);
+			ctxApplySpace(ctx, bone.world_space);
+			ctxDrawCircle(ctx, 'yellow', 0.5);
 			ctx.restore();
 			break;
 		case 2:
@@ -628,18 +628,18 @@ function drawIkConstraints (ctx, data, bones)
 			ctx.stroke();
 			
 			ctx.save();
-			applySpace(ctx, target.world_space);
-			drawCircle(ctx, 'yellow', 1.5);
+			ctxApplySpace(ctx, target.world_space);
+			ctxDrawCircle(ctx, 'yellow', 1.5);
 			ctx.restore();
 			
 			ctx.save();
-			applySpace(ctx, child.world_space);
-			drawCircle(ctx, 'yellow', 0.75);
+			ctxApplySpace(ctx, child.world_space);
+			ctxDrawCircle(ctx, 'yellow', 0.75);
 			ctx.restore();
 			
 			ctx.save();
-			applySpace(ctx, parent.world_space);
-			drawCircle(ctx, 'yellow', 0.5);
+			ctxApplySpace(ctx, parent.world_space);
+			ctxDrawCircle(ctx, 'yellow', 0.5);
 			ctx.restore();
 			break;
 		}
