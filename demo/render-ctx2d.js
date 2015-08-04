@@ -63,24 +63,6 @@ renderCtx2D.prototype.loadPose = function (spine_pose, atlas_data, images)
 				var vertex_position = attachment_info.vertex_position = new Float32Array(attachment.vertices);
 				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
 				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
-				var anim_ffd_attachments = attachment_info.anim_ffd_attachments = {};
-				spine_pose.data.iterateAnims(function (anim_key, anim)
-				{
-					var anim_ffd = anim.ffds && anim.ffds[skin_key];
-					var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
-					var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
-					if (ffd_attachment)
-					{
-						var anim_ffd_attachment = anim_ffd_attachments[anim_key] = {};
-						var anim_ffd_keyframes = anim_ffd_attachment.ffd_keyframes = [];
-						ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe, ffd_keyframe_index)
-						{
-							var anim_ffd_keyframe = anim_ffd_keyframes[ffd_keyframe_index] = {};
-							var vertex = anim_ffd_keyframe.vertex = new Float32Array(2 * vertex_count);
-							vertex.subarray(ffd_keyframe.offset, ffd_keyframe.offset + ffd_keyframe.vertices.length).set(new Float32Array(ffd_keyframe.vertices));
-						});
-					}
-				});
 				break;
 			case 'skinnedmesh':
 				var slot_info = slot_info_map[slot_key] = slot_info_map[slot_key] || {};
