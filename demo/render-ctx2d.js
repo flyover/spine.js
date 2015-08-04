@@ -49,7 +49,7 @@ renderCtx2D.prototype.loadPose = function (spine_pose, atlas_data, file_path, fi
 		var skin_info = render.skin_info_map[skin_key] = {};
 		var slot_info_map = skin_info.slot_info_map = {};
 
-		spine_pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
+		skin.iterateAttachments(function (slot_key, skin_slot, attachment_key, attachment)
 		{
 			if (!attachment) { return; }
 
@@ -141,7 +141,7 @@ renderCtx2D.prototype.loadPose = function (spine_pose, atlas_data, file_path, fi
 		// load attachment images
 		spine_pose.data.iterateSkins(function (skin_key, skin)
 		{
-			spine_pose.data.iterateAttachments(skin_key, function (slot_key, slot, skin_slot, attachment_key, attachment)
+			skin.iterateAttachments(function (slot_key, skin_slot, attachment_key, attachment)
 			{
 				if (!attachment) { return; }
 
