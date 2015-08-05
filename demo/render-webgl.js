@@ -413,35 +413,35 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 			var gl_min_filter = gl.NONE;
 			switch (page.min_filter)
 			{
-			case 'linear': gl_min_filter = gl.LINEAR; break;
-			default: case 'nearest': gl_min_filter = gl.NEAREST; break;
-			case 'nearest-mipmap-nearest': gl_min_filter = gl.NEAREST_MIPMAP_NEAREST; break;
-			case 'linear-mipmap-nearest': gl_min_filter = gl.LINEAR_MIPMAP_NEAREST; break;
-			case 'nearest-mipmap-linear': gl_min_filter = gl.NEAREST_MIPMAP_LINEAR; break;
-			case 'linear-mipmap-linear': gl_min_filter = gl.LINEAR_MIPMAP_LINEAR; break;
+			case 'Nearest': gl_min_filter = gl.NEAREST; break;
+			default: case 'Linear': gl_min_filter = gl.LINEAR; break;
+			case 'MipMapNearestNearest': gl_min_filter = gl.NEAREST_MIPMAP_NEAREST; break;
+			case 'MipMapLinearNearest': gl_min_filter = gl.LINEAR_MIPMAP_NEAREST; break;
+			case 'MipMapNearestLinear': gl_min_filter = gl.NEAREST_MIPMAP_LINEAR; break;
+			case 'MipMapLinearLinear': gl_min_filter = gl.LINEAR_MIPMAP_LINEAR; break;
 			}
 
 			var gl_mag_filter = gl.NONE;
 			switch (page.mag_filter)
 			{
-			case 'nearest': gl_mag_filter = gl.NEAREST; break;
-			default: case 'linear': gl_mag_filter = gl.LINEAR; break;
+			case 'Nearest': gl_mag_filter = gl.NEAREST; break;
+			default: case 'Linear': gl_mag_filter = gl.LINEAR; break;
 			}
 
 			var gl_wrap_s = gl.NONE;
 			switch (page.wrap_s)
 			{
-			case 'repeat': gl_wrap_s = gl.REPEAT; break;
-			default: case 'clamp-to-edge': gl_wrap_s = gl.CLAMP_TO_EDGE; break;
-			case 'mirrored-repeat': gl_wrap_s = gl.MIRRORED_REPEAT; break;
+			case 'Repeat': gl_wrap_s = gl.REPEAT; break;
+			default: case 'ClampToEdge': gl_wrap_s = gl.CLAMP_TO_EDGE; break;
+			case 'MirroredRepeat': gl_wrap_s = gl.MIRRORED_REPEAT; break;
 			}
 
 			var gl_wrap_t = gl.NONE;
 			switch (page.wrap_t)
 			{
-			case 'repeat': gl_wrap_t = gl.REPEAT; break;
-			default: case 'clamp-to-edge': gl_wrap_t = gl.CLAMP_TO_EDGE; break;
-			case 'mirrored-repeat': gl_wrap_t = gl.MIRRORED_REPEAT; break;
+			case 'Repeat': gl_wrap_t = gl.REPEAT; break;
+			default: case 'ClampToEdge': gl_wrap_t = gl.CLAMP_TO_EDGE; break;
+			case 'MirroredRepeat': gl_wrap_t = gl.MIRRORED_REPEAT; break;
 			}
 
 			var image_key = page.name;

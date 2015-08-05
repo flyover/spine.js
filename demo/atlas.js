@@ -85,14 +85,14 @@ atlas.Data.prototype.import = function (text)
 		}
 		else if (match = line.match(/^filter: (.*),(.*)$/))
 		{
-			page.min_filter = match[1].toLowerCase();
-			page.mag_filter = match[2].toLowerCase();
+			page.min_filter = match[1];
+			page.mag_filter = match[2];
 		}
 		else if (match = line.match(/^repeat: (.*)$/))
 		{
 			var repeat = match[1];
-			page.wrap_s = ((repeat === 'x') || (repeat === 'xy'))?('repeat'):('clamp-to-edge');
-			page.wrap_t = ((repeat === 'y') || (repeat === 'xy'))?('repeat'):('clamp-to-edge');
+			page.wrap_s = ((repeat === 'x') || (repeat === 'xy'))?('Repeat'):('ClampToEdge');
+			page.wrap_t = ((repeat === 'y') || (repeat === 'xy'))?('Repeat'):('ClampToEdge');
 		}
 		else if (match = line.match(/^orig: (.*)[,| x] (.*)$/))
 		{
