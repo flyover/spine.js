@@ -54,6 +54,26 @@ atlas.Data = function ()
  */
 atlas.Data.prototype.import = function (text)
 {
+	var lines = text.split(/\n|\r\n/);
+	return this.importLines(lines);
+}
+
+/**
+ * @return {string}
+ * @param {string=} text
+ */
+atlas.Data.prototype.export = function (text)
+{
+	var lines = this.exportLines([])
+	return (text || "") + lines.join('\n');
+}
+
+/**
+ * @return {atlas.Data}
+ * @param {Array.<string>} lines
+ */
+atlas.Data.prototype.importLines = function (lines)
+{
 	var data = this;
 
 	data.pages = [];
@@ -64,7 +84,6 @@ atlas.Data.prototype.import = function (text)
 	var page = null;
 	var site = null;
 
-	var lines = text.split(/\n|\r\n/);
 	var match = null;
 
 	lines.forEach(function (line)
@@ -152,4 +171,44 @@ atlas.Data.prototype.import = function (text)
 	});
 
 	return data;
+}
+
+/**
+ * @return {string}
+ * @param {Array.<string>=} lines
+ */
+atlas.Data.prototype.exportLines = function (lines)
+{
+	lines = lines || [];
+
+	var data = this;
+
+	data.pages.forEach(function (page)
+	{
+		lines.push(""); // empty line denotes new page
+		lines.push(page.name);
+		lines.push("size: " + page.w + "," + page.h);
+		lines.push("format: " + page.format);
+		lines.push("filter: " + page.min_filter + "," + page.mag_filter);
+		var repeat = 'none';
+		if ((page.wrap_s === 'Repeat') && (page.wrap_t === 'Repeat')) { repeat = 'xy'; }
+		if (page.wrap_s === 'Repeat') { repeat = 'x'; }
+		if (page.wrap_t === 'Repeat') { repeat = 'y'; }
+		lines.push("repeat: " + repeat);
+
+		for (var site_key in data.sites)
+		{
+			var site = data.sites[site_key];
+			if (site.page !== page) { continue; }
+			lines.push(site_key);
+			lines.push("  rotate: " + (site.rotate?'true':'false'));
+			lines.push("  xy: " + site.x + ", " + site.y);
+			lines.push("  size: " + site.w + ", " + site.h);
+			lines.push("  orig: " + site.original_w + ", " + site.original_h);
+			lines.push("  offset: " + site.offset_x + ", " + site.offset_y);
+			lines.push("  index: " + site.index);
+		}
+	});
+
+	return lines;
 }
