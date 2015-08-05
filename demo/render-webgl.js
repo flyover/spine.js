@@ -9,6 +9,7 @@ renderWebGL = function (gl)
 	var render = this;
 	render.gl = gl;
 	if (!gl) { return; }
+	render.bone_info_map = {};
 	render.skin_info_map = {};
 	render.gl_textures = {};
 	render.gl_projection = mat3x3Identity(new Float32Array(9));
@@ -67,7 +68,7 @@ renderWebGL = function (gl)
 	render.gl_region_vertex.triangle = glMakeVertex(gl, new Uint16Array([ 0, 1, 2, 0, 2, 3 ]), 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW); // [ i0, i1, i2 ]
 	render.gl_skin_shader_modelview_count = 16; // * mat3
 	render.gl_skin_shader_modelview_array = new Float32Array(9 * render.gl_skin_shader_modelview_count);
-	render.gl_skin_shader_position_count = 5; // * vec4
+	render.gl_skin_shader_blenders_count = 8; // * vec2
 	function repeat (format, count)
 	{
 		var array = [];
@@ -84,13 +85,15 @@ renderWebGL = function (gl)
 		"uniform mat3 uProjection;",
 		"uniform mat3 uModelviewArray[" + render.gl_skin_shader_modelview_count + "];",
 		"uniform mat3 uTexMatrix;",
-		repeat("attribute vec4 aVertexPosition{index};", render.gl_skin_shader_position_count), // [ x, y, i, w ]
+		"attribute vec2 aVertexPosition;", // [ x, y ]
+		repeat("attribute vec2 aVertexBlenders{index};", render.gl_skin_shader_blenders_count), // [ i, w ]
 		"attribute vec2 aVertexTexCoord;", // [ u, v ]
 		"varying vec3 vTexCoord;",
 		"void main(void) {",
 		" vTexCoord = uTexMatrix * vec3(aVertexTexCoord, 1.0);",
+		" vec3 position = vec3(aVertexPosition, 1.0);",
 		" vec3 blendPosition = vec3(0.0);",
-		repeat(" blendPosition += (uModelviewArray[int(aVertexPosition{index}.z)] * vec3(aVertexPosition{index}.xy, 1.0)) * aVertexPosition{index}.w;", render.gl_skin_shader_position_count),
+		repeat(" blendPosition += (uModelviewArray[int(aVertexBlenders{index}.x)] * position) * aVertexBlenders{index}.y;", render.gl_skin_shader_blenders_count),
 		" gl_Position = vec4(uProjection * blendPosition, 1.0);",
 		"}"
 	];
@@ -102,15 +105,17 @@ renderWebGL = function (gl)
 		"uniform mat3 uModelviewArray[" + render.gl_skin_shader_modelview_count + "];",
 		"uniform mat3 uTexMatrix;",
 		"uniform float uMorphWeight;",
-		repeat("attribute vec4 aVertexPosition{index};", render.gl_skin_shader_position_count), // [ x, y, i, w ]
+		"attribute vec2 aVertexPosition;", // [ x, y ]
+		repeat("attribute vec2 aVertexBlenders{index};", render.gl_skin_shader_blenders_count), // [ i, w ]
 		"attribute vec2 aVertexTexCoord;", // [ u, v ]
-		repeat("attribute vec2 aVertexMorph0Position{index};", render.gl_skin_shader_position_count), // [ dx, dy ]
-		repeat("attribute vec2 aVertexMorph1Position{index};", render.gl_skin_shader_position_count), // [ dx, dy ]
+		"attribute vec2 aVertexMorph0Position;", // [ dx, dy ]
+		"attribute vec2 aVertexMorph1Position;", // [ dx, dy ]
 		"varying vec3 vTexCoord;",
 		"void main(void) {",
 		" vTexCoord = uTexMatrix * vec3(aVertexTexCoord, 1.0);",
+		" vec3 position = vec3(aVertexPosition + mix(aVertexMorph0Position, aVertexMorph1Position, uMorphWeight), 1.0);",
 		" vec3 blendPosition = vec3(0.0);",
-		repeat(" blendPosition += (uModelviewArray[int(aVertexPosition{index}.z)] * vec3(aVertexPosition{index}.xy + mix(aVertexMorph0Position{index}, aVertexMorph1Position{index}, uMorphWeight), 1.0)) * aVertexPosition{index}.w;", render.gl_skin_shader_position_count),
+		repeat(" blendPosition += (uModelviewArray[int(aVertexBlenders{index}.x)] * position) * aVertexBlenders{index}.y;", render.gl_skin_shader_blenders_count),
 		" gl_Position = vec4(uProjection * blendPosition, 1.0);",
 		"}"
 	];
@@ -149,6 +154,13 @@ renderWebGL.prototype.dropPose = function (spine_pose, atlas_data)
 
 	render.gl_textures = {};
 
+	for (var bone_key in render.bone_info_map)
+	{
+		var bone_info = render.bone_info_map[bone_key];
+	}
+
+	render.bone_info_map = {};
+
 	for (var skin_key in render.skin_info_map)
 	{
 		var skin_info = render.skin_info_map[skin_key];
@@ -180,6 +192,7 @@ renderWebGL.prototype.dropPose = function (spine_pose, atlas_data)
 				case 'skinnedmesh':
 					var gl_vertex = attachment_info.gl_vertex;
 					gl.deleteBuffer(gl_vertex.position.buffer);
+					gl.deleteBuffer(gl_vertex.blenders.buffer);
 					gl.deleteBuffer(gl_vertex.texcoord.buffer);
 					gl.deleteBuffer(gl_vertex.triangle.buffer);
 					for (var anim_key in attachment_info.anim_ffd_attachments)
@@ -213,6 +226,12 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 	var render = this;
 	var gl = render.gl;
 	if (!gl) { return; }
+
+	spine_pose.data.iterateBones(function (bone_key, bone)
+	{
+		var bone_info = render.bone_info_map[bone_key] = {};
+		bone_info.setup_space = spine.Space.invert(bone.world_space, new spine.Space());
+	});
 
 	spine_pose.data.iterateSkins(function (skin_key, skin)
 	{
@@ -264,7 +283,8 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 				var attachment_info = attachment_info_map[attachment_key] = {};
 				attachment_info.type = attachment.type;
 				var vertex_count = attachment_info.vertex_count = attachment.uvs.length / 2;
-				var vertex_position = attachment_info.vertex_position = new Float32Array(4 * render.gl_skin_shader_position_count * vertex_count);
+				var vertex_position = attachment_info.vertex_position = new Float32Array(2 * vertex_count); // [ x, y ]
+				var vertex_blenders = attachment_info.vertex_blenders = new Float32Array(2 * render.gl_skin_shader_blenders_count * vertex_count); // [ i, w ]
 				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
 				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
 				var blend_bone_index_array = attachment_info.blend_bone_index_array = [];
@@ -278,17 +298,17 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 						var x = attachment.vertices[index++];
 						var y = attachment.vertices[index++];
 						var weight = attachment.vertices[index++];
-						blender_array.push({ x: x, y: y, bone_index: bone_index, weight: weight });
+						blender_array.push({ position: new spine.Vector(x, y), bone_index: bone_index, weight: weight });
 					}
 
 					// sort the blender array descending by weight
 					blender_array = blender_array.sort(function (a, b) { return b.weight - a.weight; });
 
 					// clamp blender array and adjust weights
-					if (blender_array.length > render.gl_skin_shader_position_count)
+					if (blender_array.length > render.gl_skin_shader_blenders_count)
 					{
-						console.log("blend array length for", attachment_key, "is", blender_array.length, "so clamp to", render.gl_skin_shader_position_count);
-						blender_array.length = render.gl_skin_shader_position_count;
+						console.log("blend array length for", attachment_key, "is", blender_array.length, "so clamp to", render.gl_skin_shader_blenders_count);
+						blender_array.length = render.gl_skin_shader_blenders_count;
 						var weight_sum = 0;
 						blender_array.forEach(function (blend) { weight_sum += blend.weight; });
 						blender_array.forEach(function (blend) { blend.weight /= weight_sum; });
@@ -304,9 +324,9 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 					});
 
 					// pad out blender array
-					while (blender_array.length < render.gl_skin_shader_position_count)
+					while (blender_array.length < render.gl_skin_shader_blenders_count)
 					{
-						blender_array.push({ x: 0, y: 0, bone_index: -1, weight: 0 });
+						blender_array.push({ position: new spine.Vector(0, 0), bone_index: -1, weight: 0 });
 					}
 
 					if (blend_bone_index_array.length > render.gl_skin_shader_modelview_count)
@@ -314,18 +334,27 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 						console.log("blend bone index array length for", attachmentPkey, "is", blend_bone_index_array.length, "greater than", render.gl_skin_shader_modelview_count);
 					}
 
-					var vertex_position_offset = vertex_index * 4 * render.gl_skin_shader_position_count;
+					var position = new spine.Vector(0, 0);
+					var blend_position = new spine.Vector();
+					var vertex_blenders_offset = vertex_index * 2 * render.gl_skin_shader_blenders_count;
 					blender_array.forEach(function (blend, index)
 					{
-						var blend_index = (blend.bone_index >= 0)?(blend_bone_index_array.indexOf(blend.bone_index)):(0);
-						vertex_position[vertex_position_offset++] = blend.x;
-						vertex_position[vertex_position_offset++] = blend.y;
-						vertex_position[vertex_position_offset++] = blend_index;
-						vertex_position[vertex_position_offset++] = blend.weight;
+						if (blend.bone_index === -1) { return; }
+						var bone_key = spine_pose.data.bone_keys[blend.bone_index];
+						var bone = spine_pose.data.bones[bone_key];
+						spine.Space.transform(bone.world_space, blend.position, blend_position);
+						position.x += blend_position.x * blend.weight;
+						position.y += blend_position.y * blend.weight;
+						vertex_blenders[vertex_blenders_offset++] = blend_bone_index_array.indexOf(blend.bone_index);
+						vertex_blenders[vertex_blenders_offset++] = blend.weight;
 					});
+					var vertex_position_offset = vertex_index * 2;
+					vertex_position[vertex_position_offset++] = position.x;
+					vertex_position[vertex_position_offset++] = position.y;
 				}
 				var gl_vertex = attachment_info.gl_vertex = {};
-				gl_vertex.position = glMakeVertex(gl, vertex_position, 4, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+				gl_vertex.position = glMakeVertex(gl, vertex_position, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+				gl_vertex.blenders = glMakeVertex(gl, vertex_blenders, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
 				var anim_ffd_attachments = attachment_info.anim_ffd_attachments = {};
@@ -341,20 +370,26 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 						ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe, ffd_keyframe_index)
 						{
 							var anim_ffd_keyframe = anim_ffd_keyframes[ffd_keyframe_index] = {};
-							var vertex = anim_ffd_keyframe.vertex = new Float32Array(2 * render.gl_skin_shader_position_count * vertex_count);
+							var vertex = anim_ffd_keyframe.vertex = new Float32Array(2 * vertex_count);
 							for (var vertex_index = 0, index = 0, ffd_index = 0; vertex_index < vertex_count; ++vertex_index)
 							{
 								var blender_count = attachment.vertices[index++];
-								var vertex_position_offset = vertex_index * 2 * render.gl_skin_shader_position_count;
+								var vertex_x = 0;
+								var vertex_y = 0;
 								for (var blender_index = 0; blender_index < blender_count; ++blender_index)
 								{
 									var bone_index = attachment.vertices[index++];
 									var x = attachment.vertices[index++];
 									var y = attachment.vertices[index++];
 									var weight = attachment.vertices[index++];
-									vertex[vertex_position_offset++] = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0; ++ffd_index;
-									vertex[vertex_position_offset++] = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0; ++ffd_index;
+									var morph_position_x = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0; ++ffd_index;
+									var morph_position_y = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0; ++ffd_index;
+									vertex_x += morph_position_x * weight;
+									vertex_y += morph_position_y * weight;
 								}
+								var vertex_offset = vertex_index * 2;
+								vertex[vertex_offset++] = vertex_x;
+								vertex[vertex_offset++] = vertex_y;								
 							}
 							anim_ffd_keyframe.gl_vertex = glMakeVertex(gl, vertex, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 						});
@@ -643,11 +678,13 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				var bone_index = blend_bone_index_array[index];
 				var bone_key = spine_pose.bone_keys[bone_index];
 				var bone = spine_pose.bones[bone_key];
+				var bone_info = render.bone_info_map[bone_key];
 				if (index < render.gl_skin_shader_modelview_count)
 				{
 					var modelview = render.gl_skin_shader_modelview_array.subarray(index * 9, (index + 1) * 9);
 					mat3x3Copy(modelview, gl_modelview);
 					mat3x3ApplySpace(modelview, bone.world_space);
+					mat3x3ApplySpace(modelview, bone_info.setup_space);
 					mat3x3ApplyAtlasSitePosition(modelview, site);
 				}
 			}
@@ -695,18 +732,20 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 				gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
 				
-				glSetupAttribute(gl, gl_shader, 'aVertexPosition{index}', gl_vertex.position, render.gl_skin_shader_position_count);
-				glSetupAttribute(gl, gl_shader, 'aVertexMorph0Position{index}', anim_ffd_keyframe0.gl_vertex, render.gl_skin_shader_position_count);
-				glSetupAttribute(gl, gl_shader, 'aVertexMorph1Position{index}', anim_ffd_keyframe1.gl_vertex, render.gl_skin_shader_position_count);
+				glSetupAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
+				glSetupAttribute(gl, gl_shader, 'aVertexBlenders{index}', gl_vertex.blenders, render.gl_skin_shader_blenders_count);
+				glSetupAttribute(gl, gl_shader, 'aVertexMorph0Position', anim_ffd_keyframe0.gl_vertex);
+				glSetupAttribute(gl, gl_shader, 'aVertexMorph1Position', anim_ffd_keyframe1.gl_vertex);
 				glSetupAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
 				gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-				glResetAttribute(gl, gl_shader, 'aVertexPosition{index}', gl_vertex.position, render.gl_skin_shader_position_count);
-				glResetAttribute(gl, gl_shader, 'aVertexMorph0Position{index}', anim_ffd_keyframe0.gl_vertex, render.gl_skin_shader_position_count);
-				glResetAttribute(gl, gl_shader, 'aVertexMorph1Position{index}', anim_ffd_keyframe1.gl_vertex, render.gl_skin_shader_position_count);
+				glResetAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
+				glResetAttribute(gl, gl_shader, 'aVertexBlenders{index}', gl_vertex.blenders, render.gl_skin_shader_blenders_count);
+				glResetAttribute(gl, gl_shader, 'aVertexMorph0Position', anim_ffd_keyframe0.gl_vertex);
+				glResetAttribute(gl, gl_shader, 'aVertexMorph1Position', anim_ffd_keyframe1.gl_vertex);
 				glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
 				gl.bindTexture(gl.TEXTURE_2D, null);
@@ -731,14 +770,16 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 				gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
 
-				glSetupAttribute(gl, gl_shader, 'aVertexPosition{index}', gl_vertex.position, render.gl_skin_shader_position_count);
+				glSetupAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
+				glSetupAttribute(gl, gl_shader, 'aVertexBlenders{index}', gl_vertex.blenders, render.gl_skin_shader_blenders_count);
 				glSetupAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
 				gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 				
-				glResetAttribute(gl, gl_shader, 'aVertexPosition{index}', gl_vertex.position, render.gl_skin_shader_position_count);
+				glResetAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
+				glResetAttribute(gl, gl_shader, 'aVertexBlenders{index}', gl_vertex.blenders, render.gl_skin_shader_blenders_count);
 				glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
 				gl.bindTexture(gl.TEXTURE_2D, null);
