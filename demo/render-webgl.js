@@ -507,7 +507,7 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 		if (attachment.type === 'boundingbox') { return; }
 
 		var site = atlas_data && atlas_data.sites[attachment_key];
-		var page = site && atlas_data.pages[site.page];
+		var page = site && site.page;
 		var image_key = (page && page.name) || attachment_key;
 		var gl_texture = render.gl_textures[image_key];
 

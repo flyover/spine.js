@@ -25,7 +25,7 @@ atlas.Page = function ()
 atlas.Site = function ()
 {
 	var site = this;
-	site.page = -1;
+	site.page = null;
 	site.x = 0;
 	site.y = 0;
 	site.w = 0;
@@ -49,7 +49,7 @@ atlas.Data = function ()
 }
 
 /**
- * @return {atlas.}
+ * @return {atlas.Data}
  * @param {string} text
  */
 atlas.Data.prototype.import = function (text)
@@ -145,7 +145,7 @@ atlas.Data.prototype.import = function (text)
 				}
 				
 				site = new atlas.Site();
-				site.page = data.pages.length - 1;
+				site.page = page;
 				data.sites[line] = site;
 			}
 		}
