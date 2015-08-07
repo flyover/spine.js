@@ -47,7 +47,7 @@ main.start = function ()
 	canvas.style.width = canvas.width + 'px';
 	canvas.style.height = canvas.height + 'px';
 	canvas.style.zIndex = -1; // behind controls
-	
+
 	document.body.appendChild(canvas);
 
 	var ctx = canvas.getContext('2d');
@@ -302,7 +302,7 @@ main.start = function ()
 		if (ctx)
 		{
 			ctx.setTransform(1, 0, 0, 1, 0, 0);
-			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);			
+			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 		}
 
 		if (gl)
@@ -391,7 +391,7 @@ function loadText (url, callback)
 			{
 				callback(req.response, null);
 			}
-		}, 
+		},
 		false);
 		req.send();
 	}
@@ -410,5 +410,5 @@ function loadImage (url, callback)
 	image.addEventListener('abort', function (event) { callback("abort", null); }, false);
 	image.addEventListener('load', function (event) { callback(null, image); }, false);
 	image.src = url;
-	return image;	
+	return image;
 }

@@ -16,7 +16,7 @@ renderWebGL = function (gl)
 	render.gl_modelview = mat3x3Identity(new Float32Array(9));
 	render.gl_tex_matrix = mat3x3Identity(new Float32Array(9));
 	render.gl_color = vec4Identity(new Float32Array(4));
-	var gl_mesh_shader_vs_src = 
+	var gl_mesh_shader_vs_src =
 	[
 		"precision mediump int;",
 		"precision mediump float;",
@@ -31,7 +31,7 @@ renderWebGL = function (gl)
 		" gl_Position = vec4(uProjection * uModelview * vec3(aVertexPosition, 1.0), 1.0);",
 		"}"
 	];
-	var gl_ffd_mesh_shader_vs_src = 
+	var gl_ffd_mesh_shader_vs_src =
 	[
 		"precision mediump int;",
 		"precision mediump float;",
@@ -49,7 +49,7 @@ renderWebGL = function (gl)
 		" gl_Position = vec4(uProjection * uModelview * vec3(aVertexPosition + mix(aVertexMorph0Position, aVertexMorph1Position, uMorphWeight), 1.0), 1.0);",
 		"}"
 	];
-	var gl_mesh_shader_fs_src = 
+	var gl_mesh_shader_fs_src =
 	[
 		"precision mediump int;",
 		"precision mediump float;",
@@ -78,7 +78,7 @@ renderWebGL = function (gl)
 		}
 		return array;
 	}
-	var gl_skin_shader_vs_src = 
+	var gl_skin_shader_vs_src =
 	[
 		"precision mediump int;",
 		"precision mediump float;",
@@ -97,7 +97,7 @@ renderWebGL = function (gl)
 		" gl_Position = vec4(uProjection * blendPosition, 1.0);",
 		"}"
 	];
-	var gl_ffd_skin_shader_vs_src = 
+	var gl_ffd_skin_shader_vs_src =
 	[
 		"precision mediump int;",
 		"precision mediump float;",
@@ -119,7 +119,7 @@ renderWebGL = function (gl)
 		" gl_Position = vec4(uProjection * blendPosition, 1.0);",
 		"}"
 	];
-	var gl_skin_shader_fs_src = 
+	var gl_skin_shader_fs_src =
 	[
 		"precision mediump int;",
 		"precision mediump float;",
@@ -389,7 +389,7 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 								}
 								var vertex_offset = vertex_index * 2;
 								vertex[vertex_offset++] = vertex_x;
-								vertex[vertex_offset++] = vertex_y;								
+								vertex[vertex_offset++] = vertex_y;
 							}
 							anim_ffd_keyframe.gl_vertex = glMakeVertex(gl, vertex, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 						});
@@ -605,13 +605,13 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
-				
+
 				gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
 				gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
 				gl.uniform1f(gl_shader.uniforms['uMorphWeight'], pct);
-				
+
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 				gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
@@ -637,17 +637,17 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 			else
 			{
 				// no ffd
-			
+
 				var gl_shader = render.gl_mesh_shader;
 				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
-				
+
 				gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uModelview'], false, gl_modelview);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
 				gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-				
+
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 				gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
@@ -721,17 +721,17 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
-				
+
 				gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uModelviewArray[0]'], false, render.gl_skin_shader_modelview_array);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
 				gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
 				gl.uniform1f(gl_shader.uniforms['uMorphWeight'], pct);
-				
+
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 				gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
-				
+
 				glSetupAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
 				glSetupAttribute(gl, gl_shader, 'aVertexBlenders{index}', gl_vertex.blenders, render.gl_skin_shader_blenders_count);
 				glSetupAttribute(gl, gl_shader, 'aVertexMorph0Position', anim_ffd_keyframe0.gl_vertex);
@@ -760,12 +760,12 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				var gl_vertex = attachment_info.gl_vertex;
 
 				gl.useProgram(gl_shader.program);
-				
+
 				gl.uniformMatrix3fv(gl_shader.uniforms['uProjection'], false, gl_projection);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uModelviewArray[0]'], false, render.gl_skin_shader_modelview_array);
 				gl.uniformMatrix3fv(gl_shader.uniforms['uTexMatrix'], false, gl_tex_matrix);
 				gl.uniform4fv(gl_shader.uniforms['uColor'], gl_color);
-				
+
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, gl_texture);
 				gl.uniform1i(gl_shader.uniforms['uSampler'], 0);
@@ -777,7 +777,7 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
 				gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-				
+
 				glResetAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
 				glResetAttribute(gl, gl_shader, 'aVertexBlenders{index}', gl_vertex.blenders, render.gl_skin_shader_blenders_count);
 				glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
@@ -817,7 +817,7 @@ function vec4ApplyColor (v, color)
 
 function mat3x3Identity (m)
 {
-	m[1] = m[2] = m[3] = 
+	m[1] = m[2] = m[3] =
 	m[5] = m[6] = m[7] = 0.0;
 	m[0] = m[4] = m[8] = 1.0;
 	return m;

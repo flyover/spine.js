@@ -319,7 +319,7 @@ renderCtx2D.prototype.drawDebugPose = function (spine_pose, atlas_data)
 {
 	var render = this;
 	var ctx = render.ctx;
-	
+
 	render.updatePose(spine_pose, atlas_data);
 
 	spine_pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
@@ -573,9 +573,9 @@ function ctxDrawImageMesh (ctx, triangles, positions, texcoords, image, site, pa
 		ctx.closePath();
 		ctx.clip();
 		x1 -= x0; y1 -= y0;
-		x2 -= x0; y2 -= y0; 
+		x2 -= x0; y2 -= y0;
 		u1 -= u0; v1 -= v0;
-		u2 -= u0; v2 -= v0; 
+		u2 -= u0; v2 -= v0;
 		var id = 1 / (u1*v2 - u2*v1);
 		var a = id * (v2*x1 - v1*x2);
 		var b = id * (v2*y1 - v1*y2);
@@ -599,7 +599,7 @@ function ctxDrawIkConstraints (ctx, data, bones)
 		{
 		case 1:
 			var bone = bones[ikc.bone_keys[0]];
-			
+
 			ctx.beginPath();
 			ctx.moveTo(target.world_space.position.x, target.world_space.position.y);
 			ctx.lineTo(bone.world_space.position.x, bone.world_space.position.y);
@@ -610,7 +610,7 @@ function ctxDrawIkConstraints (ctx, data, bones)
 			ctxApplySpace(ctx, target.world_space);
 			ctxDrawCircle(ctx, 'yellow', 1.5);
 			ctx.restore();
-			
+
 			ctx.save();
 			ctxApplySpace(ctx, bone.world_space);
 			ctxDrawCircle(ctx, 'yellow', 0.5);
@@ -619,24 +619,24 @@ function ctxDrawIkConstraints (ctx, data, bones)
 		case 2:
 			var parent = bones[ikc.bone_keys[0]];
 			var child = bones[ikc.bone_keys[1]];
-			
+
 			ctx.beginPath();
 			ctx.moveTo(target.world_space.position.x, target.world_space.position.y);
 			ctx.lineTo(child.world_space.position.x, child.world_space.position.y);
 			ctx.lineTo(parent.world_space.position.x, parent.world_space.position.y);
 			ctx.strokeStyle = 'yellow';
 			ctx.stroke();
-			
+
 			ctx.save();
 			ctxApplySpace(ctx, target.world_space);
 			ctxDrawCircle(ctx, 'yellow', 1.5);
 			ctx.restore();
-			
+
 			ctx.save();
 			ctxApplySpace(ctx, child.world_space);
 			ctxDrawCircle(ctx, 'yellow', 0.75);
 			ctx.restore();
-			
+
 			ctx.save();
 			ctxApplySpace(ctx, parent.world_space);
 			ctxDrawCircle(ctx, 'yellow', 0.5);

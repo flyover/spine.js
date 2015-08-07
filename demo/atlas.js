@@ -162,7 +162,7 @@ atlas.Data.prototype.importLines = function (lines)
 					site.original_w = site.original_w || site.w;
 					site.original_h = site.original_h || site.h;
 				}
-				
+
 				site = new atlas.Site();
 				site.page = page;
 				data.sites[line] = site;
