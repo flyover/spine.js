@@ -249,10 +249,10 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 				var attachment_info_map = slot_info.attachment_info_map = slot_info.attachment_info_map || {};
 				var attachment_info = attachment_info_map[attachment_key] = {};
 				attachment_info.type = attachment.type;
-				var vertex_count = attachment_info.vertex_count = attachment.vertices.length / 2;
-				var vertex_position = attachment_info.vertex_position = new Float32Array(attachment.vertices);
-				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
-				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
+				var vertex_count = attachment.vertices.length / 2;
+				var vertex_position = new Float32Array(attachment.vertices);
+				var vertex_texcoord = new Float32Array(attachment.uvs);
+				var vertex_triangle = new Uint16Array(attachment.triangles);
 				var gl_vertex = attachment_info.gl_vertex = {};
 				gl_vertex.position = glMakeVertex(gl, vertex_position, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 				gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
@@ -270,7 +270,7 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 						ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe, ffd_keyframe_index)
 						{
 							var anim_ffd_keyframe = anim_ffd_keyframes[ffd_keyframe_index] = {};
-							var vertex = anim_ffd_keyframe.vertex = new Float32Array(2 * vertex_count);
+							var vertex = new Float32Array(2 * vertex_count);
 							vertex.subarray(ffd_keyframe.offset, ffd_keyframe.offset + ffd_keyframe.vertices.length).set(new Float32Array(ffd_keyframe.vertices));
 							anim_ffd_keyframe.gl_vertex = glMakeVertex(gl, vertex, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
 						});
@@ -282,11 +282,11 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 				var attachment_info_map = slot_info.attachment_info_map = slot_info.attachment_info_map || {};
 				var attachment_info = attachment_info_map[attachment_key] = {};
 				attachment_info.type = attachment.type;
-				var vertex_count = attachment_info.vertex_count = attachment.uvs.length / 2;
-				var vertex_position = attachment_info.vertex_position = new Float32Array(2 * vertex_count); // [ x, y ]
-				var vertex_blenders = attachment_info.vertex_blenders = new Float32Array(2 * render.gl_skin_shader_blenders_count * vertex_count); // [ i, w ]
-				var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
-				var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
+				var vertex_count = attachment.uvs.length / 2;
+				var vertex_position = new Float32Array(2 * vertex_count); // [ x, y ]
+				var vertex_blenders = new Float32Array(2 * render.gl_skin_shader_blenders_count * vertex_count); // [ i, w ]
+				var vertex_texcoord = new Float32Array(attachment.uvs);
+				var vertex_triangle = new Uint16Array(attachment.triangles);
 				var blend_bone_index_array = attachment_info.blend_bone_index_array = [];
 				for (var vertex_index = 0, index = 0; vertex_index < vertex_count; ++vertex_index)
 				{
@@ -314,43 +314,34 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 						blender_array.forEach(function (blend) { blend.weight /= weight_sum; });
 					}
 
-					// keep track of which bones are used for blending
-					blender_array.forEach(function (blend)
+					var position_x = 0;
+					var position_y = 0;
+					var blend_position = new spine.Vector();
+					var vertex_blenders_offset = vertex_index * 2 * render.gl_skin_shader_blenders_count;
+					blender_array.forEach(function (blend, index)
 					{
+						// keep track of which bones are used for blending
 						if (blend_bone_index_array.indexOf(blend.bone_index) === -1)
 						{
 							blend_bone_index_array.push(blend.bone_index);
 						}
+						var bone_key = spine_pose.data.bone_keys[blend.bone_index];
+						var bone = spine_pose.data.bones[bone_key];
+						spine.Space.transform(bone.world_space, blend.position, blend_position);
+						position_x += blend_position.x * blend.weight;
+						position_y += blend_position.y * blend.weight;
+						// index into gl_skin_shader_modelview_array, not spine_pose.data.bone_keys
+						vertex_blenders[vertex_blenders_offset++] = blend_bone_index_array.indexOf(blend.bone_index);
+						vertex_blenders[vertex_blenders_offset++] = blend.weight;
 					});
-
-					// pad out blender array
-					while (blender_array.length < render.gl_skin_shader_blenders_count)
-					{
-						blender_array.push({ position: new spine.Vector(0, 0), bone_index: -1, weight: 0 });
-					}
+					var vertex_position_offset = vertex_index * 2;
+					vertex_position[vertex_position_offset++] = position_x;
+					vertex_position[vertex_position_offset++] = position_y;
 
 					if (blend_bone_index_array.length > render.gl_skin_shader_modelview_count)
 					{
 						console.log("blend bone index array length for", attachmentPkey, "is", blend_bone_index_array.length, "greater than", render.gl_skin_shader_modelview_count);
 					}
-
-					var position = new spine.Vector(0, 0);
-					var blend_position = new spine.Vector();
-					var vertex_blenders_offset = vertex_index * 2 * render.gl_skin_shader_blenders_count;
-					blender_array.forEach(function (blend, index)
-					{
-						if (blend.bone_index === -1) { return; }
-						var bone_key = spine_pose.data.bone_keys[blend.bone_index];
-						var bone = spine_pose.data.bones[bone_key];
-						spine.Space.transform(bone.world_space, blend.position, blend_position);
-						position.x += blend_position.x * blend.weight;
-						position.y += blend_position.y * blend.weight;
-						vertex_blenders[vertex_blenders_offset++] = blend_bone_index_array.indexOf(blend.bone_index);
-						vertex_blenders[vertex_blenders_offset++] = blend.weight;
-					});
-					var vertex_position_offset = vertex_index * 2;
-					vertex_position[vertex_position_offset++] = position.x;
-					vertex_position[vertex_position_offset++] = position.y;
 				}
 				var gl_vertex = attachment_info.gl_vertex = {};
 				gl_vertex.position = glMakeVertex(gl, vertex_position, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
@@ -370,7 +361,7 @@ renderWebGL.prototype.loadPose = function (spine_pose, atlas_data, images)
 						ffd_attachment.ffd_keyframes.forEach(function (ffd_keyframe, ffd_keyframe_index)
 						{
 							var anim_ffd_keyframe = anim_ffd_keyframes[ffd_keyframe_index] = {};
-							var vertex = anim_ffd_keyframe.vertex = new Float32Array(2 * vertex_count);
+							var vertex = new Float32Array(2 * vertex_count);
 							for (var vertex_index = 0, index = 0, ffd_index = 0; vertex_index < vertex_count; ++vertex_index)
 							{
 								var blender_count = attachment.vertices[index++];
