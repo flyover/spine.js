@@ -65,7 +65,6 @@ renderWebGL = function (gl)
 	render.gl_region_vertex = {};
 	render.gl_region_vertex.position = glMakeVertex(gl, new Float32Array([ -1, -1,  1, -1,  1,  1, -1,  1 ]), 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW); // [ x, y ]
 	render.gl_region_vertex.texcoord = glMakeVertex(gl, new Float32Array([  0,  1,  1,  1,  1,  0,  0,  0 ]), 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW); // [ u, v ]
-	render.gl_region_vertex.triangle = glMakeVertex(gl, new Uint16Array([ 0, 1, 2, 0, 2, 3 ]), 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW); // [ i0, i1, i2 ]
 	render.gl_skin_shader_modelview_count = 16; // * mat3
 	render.gl_skin_shader_modelview_array = new Float32Array(9 * render.gl_skin_shader_modelview_count);
 	render.gl_skin_shader_blenders_count = 8; // * vec2
@@ -545,9 +544,7 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 			glSetupAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
 			glSetupAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
 
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_vertex.triangle.buffer);
-			gl.drawElements(gl.TRIANGLES, gl_vertex.triangle.count, gl_vertex.triangle.type, 0);
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+			gl.drawArrays(gl.TRIANGLE_FAN, 0, gl_vertex.position.count);
 
 			glResetAttribute(gl, gl_shader, 'aVertexPosition', gl_vertex.position);
 			glResetAttribute(gl, gl_shader, 'aVertexTexCoord', gl_vertex.texcoord);
@@ -999,8 +996,8 @@ function glMakeVertex (gl, type_array, size, buffer_type, buffer_draw)
 {
 	var vertex = {};
 	if (type_array instanceof Float32Array) { vertex.type = gl.FLOAT; }
-	else if (type_array instanceof Int8Array) { vertex.type = gl.CHAR; }
-	else if (type_array instanceof Uint8Array) { vertex.type = gl.UNSIGNED_CHAR; }
+	else if (type_array instanceof Int8Array) { vertex.type = gl.BYTE; }
+	else if (type_array instanceof Uint8Array) { vertex.type = gl.UNSIGNED_BYTE; }
 	else if (type_array instanceof Int16Array) { vertex.type = gl.SHORT; }
 	else if (type_array instanceof Uint16Array) { vertex.type = gl.UNSIGNED_SHORT; }
 	else if (type_array instanceof Int32Array) { vertex.type = gl.INT; }
