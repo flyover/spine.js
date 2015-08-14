@@ -212,3 +212,40 @@ atlas.Data.prototype.exportLines = function (lines)
 
 	return lines;
 }
+
+atlas.Data.prototype.importTPS = function (tps_text)
+{
+	var tps_json = JSON.parse(tps_text);
+
+	var data = this;
+
+	data.pages = [];
+	data.sites = {};
+
+	if (tps_json.meta)
+	{
+		// TexturePacker only supports one page
+		var page = data.pages[0] = new atlas.Page();
+		page.w = tps_json.meta.size.w;
+		page.h = tps_json.meta.size.h;
+		page.name = tps_json.meta.image;
+	}
+
+	if (tps_json.frames) for (var i in tps_json.frames)
+	{
+		var frame = tps_json.frames[i];
+		var site = data.sites[i] = new atlas.Site();
+		site.page = 0;
+		site.x = frame.frame.x;
+		site.y = frame.frame.y;
+		site.w = frame.frame.w;
+		site.h = frame.frame.h;
+		site.rotate = frame.rotated;
+		site.offset_x = frame.spriteSourceSize.x;
+		site.offset_y = frame.spriteSourceSize.y;
+		site.original_w = frame.sourceSize.w;
+		site.original_h = frame.sourceSize.h;
+	}
+
+	return data;
+}
