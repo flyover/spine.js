@@ -476,9 +476,9 @@ function ctxApplyAtlasSitePosition (ctx, site)
 {
 	if (site)
 	{
-		ctx.scale(1 / site.w, 1 / site.h);
-		ctx.translate(site.offset_x, site.offset_y);
-		ctx.scale(site.original_w, site.original_h);
+		ctx.scale(1 / site.original_w, 1 / site.original_h);
+		ctx.translate(2*site.offset_x - (site.original_w - site.w), (site.original_h - site.h) - 2*site.offset_y);
+		ctx.scale(site.w, site.h);
 	}
 }
 
