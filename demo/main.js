@@ -220,6 +220,7 @@ main.start = function ()
 	//add_file("spineboy/", "export/spineboy.json");
 	//add_file("raptor/", "export/raptor.json", "export/raptor.atlas");
 	add_file("Splatoon-FanArt/", "Data/splatoon.json", "Data/splatoon.atlas.txt");
+	add_file("ExplorerQ/", "ExplorerQ.json");
 	var esoteric = "https://raw.githubusercontent.com/EsotericSoftware/spine-runtimes/master/";
 	add_file(esoteric + "spine-unity/Assets/Examples/Spine/Dragon/", "dragon.json", "dragon.atlas.txt");
 	add_file(esoteric + "spine-unity/Assets/Examples/Spine/Eyes/", "eyes.json", "eyes.atlas.txt");
