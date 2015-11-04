@@ -523,7 +523,9 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 		switch (attachment.type)
 		{
 		case 'region':
-			mat3x3ApplySpace(gl_modelview, attachment.world_space);
+			var bone = spine_pose.bones[slot.bone_key];
+			mat3x3ApplySpace(gl_modelview, bone.world_space);
+			mat3x3ApplySpace(gl_modelview, attachment.local_space);
 			mat3x3Scale(gl_modelview, attachment.width/2, attachment.height/2);
 			mat3x3ApplyAtlasSitePosition(gl_modelview, site);
 

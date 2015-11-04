@@ -283,7 +283,9 @@ renderCtx2D.prototype.drawPose = function (spine_pose, atlas_data)
 		switch (attachment.type)
 		{
 		case 'region':
-			ctxApplySpace(ctx, attachment.world_space);
+			var bone = spine_pose.bones[slot.bone_key];
+			ctxApplySpace(ctx, bone.world_space);
+			ctxApplySpace(ctx, attachment.local_space);
 			ctxApplyAtlasSitePosition(ctx, site);
 			ctx.scale(attachment.width/2, attachment.height/2);
 			ctxDrawImageMesh(ctx, render.region_vertex_triangle, render.region_vertex_position, render.region_vertex_texcoord, image, site, page);
@@ -333,7 +335,9 @@ renderCtx2D.prototype.drawDebugPose = function (spine_pose, atlas_data)
 		switch (attachment.type)
 		{
 		case 'region':
-			ctxApplySpace(ctx, attachment.world_space);
+			var bone = spine_pose.bones[slot.bone_key];
+			ctxApplySpace(ctx, bone.world_space);
+			ctxApplySpace(ctx, attachment.local_space);
 			ctxApplyAtlasSitePosition(ctx, site);
 			ctx.beginPath();
 			ctx.rect(-attachment.width/2, -attachment.height/2, attachment.width, attachment.height);
@@ -408,7 +412,9 @@ renderCtx2D.prototype.drawDebugData = function (spine_pose, atlas_data)
 		switch (attachment.type)
 		{
 		case 'region':
-			ctxApplySpace(ctx, attachment.world_space);
+			var bone = spine_pose.bones[slot.bone_key];
+			ctxApplySpace(ctx, bone.world_space);
+			ctxApplySpace(ctx, attachment.local_space);
 			ctxApplyAtlasSitePosition(ctx, site);
 			ctx.beginPath();
 			ctx.rect(-attachment.width/2, -attachment.height/2, attachment.width, attachment.height);

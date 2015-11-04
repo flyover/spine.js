@@ -1222,15 +1222,12 @@ spine.RegionAttachment = function ()
 {
 	goog.base(this, 'region');
 	this.local_space = new spine.Space();
-	this.world_space = new spine.Space();
 }
 
 goog.inherits(spine.RegionAttachment, spine.Attachment);
 
 /** @type {spine.Space} */
 spine.RegionAttachment.prototype.local_space;
-/** @type {spine.Space} */
-spine.RegionAttachment.prototype.world_space;
 /** @type {number} */
 spine.RegionAttachment.prototype.width = 0;
 /** @type {number} */
@@ -1246,7 +1243,6 @@ spine.RegionAttachment.prototype.load = function (json)
 
 	var attachment = this;
 	attachment.local_space.load(json);
-	attachment.world_space.copy(attachment.local_space);
 	attachment.width = spine.loadFloat(json, 'width', 0);
 	attachment.height = spine.loadFloat(json, 'height', 0);
 	return attachment;
@@ -3322,15 +3318,6 @@ spine.Pose.prototype.strike = function ()
 	});
 
 	pose.slot_keys = data.slot_keys;
-
-	pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
-	{
-		if (!attachment) { return; }
-		if (attachment.type !== 'region') { return; }
-
-		var bone = pose.bones[slot.bone_key];
-		spine.Space.combine(bone.world_space, attachment.local_space, attachment.world_space);
-	});
 
 	if (anim)
 	{
