@@ -31,6 +31,23 @@ main.start = function ()
 		controls.appendChild(control);
 	}
 
+	var add_range_control = function (text, init, min, max, step, callback)
+	{
+		var control = document.createElement('div');
+		var input = document.createElement('input');
+		input.type = 'range';
+		input.value = init;
+		input.min = min;
+		input.max = max;
+		input.step = step;
+		input.addEventListener('input', function () { callback(this.value); label.innerHTML = text + " : " + this.value; }, false);
+		control.appendChild(input);
+		var label = document.createElement('label');
+		label.innerHTML = text + " : " + init;
+		control.appendChild(label);
+		controls.appendChild(control);
+	}
+
 	var messages = document.createElement('div');
 	messages.style.position = 'absolute';
 	messages.style.left = '0px';
@@ -107,6 +124,14 @@ main.start = function ()
 	var anim_length = 0;
 	var anim_rate = 1;
 	var anim_repeat = 2;
+
+	var anim_blend = 0.0;
+
+	add_range_control("Anim Rate", anim_rate, -2.0, 2.0, 0.1, function (value) { anim_rate = value; });
+
+	var alpha = 1.0;
+
+	add_range_control("Alpha", alpha, 0.0, 1.0, 0.01, function (value) { alpha = value; });
 
 	var loadFile = function (file, callback)
 	{
@@ -321,6 +346,8 @@ main.start = function ()
 
 		if (ctx)
 		{
+			ctx.globalAlpha = alpha;
+
 			// origin at center, x right, y up
 			ctx.translate(ctx.canvas.width/2, ctx.canvas.height/2); ctx.scale(1, -1);
 
@@ -351,6 +378,9 @@ main.start = function ()
 
 		if (gl)
 		{
+			var gl_color = render_webgl.gl_color;
+			gl_color[3] = alpha;
+
 			var gl_projection = render_webgl.gl_projection;
 			mat4x4Identity(gl_projection);
 			mat4x4Ortho(gl_projection, -gl.canvas.width/2, gl.canvas.width/2, -gl.canvas.height/2, gl.canvas.height/2, -1, 1);
