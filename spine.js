@@ -294,7 +294,7 @@ spine.BezierCurve = function (x1, y1, x2, y2, epsilon)
 			x2 = curveX(t2) - x;
 			if (Math.abs(x2) < epsilon) return curveY(t2);
 			d2 = derivativeCurveX(t2);
-			if (Math.abs(d2) < 1e-6) break;
+			if (Math.abs(d2) < epsilon) break;
 			t2 = t2 - (x2 / d2);
 		}
 
