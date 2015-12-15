@@ -269,7 +269,7 @@ renderCtx2D.prototype.drawPose = function (spine_pose, atlas_data)
 		ctx.save();
 
 		// TODO: slot.color.rgb
-		ctx.globalAlpha = slot.color.a;
+		ctx.globalAlpha *= slot.color.a;
 
 		switch (slot.blend)
 		{

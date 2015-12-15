@@ -493,6 +493,8 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 	var gl_tex_matrix = render.gl_tex_matrix;
 	var gl_color = render.gl_color;
 
+	var alpha = gl_color[3];
+
 	spine_pose.iterateAttachments(function (slot_key, slot, skin_slot, attachment_key, attachment)
 	{
 		if (!attachment) { return; }
@@ -511,6 +513,7 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 		mat3x3ApplyAtlasSiteTexcoord(gl_tex_matrix, site);
 
 		vec4CopyColor(gl_color, slot.color);
+		gl_color[3] *= alpha;
 
 		gl.enable(gl.BLEND);
 		switch (slot.blend)
@@ -781,6 +784,8 @@ renderWebGL.prototype.drawPose = function (spine_pose, atlas_data)
 			break;
 		}
 	});
+
+	gl_color[3] = alpha;
 }
 
 function vec4Identity (v)
