@@ -3358,33 +3358,70 @@ spine.Pose.prototype.strike = function ()
 			pose.events.push(pose_event);
 		}
 
-		if (wrapped_min)
+		if (elapsed_time < 0)
 		{
-			var keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.min_time);
-			if (keyframe_index !== -1)
+			if (wrapped_min)
 			{
-				var event_keyframe = anim.event_keyframes[keyframe_index];
-				add_event(event_keyframe);
+				// min    prev_time           time      max
+				//  |         |                |         |
+				//  ----------x                o<---------
+				// all events between min_time and prev_time, not including prev_time
+				// all events between max_time and time
+				anim.event_keyframes.forEach(function (event_keyframe)
+				{
+					if (((anim.min_time <= event_keyframe.time) && (event_keyframe.time < prev_time)) || 
+						((time <= event_keyframe.time) && (event_keyframe.time <= anim.max_time)))
+					{
+						add_event(event_keyframe);
+					}
+				});
+			}
+			else
+			{
+				// min       time          prev_time    max
+				//  |         |                |         |
+				//            o<---------------x
+				// all events between time and prev_time, not including prev_time
+				anim.event_keyframes.forEach(function (event_keyframe)
+				{
+					if ((time <= event_keyframe.time) && (event_keyframe.time < prev_time))
+					{
+						add_event(event_keyframe);
+					}
+				});
 			}
 		}
-		else if (wrapped_max)
+		else
 		{
-			var keyframe_index = spine.Keyframe.find(anim.event_keyframes, anim.max_time);
-			if (keyframe_index !== -1)
+			if (wrapped_max)
 			{
-				var event_keyframe = anim.event_keyframes[keyframe_index];
-				add_event(event_keyframe);
+				// min       time          prev_time    max
+				//  |         |                |         |
+				//  --------->o                x----------
+				// all events between prev_time and max_time, not including prev_time
+				// all events between min_time and time
+				anim.event_keyframes.forEach(function (event_keyframe)
+				{
+					if (((anim.min_time <= event_keyframe.time) && (event_keyframe.time <= time)) || 
+						((prev_time < event_keyframe.time) && (event_keyframe.time <= anim.max_time)))
+					{
+						add_event(event_keyframe);
+					}
+				});
 			}
-		}
-
-		var keyframe_index = spine.Keyframe.find(anim.event_keyframes, time);
-		if (keyframe_index !== -1)
-		{
-			var event_keyframe = anim.event_keyframes[keyframe_index];
-			if (((elapsed_time < 0) && ((time <= event_keyframe.time) && (event_keyframe.time <= prev_time))) ||
-				((elapsed_time > 0) && ((prev_time <= event_keyframe.time) && (event_keyframe.time <= time))))
+			else
 			{
-				add_event(event_keyframe);
+				// min    prev_time           time      max
+				//  |         |                |         |
+				//            x--------------->o
+				// all events between prev_time and time, not including prev_time
+				anim.event_keyframes.forEach(function (event_keyframe)
+				{
+					if ((prev_time < event_keyframe.time) && (event_keyframe.time <= time))
+					{
+						add_event(event_keyframe);
+					}
+				});
 			}
 		}
 	}
