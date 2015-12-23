@@ -3342,7 +3342,7 @@ spine.Pose.prototype.strike = function ()
 
 	pose.events.length = 0;
 
-	if (anim)
+	if (anim && anim.event_keyframes)
 	{
 		var add_event = function (event_keyframe)
 		{
