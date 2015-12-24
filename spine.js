@@ -988,6 +988,22 @@ spine.Space.untransform = function (space, v, out)
 }
 
 /**
+ * @return {spine.Space} 
+ * @param {spine.Space} a 
+ * @param {spine.Space} b 
+ * @param {number} tween
+ * @param {spine.Space=} out 
+ */
+spine.Space.tween = function (a, b, tween, out)
+{
+	out.position.x = spine.tween(a.position.x, b.position.x, tween);
+	out.position.y = spine.tween(a.position.y, b.position.y, tween);
+	out.rotation.rad = spine.tweenAngle(a.rotation.rad, b.rotation.rad, tween);
+	out.scale.x = spine.tween(a.scale.x, b.scale.x, tween);
+	out.scale.y = spine.tween(a.scale.y, b.scale.y, tween);
+	return out;
+}
+/**
  * @constructor
  */
 spine.Bone = function ()
