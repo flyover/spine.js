@@ -117,17 +117,22 @@ main.start = function ()
 	add_checkbox_control("2D Debug Data", enable_render_debug_data, function (checked) { enable_render_debug_data = checked; });
 	add_checkbox_control("2D Debug Pose", enable_render_debug_pose, function (checked) { enable_render_debug_pose = checked; });
 
+	var spine_data = null;
 	var spine_pose = null;
+	var spine_pose_next = null;
 	var atlas_data = null;
 
 	var anim_time = 0;
 	var anim_length = 0;
+	var anim_length_next = 0;
 	var anim_rate = 1;
 	var anim_repeat = 2;
 
 	var anim_blend = 0.0;
 
 	add_range_control("Anim Rate", anim_rate, -2.0, 2.0, 0.1, function (value) { anim_rate = value; });
+
+	add_range_control("Anim Blend", anim_blend, 0.0, 1.0, 0.01, function (value) { anim_blend = value; });
 
 	var alpha = 1.0;
 
@@ -137,8 +142,11 @@ main.start = function ()
 	{
 		render_ctx2d.dropPose(spine_pose, atlas_data);
 		render_webgl.dropPose(spine_pose, atlas_data);
+		render_webgl.dropPose(spine_pose_next, atlas_data);
 
+		spine_data = null;
 		spine_pose = null;
+		spine_pose_next = null;
 		atlas_data = null;
 
 		var file_path = file.path;
@@ -153,7 +161,9 @@ main.start = function ()
 				return;
 			}
 
-			spine_pose = new spine.Pose(new spine.Data().load(JSON.parse(json_text)));
+			spine_data = new spine.Data().load(JSON.parse(json_text));
+			spine_pose = new spine.Pose(spine_data);
+			spine_pose_next = new spine.Pose(spine_data);
 
 			loadText(file_atlas_url, function (err, atlas_text)
 			{
@@ -167,6 +177,7 @@ main.start = function ()
 					{
 						render_ctx2d.loadPose(spine_pose, atlas_data, images);
 						render_webgl.loadPose(spine_pose, atlas_data, images);
+						render_webgl.loadPose(spine_pose_next, atlas_data, images);
 						callback();
 					}
 				}
@@ -188,7 +199,7 @@ main.start = function ()
 						{
 							if (err)
 							{
-								console.log("error loading:", image.src);
+								console.log("error loading:", image && image.src || page.name);
 							}
 							page.w = page.w || image.width;
 							page.h = page.h || image.height;
@@ -199,7 +210,7 @@ main.start = function ()
 				else
 				{
 					// load attachment images
-					spine_pose.data.iterateSkins(function (skin_key, skin)
+					spine_data.iterateSkins(function (skin_key, skin)
 					{
 						skin.iterateAttachments(function (slot_key, skin_slot, attachment_key, attachment)
 						{
@@ -210,7 +221,7 @@ main.start = function ()
 							case 'mesh':
 							case 'skinnedmesh':
 								var image_key = attachment_key;
-								var image_url = file_path + spine_pose.data.skeleton.images + image_key + ".png";
+								var image_url = file_path + spine_data.skeleton.images + image_key + ".png";
 								counter_inc();
 								var image = images[image_key] = loadImage(image_url, function (err, image)
 								{
@@ -268,10 +279,19 @@ main.start = function ()
 	loading = true; loadFile(file, function ()
 	{
 		loading = false;
-		spine_pose.setSkin(spine_pose.data.skin_keys[skin_index = 0]);
-		spine_pose.setAnim(spine_pose.data.anim_keys[anim_index = 0]);
+		var skin_keys = spine_data.skin_keys;
+		var skin_key = skin_keys[skin_index = 0];
+		spine_pose.setSkin(skin_key);
+		spine_pose_next.setSkin(skin_key);
+		var anim_keys = spine_data.anim_keys;
+		var anim_key = skin_keys[anim_index = 0];
+		spine_pose.setAnim(anim_key);
+		var anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
+		spine_pose_next.setAnim(anim_key_next);
 		spine_pose.setTime(anim_time = 0);
+		spine_pose_next.setTime(anim_time);
 		anim_length = spine_pose.curAnimLength() || 1000;
+		anim_length_next = spine_pose_next.curAnimLength() || 1000;
 	});
 
 	var prev_time = 0;
@@ -285,15 +305,20 @@ main.start = function ()
 		if (!loading)
 		{
 			spine_pose.update(dt * anim_rate);
+			var anim_rate_next = anim_rate * anim_length_next / anim_length;
+			spine_pose_next.update(dt * anim_rate_next);
 
 			anim_time += dt * anim_rate;
 
 			if (anim_time >= (anim_length * anim_repeat))
 			{
-				if (++anim_index >= spine_pose.data.anim_keys.length)
+				var skin_keys = spine_data.skin_keys;
+				var skin_key = skin_keys[skin_index];
+				var anim_keys = spine_data.anim_keys;
+				if (++anim_index >= anim_keys.length)
 				{
 					anim_index = 0;
-					if (++skin_index >= spine_pose.data.skin_keys.length)
+					if (++skin_index >= skin_keys.length)
 					{
 						skin_index = 0;
 						if (files.length > 1)
@@ -307,22 +332,45 @@ main.start = function ()
 							loading = true; loadFile(file, function ()
 							{
 								loading = false;
-								spine_pose.setSkin(spine_pose.data.skin_keys[skin_index = 0]);
-								spine_pose.setAnim(spine_pose.data.anim_keys[anim_index = 0]);
+								var skin_keys = spine_data.skin_keys;
+								var skin_key = skin_keys[skin_index = 0];
+								spine_pose.setSkin(skin_key);
+								spine_pose_next.setSkin(skin_key);
+								var anim_keys = spine_data.anim_keys;
+								var anim_key = anim_keys[anim_index = 0];
+								spine_pose.setAnim(anim_key);
+								var anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
+								spine_pose_next.setAnim(anim_key_next);
 								spine_pose.setTime(anim_time = 0);
+								spine_pose_next.setTime(anim_time);
 								anim_length = spine_pose.curAnimLength() || 1000;
+								anim_length_next = spine_pose_next.curAnimLength() || 1000;
 							});
 							return;
 						}
 					}
-					spine_pose.setSkin(spine_pose.data.skin_keys[skin_index]);
+					var skin_keys = spine_data.skin_keys;
+					var skin_key = skin_keys[skin_index];
+					spine_pose.setSkin(skin_key);
+					spine_pose_next.setSkin(skin_key);
 				}
-				spine_pose.setAnim(spine_pose.data.anim_keys[anim_index]);
+				var anim_keys = spine_data.anim_keys;
+				var anim_key = anim_keys[anim_index];
+				spine_pose.setAnim(anim_key);
+				var anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
+				spine_pose_next.setAnim(anim_key_next);
 				spine_pose.setTime(anim_time = 0);
+				spine_pose_next.setTime(anim_time);
 				anim_length = spine_pose.curAnimLength() || 1000;
+				anim_length_next = spine_pose_next.curAnimLength() || 1000;
 			}
 
-			messages.innerHTML = "skin: " + spine_pose.skin_key + ", anim: " + spine_pose.anim_key + "<br>" + file.path + file.json_url;
+			var skin_keys = spine_data.skin_keys;
+			var skin_key = skin_keys[skin_index];
+			var anim_keys = spine_data.anim_keys;
+			var anim_key = anim_keys[anim_index];
+			var anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
+			messages.innerHTML = "skin: " + skin_key + ", anim: " + anim_key + ", next anim: " + anim_key_next + "<br>" + file.path + file.json_url;
 		}
 
 		if (ctx)
@@ -341,8 +389,23 @@ main.start = function ()
 		if (loading) { return; }
 
 		spine_pose.strike();
+		spine_pose_next.strike();
 
 		//spine_pose.events.forEach(function (event) { console.log("event", event.name, event.int_value, event.float_value, event.string_value); });
+
+		// blend next pose bone into pose bone
+		spine_pose.iterateBones(function (bone_key, bone)
+		{
+			var bone_next = spine_pose_next.bones[bone_key];
+			if (!bone_next) { return; }
+			spine.Space.tween(bone.local_space, bone_next.local_space, anim_blend, bone.local_space);
+		});
+
+		// compute bone world space
+		spine_pose.iterateBones(function (bone_key, bone)
+		{
+			spine.Bone.flatten(bone, spine_pose.bones);
+		});
 
 		if (ctx)
 		{
