@@ -1544,17 +1544,14 @@ spine.Event.prototype.copy = function (other)
  */
 spine.Event.prototype.load = function (json)
 {
-	if (typeof(json['name']) === 'string')
-	{
-		this.name = spine.loadString(json, 'name', "");
-	}
-	if (typeof(json['int']) === 'string')
+	this.name = spine.loadString(json, 'name', "");
+	if (typeof(json['int']) === 'number')
 	{
 		this.int_value = spine.loadInt(json, 'int', 0);
 	}
-	if (typeof(json['float']) === 'string')
+	if (typeof(json['float']) === 'number')
 	{
-		this.float_value = spine.loadFloat(json['float'], 0);
+		this.float_value = spine.loadFloat(json, 'float', 0);
 	}
 	if (typeof(json['string']) === 'string')
 	{
@@ -1764,7 +1761,7 @@ spine.FlipXKeyframe.prototype.flip_x = false;
 spine.FlipXKeyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	this.flip = spine.loadBool(json, 'x', false);
+	this.flip_x = spine.loadBool(json, 'x', false);
 	return this;
 }
 
@@ -1789,7 +1786,7 @@ spine.FlipYKeyframe.prototype.flip_y = false;
 spine.FlipYKeyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	this.flip = spine.loadBool(json, 'y', false);
+	this.flip_y = spine.loadBool(json, 'y', false);
 	return this;
 }
 
@@ -2067,15 +2064,12 @@ spine.EventKeyframe.prototype.string_value = "";
 spine.EventKeyframe.prototype.load = function (json)
 {
 	goog.base(this, 'load', json);
-	if (typeof(json['name']) === 'string')
-	{
-		this.name = spine.loadString(json, 'name', "");
-	}
-	if (typeof(json['int']) === 'string')
+	this.name = spine.loadString(json, 'name', "");
+	if (typeof(json['int']) === 'number')
 	{
 		this.int_value = spine.loadInt(json, 'int', 0);
 	}
-	if (typeof(json['float']) === 'string')
+	if (typeof(json['float']) === 'number')
 	{
 		this.float_value = spine.loadFloat(json, 'float', 0);
 	}
@@ -3155,7 +3149,7 @@ spine.Pose.prototype.strike = function ()
 			{
 				var flip_x_keyframe0 = anim_bone.flip_x_keyframes[keyframe_index];
 				// no tweening bone flip x
-				pose_bone.local_space.flip.x = (flip_x_keyframe0.flip)?(-1):(1);
+				pose_bone.local_space.flip.x = (flip_x_keyframe0.flip_x)?(-1):(1);
 			}
 
 			var keyframe_index = spine.Keyframe.find(anim_bone.flip_y_keyframes, time);
@@ -3163,7 +3157,7 @@ spine.Pose.prototype.strike = function ()
 			{
 				var flip_y_keyframe0 = anim_bone.flip_y_keyframes[keyframe_index];
 				// no tweening bone flip y
-				pose_bone.local_space.flip.y = (flip_y_keyframe0.flip)?(-1):(1);
+				pose_bone.local_space.flip.y = (flip_y_keyframe0.flip_y)?(-1):(1);
 			}
 		}
 	});
