@@ -255,20 +255,33 @@ main.start = function() {
     files.push(file);
   }
 
-  //add_file("spineboy/", "export/spineboy.json");
-  //add_file("raptor/", "export/raptor.json", "export/raptor.atlas");
   add_file("Splatoon-FanArt/", "Data/splatoon.json", "Data/splatoon.atlas.txt");
   add_file("ExplorerQ/", "ExplorerQ.json");
-  var esoteric = "https://raw.githubusercontent.com/EsotericSoftware/spine-runtimes/master/";
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Dragon/", "dragon.json", "dragon.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Eyes/", "eyes.json", "eyes.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/FootSoldier/", "FootSoldier.json", "FS_White.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Gauge/", "Gauge.json", "Gauge.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Goblins/", "goblins-mesh.json", "goblins-mesh.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Hero/", "hero-mesh.json", "hero-mesh.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Raggedy Spineboy/", "Raggedy Spineboy.json", "Raggedy Spineboy.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Raptor/", "raptor.json", "raptor.atlas.txt");
-  add_file(esoteric + "spine-unity/Assets/Examples/Spine/Spineboy/", "spineboy.json", "spineboy.atlas.txt");
+  add_file("examples/alien/", "export/alien.json", "export/alien.atlas");
+  add_file("examples/dragon/", "export/dragon.json", "export/dragon.atlas");
+  add_file("examples/goblins/", "export/goblins.json", "export/goblins.atlas");
+  add_file("examples/goblins/", "export/goblins-mesh.json", "export/goblins-mesh.atlas");
+  add_file("examples/goblins/", "export/goblins-ffd.json", "export/goblins-ffd.atlas");
+  add_file("examples/hero/", "export/hero-mesh.json", "export/hero-mesh.atlas");
+  add_file("examples/hero/", "export/hero.json", "export/hero.atlas");
+  add_file("examples/powerup/", "export/powerup.json", "export/powerup.atlas");
+  add_file("examples/raptor/", "export/raptor.json", "export/raptor.atlas");
+  add_file("examples/speedy/", "export/speedy.json", "export/speedy.atlas");
+  add_file("examples/spineboy-old/", "export/spineboy-old.json", "export/spineboy-old.atlas");
+  add_file("examples/spineboy/", "export/spineboy.json", "export/spineboy.atlas");
+  add_file("examples/spineboy/", "export/spineboy-mesh.json", "export/spineboy-mesh.atlas");
+  add_file("examples/spineboy/", "export/spineboy-hoverboard.json", "export/spineboy-hoverboard.atlas");
+  add_file("examples/spinosaurus/", "export/spinosaurus.json", "export/spinosaurus.atlas");
+  //var esoteric = "https://raw.githubusercontent.com/EsotericSoftware/spine-runtimes/master/";
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Dragon/", "dragon.json", "dragon.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Eyes/", "eyes.json", "eyes.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/FootSoldier/", "FootSoldier.json", "FS_White.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Gauge/", "Gauge.json", "Gauge.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Goblins/", "goblins-mesh.json", "goblins-mesh.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Hero/", "hero-mesh.json", "hero-mesh.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Raggedy Spineboy/", "Raggedy Spineboy.json", "Raggedy Spineboy.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Raptor/", "raptor.json", "raptor.atlas.txt");
+  //add_file(esoteric + "spine-unity/Assets/Examples/Spine/Spineboy/", "spineboy.json", "spineboy.atlas.txt");
 
   var file_index = 0;
   var skin_index = 0;
