@@ -1,13 +1,14 @@
 
 dragon.png
+size: 1024,1024
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
-L_rear_thigh
-  rotate: false
-  xy: 895, 20
-  size: 91, 148
-  orig: 91, 149
+L_rear_leg
+  rotate: true
+  xy: 714, 252
+  size: 206, 177
+  orig: 206, 177
   offset: 0, 0
   index: -1
 L_wing01
@@ -15,13 +16,6 @@ L_wing01
   xy: 814, 672
   size: 191, 256
   orig: 191, 256
-  offset: 0, 0
-  index: -1
-L_wing02
-  rotate: false
-  xy: 714, 189
-  size: 179, 269
-  orig: 179, 269
   offset: 0, 0
   index: -1
 L_wing03
@@ -43,6 +37,13 @@ L_wing06
   xy: 2, 229
   size: 192, 331
   orig: 192, 331
+  offset: 0, 0
+  index: -1
+R_front_thigh
+  rotate: false
+  xy: 890, 60
+  size: 108, 108
+  orig: 108, 108
   offset: 0, 0
   index: -1
 R_wing01
@@ -102,15 +103,15 @@ R_wing09
   offset: 0, 0
   index: -1
 back
-  rotate: false
-  xy: 703, 2
+  rotate: true
+  xy: 703, 60
   size: 190, 185
   orig: 190, 185
   offset: 0, 0
   index: -1
 chest
   rotate: true
-  xy: 895, 170
+  xy: 893, 170
   size: 136, 122
   orig: 136, 122
   offset: 0, 0
@@ -120,6 +121,13 @@ front_toeA
   xy: 976, 972
   size: 29, 50
   orig: 29, 50
+  offset: 0, 0
+  index: -1
+front_toeB
+  rotate: true
+  xy: 776, 2
+  size: 56, 57
+  orig: 56, 57
   offset: 0, 0
   index: -1
 head
@@ -138,7 +146,7 @@ logo
   index: -1
 tail01
   rotate: false
-  xy: 895, 308
+  xy: 893, 308
   size: 120, 153
   orig: 120, 153
   offset: 0, 0
@@ -150,140 +158,134 @@ tail03
   orig: 73, 92
   offset: 0, 0
   index: -1
+tail04
+  rotate: true
+  xy: 703, 2
+  size: 56, 71
+  orig: 56, 71
+  offset: 0, 0
+  index: -1
+tail05
+  rotate: true
+  xy: 835, 6
+  size: 52, 59
+  orig: 52, 59
+  offset: 0, 0
+  index: -1
 
 dragon2.png
+size: 1024,512
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
 L_front_leg
   rotate: true
-  xy: 391, 141
+  xy: 884, 245
   size: 84, 57
   orig: 84, 57
   offset: 0, 0
   index: -1
 L_front_thigh
-  rotate: false
-  xy: 446, 269
+  rotate: true
+  xy: 943, 282
   size: 84, 72
   orig: 84, 72
   offset: 0, 0
   index: -1
-L_rear_leg
+L_rear_thigh
   rotate: true
-  xy: 888, 342
-  size: 168, 132
-  orig: 206, 177
-  offset: 19, 20
+  xy: 464, 225
+  size: 91, 149
+  orig: 91, 149
+  offset: 0, 0
+  index: -1
+L_wing02
+  rotate: false
+  xy: 2, 208
+  size: 179, 269
+  orig: 179, 269
+  offset: 0, 0
   index: -1
 L_wing04
   rotate: false
-  xy: 256, 227
+  xy: 183, 196
   size: 188, 135
   orig: 188, 135
   offset: 0, 0
   index: -1
 L_wing07
-  rotate: false
-  xy: 2, 109
+  rotate: true
+  xy: 464, 318
   size: 159, 255
   orig: 159, 255
   offset: 0, 0
   index: -1
 L_wing08
-  rotate: true
-  xy: 705, 346
+  rotate: false
+  xy: 171, 13
   size: 164, 181
   orig: 164, 181
   offset: 0, 0
   index: -1
 L_wing09
-  rotate: false
-  xy: 499, 343
+  rotate: true
+  xy: 2, 2
   size: 204, 167
   orig: 204, 167
   offset: 0, 0
   index: -1
 R_front_leg
-  rotate: false
-  xy: 273, 34
+  rotate: true
+  xy: 373, 230
   size: 101, 89
   orig: 101, 89
   offset: 0, 0
   index: -1
-R_front_thigh
-  rotate: false
-  xy: 163, 106
-  size: 108, 108
-  orig: 108, 108
-  offset: 0, 0
-  index: -1
 R_rear_leg
   rotate: false
-  xy: 273, 125
+  xy: 615, 216
   size: 116, 100
   orig: 116, 100
   offset: 0, 0
   index: -1
 R_rear_thigh
-  rotate: false
-  xy: 163, 216
-  size: 91, 148
+  rotate: true
+  xy: 733, 238
+  size: 91, 149
   orig: 91, 149
   offset: 0, 0
   index: -1
 R_wing04
   rotate: false
-  xy: 2, 366
+  xy: 183, 333
   size: 279, 144
   orig: 279, 144
   offset: 0, 0
   index: -1
 chin
   rotate: false
-  xy: 283, 364
+  xy: 721, 331
   size: 214, 146
   orig: 214, 146
   offset: 0, 0
   index: -1
-front_toeB
-  rotate: false
-  xy: 590, 284
-  size: 56, 57
-  orig: 56, 57
-  offset: 0, 0
-  index: -1
 rear-toe
   rotate: true
-  xy: 2, 2
-  size: 105, 77
+  xy: 937, 368
+  size: 109, 77
   orig: 109, 77
   offset: 0, 0
   index: -1
 tail02
-  rotate: true
-  xy: 151, 9
+  rotate: false
+  xy: 337, 74
   size: 95, 120
   orig: 95, 120
   offset: 0, 0
   index: -1
-tail04
-  rotate: false
-  xy: 532, 270
-  size: 56, 71
-  orig: 56, 71
-  offset: 0, 0
-  index: -1
-tail05
-  rotate: false
-  xy: 648, 282
-  size: 52, 59
-  orig: 52, 59
-  offset: 0, 0
-  index: -1
 tail06
-  rotate: true
-  xy: 81, 12
+  rotate: false
+  xy: 337, 4
   size: 95, 68
   orig: 95, 68
   offset: 0, 0
