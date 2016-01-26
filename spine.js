@@ -658,23 +658,12 @@ spine.Scale.prototype.selfIdentity = function() {
 
 /**
  * @constructor
- * @extends {spine.Vector}
- */
-spine.Flip = function() {
-  goog.base(this, 1, 1);
-}
-
-goog.inherits(spine.Flip, spine.Vector);
-
-/**
- * @constructor
  */
 spine.Space = function() {
   var space = this;
   space.position = new spine.Position();
   space.rotation = new spine.Rotation();
   space.scale = new spine.Scale();
-  space.flip = new spine.Flip();
 }
 
 /** @type {spine.Position} */
@@ -683,8 +672,6 @@ spine.Space.prototype.position;
 spine.Space.prototype.rotation;
 /** @type {spine.Scale} */
 spine.Space.prototype.scale;
-/** @type {spine.Flip} */
-spine.Space.prototype.flip;
 
 /**
  * @return {spine.Space}
@@ -695,7 +682,6 @@ spine.Space.prototype.copy = function(other) {
   space.position.copy(other.position);
   space.rotation.copy(other.rotation);
   space.scale.copy(other.scale);
-  space.flip.copy(other.flip);
   return space;
 }
 
@@ -710,8 +696,6 @@ spine.Space.prototype.load = function(json) {
   space.rotation.deg = spine.loadFloat(json, 'rotation', 0);
   space.scale.x = spine.loadFloat(json, 'scaleX', 1);
   space.scale.y = spine.loadFloat(json, 'scaleY', 1);
-  space.flip.x = (spine.loadBool(json, 'flipX', false)) ? (-1) : (1);
-  space.flip.y = (spine.loadBool(json, 'flipY', false)) ? (-1) : (1);
   return space;
 }
 
@@ -738,12 +722,6 @@ spine.Space.equal = function(a, b, epsilon) {
   if (Math.abs(a.scale.y - b.scale.y) > epsilon) {
     return false;
   }
-  if (Math.abs(a.flip.x - b.flip.x) > epsilon) {
-    return false;
-  }
-  if (Math.abs(a.flip.y - b.flip.y) > epsilon) {
-    return false;
-  }
   return true;
 }
 
@@ -758,8 +736,6 @@ spine.Space.identity = function(out) {
   out.rotation.rad = 0;
   out.scale.x = 1;
   out.scale.y = 1;
-  out.flip.x = 1;
-  out.flip.y = 1;
   return out;
 }
 
@@ -770,9 +746,9 @@ spine.Space.identity = function(out) {
  * @param {number} y
  */
 spine.Space.translate = function(space, x, y) {
-  x *= space.scale.x * space.flip.x;
-  y *= space.scale.y * space.flip.y;
-  var rad = space.rotation.rad * space.flip.x * space.flip.y;
+  x *= space.scale.x;
+  y *= space.scale.y;
+  var rad = space.rotation.rad;
   var c = Math.cos(rad);
   var s = Math.sin(rad);
   var tx = c * x - s * y;
@@ -808,18 +784,6 @@ spine.Space.scale = function(space, x, y) {
 /**
  * @return {spine.Space}
  * @param {spine.Space} space
- * @param {boolean} x
- * @param {boolean} y
- */
-spine.Space.flip = function(space, x, y) {
-  space.flip.x *= (x) ? (-1) : (1);
-  space.flip.y *= (y) ? (-1) : (1);
-  return space;
-}
-
-/**
- * @return {spine.Space}
- * @param {spine.Space} space
  * @param {spine.Space=} out
  */
 spine.Space.invert = function(space, out) {
@@ -829,8 +793,6 @@ spine.Space.invert = function(space, out) {
   // out.pos = space.pos.neg().rotate(space.rot.inv()).mul(space.sca.inv());
 
   out = out || new spine.Space();
-  var inv_flip_x = space.flip.x;
-  var inv_flip_y = space.flip.y;
   var inv_scale_x = 1 / space.scale.x;
   var inv_scale_y = 1 / space.scale.y;
   var inv_rotation = -space.rotation.rad;
@@ -839,17 +801,15 @@ spine.Space.invert = function(space, out) {
   out.scale.x = inv_scale_x;
   out.scale.y = inv_scale_y;
   out.rotation.rad = inv_rotation;
-  out.flip.x = inv_flip_x;
-  out.flip.y = inv_flip_y;
   var x = inv_x;
   var y = inv_y;
-  var rad = inv_rotation * inv_flip_x * inv_flip_y;
+  var rad = inv_rotation;
   var c = Math.cos(rad);
   var s = Math.sin(rad);
   var tx = c * x - s * y;
   var ty = s * x + c * y;
-  out.position.x = tx * inv_scale_x * inv_flip_x;
-  out.position.y = ty * inv_scale_y * inv_flip_y;
+  out.position.x = tx * inv_scale_x;
+  out.position.y = ty * inv_scale_y;
   return out;
 }
 
@@ -866,9 +826,9 @@ spine.Space.combine = function(a, b, out) {
   // out.sca = b.sca.mul(a.sca);
 
   out = out || new spine.Space();
-  var x = b.position.x * a.scale.x * a.flip.x;
-  var y = b.position.y * a.scale.y * a.flip.y;
-  var rad = a.rotation.rad * a.flip.x * a.flip.y;
+  var x = b.position.x * a.scale.x;
+  var y = b.position.y * a.scale.y;
+  var rad = a.rotation.rad;
   var c = Math.cos(rad);
   var s = Math.sin(rad);
   var tx = c * x - s * y;
@@ -878,8 +838,6 @@ spine.Space.combine = function(a, b, out) {
   out.rotation.rad = spine.wrapAngleRadians(b.rotation.rad + a.rotation.rad);
   out.scale.x = b.scale.x * a.scale.x;
   out.scale.y = b.scale.y * a.scale.y;
-  out.flip.x = b.flip.x * a.flip.x;
-  out.flip.y = b.flip.y * a.flip.y;
   return out;
 }
 
@@ -896,20 +854,18 @@ spine.Space.extract = function(ab, a, out) {
   // out.pos = ab.pos.add(a.pos.neg()).rotate(a.rot.inv()).mul(a.sca.inv());
 
   out = out || new spine.Space();
-  out.flip.x = ab.flip.x * a.flip.x;
-  out.flip.y = ab.flip.y * a.flip.y;
   out.scale.x = ab.scale.x / a.scale.x;
   out.scale.y = ab.scale.y / a.scale.y;
   out.rotation.rad = spine.wrapAngleRadians(ab.rotation.rad - a.rotation.rad);
   var x = ab.position.x - a.position.x;
   var y = ab.position.y - a.position.y;
-  var rad = -a.rotation.rad * a.flip.x * a.flip.y;
+  var rad = -a.rotation.rad;
   var c = Math.cos(rad);
   var s = Math.sin(rad);
   var tx = c * x - s * y;
   var ty = s * x + c * y;
-  out.position.x = tx / (a.scale.x * a.flip.x);
-  out.position.y = ty / (a.scale.y * a.flip.y);
+  out.position.x = tx / a.scale.x;
+  out.position.y = ty / a.scale.y;
   return out;
 }
 
@@ -921,9 +877,9 @@ spine.Space.extract = function(ab, a, out) {
  */
 spine.Space.transform = function(space, v, out) {
   out = out || new spine.Vector();
-  var x = v.x * space.scale.x * space.flip.x;
-  var y = v.y * space.scale.y * space.flip.y;
-  var rad = space.rotation.rad * space.flip.x * space.flip.y;
+  var x = v.x * space.scale.x;
+  var y = v.y * space.scale.y;
+  var rad = space.rotation.rad;
   var c = Math.cos(rad);
   var s = Math.sin(rad);
   var tx = c * x - s * y;
@@ -943,13 +899,13 @@ spine.Space.untransform = function(space, v, out) {
   out = out || new spine.Vector();
   var x = v.x - space.position.x;
   var y = v.y - space.position.y;
-  var rad = -space.rotation.rad * space.flip.x * space.flip.y;
+  var rad = -space.rotation.rad;
   var c = Math.cos(rad);
   var s = Math.sin(rad);
   var tx = c * x - s * y;
   var ty = s * x + c * y;
-  out.x = tx / (space.scale.x * space.flip.x);
-  out.y = ty / (space.scale.y * space.flip.y);
+  out.x = tx / space.scale.x;
+  out.y = ty / space.scale.y;
   return out;
 }
 
@@ -1036,9 +992,9 @@ spine.Bone.flatten = function(bone, bones) {
     var b = bone.local_space;
     var out = bone.world_space;
 
-    var x = b.position.x * a.scale.x * a.flip.x;
-    var y = b.position.y * a.scale.y * a.flip.y;
-    var rad = a.rotation.rad * a.flip.x * a.flip.y;
+    var x = b.position.x * a.scale.x;
+    var y = b.position.y * a.scale.y;
+    var rad = a.rotation.rad;
     var c = Math.cos(rad);
     var s = Math.sin(rad);
     var tx = c * x - s * y;
@@ -1059,8 +1015,6 @@ spine.Bone.flatten = function(bone, bones) {
       out.scale.x = b.scale.x;
       out.scale.y = b.scale.y;
     }
-    out.flip.x = b.flip.x * a.flip.x;
-    out.flip.y = b.flip.y * a.flip.y;
   } else {
     bone.world_space.copy(bone.local_space);
   }
@@ -1380,7 +1334,7 @@ spine.SkinSlot.prototype.attachment_keys;
  */
 spine.SkinSlot.prototype.load = function(json) {
   var skin_slot = this;
-  skin_slot.attachment_keys = Object.keys(json);
+  skin_slot.attachment_keys = Object.keys(json || {});
   skin_slot.attachment_keys.forEach(function(attachment_key) {
     var json_attachment = json[attachment_key];
     switch (json_attachment.type) {
@@ -1427,7 +1381,7 @@ spine.Skin.prototype.slot_keys;
 spine.Skin.prototype.load = function(json) {
   var skin = this;
   skin.name = spine.loadString(json, 'name', "");
-  skin.slot_keys = Object.keys(json);
+  skin.slot_keys = Object.keys(json || {});
   skin.slot_keys.forEach(function(slot_key) {
     skin.slots[slot_key] = new spine.SkinSlot().load(json[slot_key]);
   });
@@ -1675,52 +1629,6 @@ spine.ScaleKeyframe.prototype.load = function(json) {
 
 /**
  * @constructor
- * @extends {spine.BoneKeyframe}
- */
-spine.FlipXKeyframe = function() {
-  goog.base(this);
-}
-
-goog.inherits(spine.FlipXKeyframe, spine.BoneKeyframe);
-
-/** @type {boolean} */
-spine.FlipXKeyframe.prototype.flip_x = false;
-
-/**
- * @return {spine.FlipXKeyframe}
- * @param {Object.<string,?>} json
- */
-spine.FlipXKeyframe.prototype.load = function(json) {
-  goog.base(this, 'load', json);
-  this.flip_x = spine.loadBool(json, 'x', false);
-  return this;
-}
-
-/**
- * @constructor
- * @extends {spine.BoneKeyframe}
- */
-spine.FlipYKeyframe = function() {
-  goog.base(this);
-}
-
-goog.inherits(spine.FlipYKeyframe, spine.BoneKeyframe);
-
-/** @type {boolean} */
-spine.FlipYKeyframe.prototype.flip_y = false;
-
-/**
- * @return {spine.FlipYKeyframe}
- * @param {Object.<string,?>} json
- */
-spine.FlipYKeyframe.prototype.load = function(json) {
-  goog.base(this, 'load', json);
-  this.flip_y = spine.loadBool(json, 'y', false);
-  return this;
-}
-
-/**
- * @constructor
  */
 spine.AnimBone = function() {}
 
@@ -1734,10 +1642,6 @@ spine.AnimBone.prototype.translate_keyframes = null;
 spine.AnimBone.prototype.rotate_keyframes = null;
 /** @type {Array.<spine.ScaleKeyframe>} */
 spine.AnimBone.prototype.scale_keyframes = null;
-/** @type {Array.<spine.FlipXKeyframe>} */
-spine.AnimBone.prototype.flip_x_keyframes = null;
-/** @type {Array.<spine.FlipYKeyframe>} */
-spine.AnimBone.prototype.flip_y_keyframes = null;
 
 /**
  * @return {spine.AnimBone}
@@ -1750,10 +1654,8 @@ spine.AnimBone.prototype.load = function(json) {
   anim_bone.translate_keyframes = null;
   anim_bone.rotate_keyframes = null;
   anim_bone.scale_keyframes = null;
-  anim_bone.flip_x_keyframes = null;
-  anim_bone.flip_y_keyframes = null;
 
-  Object.keys(json).forEach(function(key) {
+  Object.keys(json || {}).forEach(function(key) {
     switch (key) {
       case 'translate':
         anim_bone.translate_keyframes = [];
@@ -1784,26 +1686,6 @@ spine.AnimBone.prototype.load = function(json) {
           anim_bone.max_time = Math.max(anim_bone.max_time, scale_keyframe.time);
         });
         anim_bone.scale_keyframes = anim_bone.scale_keyframes.sort(spine.Keyframe.compare);
-        break;
-      case 'flipX':
-        anim_bone.flip_x_keyframes = [];
-        json[key].forEach(function(flip_json) {
-          var flip_x_keyframe = new spine.FlipXKeyframe().load(flip_json);
-          anim_bone.flip_x_keyframes.push(flip_x_keyframe);
-          anim_bone.min_time = Math.min(anim_bone.min_time, flip_x_keyframe.time);
-          anim_bone.max_time = Math.max(anim_bone.max_time, flip_x_keyframe.time);
-        });
-        anim_bone.flip_x_keyframes = anim_bone.flip_x_keyframes.sort(spine.Keyframe.compare);
-        break;
-      case 'flipY':
-        anim_bone.flip_y_keyframes = [];
-        json[key].forEach(function(flip_json) {
-          var flip_y_keyframe = new spine.FlipYKeyframe().load(flip_json);
-          anim_bone.flip_y_keyframes.push(flip_y_keyframe);
-          anim_bone.min_time = Math.min(anim_bone.min_time, flip_y_keyframe.time);
-          anim_bone.max_time = Math.max(anim_bone.max_time, flip_y_keyframe.time);
-        });
-        anim_bone.flip_y_keyframes = anim_bone.flip_y_keyframes.sort(spine.Keyframe.compare);
         break;
       default:
         console.log("TODO: spine.AnimBone::load", key);
@@ -1911,7 +1793,7 @@ spine.AnimSlot.prototype.load = function(json) {
   anim_slot.color_keyframes = null;
   anim_slot.attachment_keyframes = null;
 
-  Object.keys(json).forEach(function(key) {
+  Object.keys(json || {}).forEach(function(key) {
     switch (key) {
       case 'color':
         anim_slot.color_keyframes = [];
@@ -2024,7 +1906,7 @@ spine.OrderKeyframe.prototype.load = function(json) {
   var order_keyframe = this;
   order_keyframe.slot_offsets = [];
 
-  Object.keys(json).forEach(function(key) {
+  Object.keys(json || {}).forEach(function(key) {
     switch (key) {
       case 'offsets':
         json[key].forEach(function(offset) {
@@ -2194,7 +2076,7 @@ spine.FfdSlot.prototype.load = function(json) {
   var ffd_slot = this;
 
   ffd_slot.ffd_attachments = {};
-  ffd_slot.ffd_attachment_keys = Object.keys(json);
+  ffd_slot.ffd_attachment_keys = Object.keys(json || {});
   ffd_slot.ffd_attachment_keys.forEach(function(key) {
     ffd_slot.ffd_attachments[key] = new spine.FfdAttachment().load(json[key]);
   });
@@ -2243,7 +2125,7 @@ spine.AnimFfd.prototype.load = function(json) {
   anim_ffd.min_time = 0;
   anim_ffd.max_time = 0;
   anim_ffd.ffd_slots = {};
-  anim_ffd.ffd_slot_keys = Object.keys(json);
+  anim_ffd.ffd_slot_keys = Object.keys(json || {});
   anim_ffd.ffd_slot_keys.forEach(function(key) {
     anim_ffd.ffd_slots[key] = new spine.FfdSlot().load(json[key]);
   });
@@ -2323,10 +2205,10 @@ spine.Animation.prototype.load = function(json) {
   anim.min_time = 0;
   anim.max_time = 0;
 
-  Object.keys(json).forEach(function(key) {
+  Object.keys(json || {}).forEach(function(key) {
     switch (key) {
       case 'bones':
-        Object.keys(json[key]).forEach(function(bone_key) {
+        Object.keys(json[key] || {}).forEach(function(bone_key) {
           var anim_bone = new spine.AnimBone().load(json[key][bone_key]);
           anim.min_time = Math.min(anim.min_time, anim_bone.min_time);
           anim.max_time = Math.max(anim.max_time, anim_bone.max_time);
@@ -2334,7 +2216,7 @@ spine.Animation.prototype.load = function(json) {
         });
         break;
       case 'slots':
-        Object.keys(json[key]).forEach(function(slot_key) {
+        Object.keys(json[key] || {}).forEach(function(slot_key) {
           var anim_slot = new spine.AnimSlot().load(json[key][slot_key]);
           anim.min_time = Math.min(anim.min_time, anim_slot.min_time);
           anim.max_time = Math.max(anim.max_time, anim_slot.max_time);
@@ -2363,7 +2245,7 @@ spine.Animation.prototype.load = function(json) {
         anim.order_keyframes = anim.order_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'ik':
-        Object.keys(json[key]).forEach(function(ikc_key) {
+        Object.keys(json[key] || {}).forEach(function(ikc_key) {
           var anim_ikc = new spine.AnimIkc().load(json[key][ikc_key]);
           anim.min_time = Math.min(anim.min_time, anim_ikc.min_time);
           anim.max_time = Math.max(anim.max_time, anim_ikc.max_time);
@@ -2371,7 +2253,7 @@ spine.Animation.prototype.load = function(json) {
         });
         break;
       case 'ffd':
-        Object.keys(json[key]).forEach(function(ffd_key) {
+        Object.keys(json[key] || {}).forEach(function(ffd_key) {
           var anim_ffd = new spine.AnimFfd().load(json[key][ffd_key]);
           anim.min_time = Math.min(anim.min_time, anim_ffd.min_time);
           anim.max_time = Math.max(anim.max_time, anim_ffd.max_time);
@@ -2491,7 +2373,7 @@ spine.Data.prototype.load = function(json) {
   data.anims = {};
   data.anim_keys = [];
 
-  Object.keys(json).forEach(function(key) {
+  Object.keys(json || {}).forEach(function(key) {
     switch (key) {
       case 'skeleton':
         data.skeleton.load(json[key]);
@@ -2518,7 +2400,7 @@ spine.Data.prototype.load = function(json) {
         });
         break;
       case 'skins':
-        var json_skins = json[key];
+        var json_skins = json[key] || {};
         data.skin_keys = Object.keys(json_skins);
         data.skin_keys.forEach(function(skin_key) {
           var skin = data.skins[skin_key] = new spine.Skin().load(json_skins[skin_key]);
@@ -2526,7 +2408,7 @@ spine.Data.prototype.load = function(json) {
         });
         break;
       case 'events':
-        var json_events = json[key];
+        var json_events = json[key] || {};
         data.event_keys = Object.keys(json_events);
         data.event_keys.forEach(function(event_key) {
           var event = data.events[event_key] = new spine.Event().load(json_events[event_key]);
@@ -2534,7 +2416,7 @@ spine.Data.prototype.load = function(json) {
         });
         break;
       case 'animations':
-        var json_animations = json[key];
+        var json_animations = json[key] || {};
         data.anim_keys = Object.keys(json_animations);
         data.anim_keys.forEach(function(anim_key) {
           var anim = data.anims[anim_key] = new spine.Animation().load(json_animations[anim_key]);
@@ -2946,20 +2828,6 @@ spine.Pose.prototype.strike = function() {
           pose_bone.local_space.scale.x += scale_keyframe0.scale.x - 1;
           pose_bone.local_space.scale.y += scale_keyframe0.scale.y - 1;
         }
-      }
-
-      keyframe_index = spine.Keyframe.find(anim_bone.flip_x_keyframes, time);
-      if (keyframe_index !== -1) {
-        var flip_x_keyframe0 = anim_bone.flip_x_keyframes[keyframe_index];
-        // no tweening bone flip x
-        pose_bone.local_space.flip.x = (flip_x_keyframe0.flip_x) ? (-1) : (1);
-      }
-
-      keyframe_index = spine.Keyframe.find(anim_bone.flip_y_keyframes, time);
-      if (keyframe_index !== -1) {
-        var flip_y_keyframe0 = anim_bone.flip_y_keyframes[keyframe_index];
-        // no tweening bone flip y
-        pose_bone.local_space.flip.y = (flip_y_keyframe0.flip_y) ? (-1) : (1);
       }
     }
   });
