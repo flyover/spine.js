@@ -878,8 +878,8 @@ function mat3x3Transform(m, v, out) {
 function mat3x3ApplySpace(m, space) {
   if (space) {
     mat3x3Translate(m, space.position.x, space.position.y);
-    mat3x3Rotate(m, space.rotation.rad * space.flip.x * space.flip.y);
-    mat3x3Scale(m, space.scale.x * space.flip.x, space.scale.y * space.flip.y);
+    mat3x3Rotate(m, space.rotation.rad);
+    mat3x3Scale(m, space.scale.x, space.scale.y);
   }
   return m;
 }
