@@ -465,8 +465,8 @@ renderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
 function ctxApplySpace(ctx, space) {
   if (space) {
     ctx.translate(space.position.x, space.position.y);
-    ctx.rotate(space.rotation.rad * space.flip.x * space.flip.y);
-    ctx.scale(space.scale.x * space.flip.x, space.scale.y * space.flip.y);
+    ctx.rotate(space.rotation.rad);
+    ctx.scale(space.scale.x, space.scale.y);
   }
 }
 
