@@ -1665,7 +1665,7 @@ spine.AnimBone.prototype.load = function(json) {
           anim_bone.min_time = Math.min(anim_bone.min_time, translate_keyframe.time);
           anim_bone.max_time = Math.max(anim_bone.max_time, translate_keyframe.time);
         });
-        anim_bone.translate_keyframes = anim_bone.translate_keyframes.sort(spine.Keyframe.compare);
+        anim_bone.translate_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'rotate':
         anim_bone.rotate_keyframes = [];
@@ -1675,7 +1675,7 @@ spine.AnimBone.prototype.load = function(json) {
           anim_bone.min_time = Math.min(anim_bone.min_time, rotate_keyframe.time);
           anim_bone.max_time = Math.max(anim_bone.max_time, rotate_keyframe.time);
         });
-        anim_bone.rotate_keyframes = anim_bone.rotate_keyframes.sort(spine.Keyframe.compare);
+        anim_bone.rotate_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'scale':
         anim_bone.scale_keyframes = [];
@@ -1685,7 +1685,7 @@ spine.AnimBone.prototype.load = function(json) {
           anim_bone.min_time = Math.min(anim_bone.min_time, scale_keyframe.time);
           anim_bone.max_time = Math.max(anim_bone.max_time, scale_keyframe.time);
         });
-        anim_bone.scale_keyframes = anim_bone.scale_keyframes.sort(spine.Keyframe.compare);
+        anim_bone.scale_keyframes.sort(spine.Keyframe.compare);
         break;
       default:
         console.log("TODO: spine.AnimBone::load", key);
@@ -1803,7 +1803,7 @@ spine.AnimSlot.prototype.load = function(json) {
           anim_slot.max_time = Math.max(anim_slot.max_time, color_keyframe.time);
           anim_slot.color_keyframes.push(color_keyframe);
         });
-        anim_slot.color_keyframes = anim_slot.color_keyframes.sort(spine.Keyframe.compare);
+        anim_slot.color_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'attachment':
         anim_slot.attachment_keyframes = [];
@@ -1813,7 +1813,7 @@ spine.AnimSlot.prototype.load = function(json) {
           anim_slot.max_time = Math.max(anim_slot.max_time, attachment_keyframe.time);
           anim_slot.attachment_keyframes.push(attachment_keyframe);
         });
-        anim_slot.attachment_keyframes = anim_slot.attachment_keyframes.sort(spine.Keyframe.compare);
+        anim_slot.attachment_keyframes.sort(spine.Keyframe.compare);
         break;
       default:
         console.log("TODO: spine.AnimSlot::load", key);
@@ -1979,7 +1979,7 @@ spine.AnimIkc.prototype.load = function(json) {
     anim_ikc.max_time = Math.max(anim_ikc.max_time, ikc_keyframe.time);
     anim_ikc.ikc_keyframes.push(ikc_keyframe);
   });
-  anim_ikc.ikc_keyframes = anim_ikc.ikc_keyframes.sort(spine.Keyframe.compare);
+  anim_ikc.ikc_keyframes.sort(spine.Keyframe.compare);
 
   return anim_ikc;
 }
@@ -2048,7 +2048,7 @@ spine.FfdAttachment.prototype.load = function(json) {
     ffd_attachment.ffd_keyframes.push(ffd_keyframe);
   });
 
-  ffd_attachment.ffd_keyframes = ffd_attachment.ffd_keyframes.sort(spine.Keyframe.compare);
+  ffd_attachment.ffd_keyframes.sort(spine.Keyframe.compare);
 
   return ffd_attachment;
 }
@@ -2231,7 +2231,7 @@ spine.Animation.prototype.load = function(json) {
           anim.max_time = Math.max(anim.max_time, event_keyframe.time);
           anim.event_keyframes.push(event_keyframe);
         });
-        anim.event_keyframes = anim.event_keyframes.sort(spine.Keyframe.compare);
+        anim.event_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'drawOrder':
       case 'draworder':
@@ -2242,7 +2242,7 @@ spine.Animation.prototype.load = function(json) {
           anim.max_time = Math.max(anim.max_time, order_keyframe.time);
           anim.order_keyframes.push(order_keyframe);
         });
-        anim.order_keyframes = anim.order_keyframes.sort(spine.Keyframe.compare);
+        anim.order_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'ik':
         Object.keys(json[key] || {}).forEach(function(ikc_key) {
