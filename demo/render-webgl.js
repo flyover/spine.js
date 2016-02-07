@@ -1,10 +1,10 @@
-goog.provide('renderWebGL');
+goog.provide('RenderWebGL');
 
 /**
  * @constructor
  * @param {WebGLRenderingContext} gl
  */
-renderWebGL = function(gl) {
+RenderWebGL = function(gl) {
   var render = this;
   render.gl = gl;
   if (!gl) {
@@ -131,7 +131,7 @@ renderWebGL = function(gl) {
  * @param {spine.Pose} spine_pose
  * @param {atlas.Data} atlas_data
  */
-renderWebGL.prototype.dropPose = function(spine_pose, atlas_data) {
+RenderWebGL.prototype.dropPose = function(spine_pose, atlas_data) {
   var render = this;
   var gl = render.gl;
   if (!gl) {
@@ -205,7 +205,7 @@ renderWebGL.prototype.dropPose = function(spine_pose, atlas_data) {
  * @param {atlas.Data} atlas_data
  * @param {Object.<string,HTMLImageElement>} images
  */
-renderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
+RenderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
   var render = this;
   var gl = render.gl;
   if (!gl) {
@@ -484,7 +484,7 @@ renderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
  * @param {spine.Pose} spine_pose
  * @param {atlas.Data} atlas_data
  */
-renderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
+RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
   var render = this;
   var gl = render.gl;
   if (!gl) {
