@@ -16,10 +16,10 @@ RenderCtx2D = function(ctx) {
 
 /**
  * @return {void}
- * @param {spine.Pose} spine_pose
+ * @param {spine.Data} spine_data
  * @param {atlas.Data} atlas_data
  */
-RenderCtx2D.prototype.dropPose = function(spine_pose, atlas_data) {
+RenderCtx2D.prototype.dropData = function(spine_data, atlas_data) {
   var render = this;
   render.images = {};
   render.skin_info_map = {};
@@ -27,14 +27,14 @@ RenderCtx2D.prototype.dropPose = function(spine_pose, atlas_data) {
 
 /**
  * @return {void}
- * @param {spine.Pose} spine_pose
+ * @param {spine.Data} spine_data
  * @param {atlas.Data} atlas_data
  * @param {Object.<string,HTMLImageElement>} images
  */
-RenderCtx2D.prototype.loadPose = function(spine_pose, atlas_data, images) {
+RenderCtx2D.prototype.loadData = function(spine_data, atlas_data, images) {
   var render = this;
 
-  spine_pose.data.iterateSkins(function(skin_key, skin) {
+  spine_data.iterateSkins(function(skin_key, skin) {
     var skin_info = render.skin_info_map[skin_key] = {};
     var slot_info_map = skin_info.slot_info_map = {};
 
@@ -74,8 +74,8 @@ RenderCtx2D.prototype.loadPose = function(spine_pose, atlas_data, images) {
               var x = position.x = attachment.vertices[index++];
               var y = position.y = attachment.vertices[index++];
               var weight = attachment.vertices[index++];
-              var bone_key = spine_pose.data.bone_keys[bone_index];
-              var bone = spine_pose.data.bones[bone_key];
+              var bone_key = spine_data.bone_keys[bone_index];
+              var bone = spine_data.bones[bone_key];
               spine.Space.transform(bone.world_space, position, position);
               setup_position_x += position.x * weight;
               setup_position_y += position.y * weight;

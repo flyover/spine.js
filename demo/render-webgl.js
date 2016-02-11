@@ -128,10 +128,10 @@ RenderWebGL = function(gl) {
 
 /**
  * @return {void}
- * @param {spine.Pose} spine_pose
+ * @param {spine.Data} spine_data
  * @param {atlas.Data} atlas_data
  */
-RenderWebGL.prototype.dropPose = function(spine_pose, atlas_data) {
+RenderWebGL.prototype.dropData = function(spine_data, atlas_data) {
   var render = this;
   var gl = render.gl;
   if (!gl) {
@@ -201,23 +201,23 @@ RenderWebGL.prototype.dropPose = function(spine_pose, atlas_data) {
 
 /**
  * @return {void}
- * @param {spine.Pose} spine_pose
+ * @param {spine.Data} spine_data
  * @param {atlas.Data} atlas_data
  * @param {Object.<string,HTMLImageElement>} images
  */
-RenderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
+RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
   var render = this;
   var gl = render.gl;
   if (!gl) {
     return;
   }
 
-  spine_pose.data.iterateBones(function(bone_key, bone) {
+  spine_data.iterateBones(function(bone_key, bone) {
     var bone_info = render.bone_info_map[bone_key] = {};
     bone_info.setup_space = spine.Space.invert(bone.world_space, new spine.Space());
   });
 
-  spine_pose.data.iterateSkins(function(skin_key, skin) {
+  spine_data.iterateSkins(function(skin_key, skin) {
     var skin_info = render.skin_info_map[skin_key] = {};
     var slot_info_map = skin_info.slot_info_map = {};
 
@@ -241,7 +241,7 @@ RenderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
           gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
           gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
           var anim_ffd_attachments = attachment_info.anim_ffd_attachments = {};
-          spine_pose.data.iterateAnims(function(anim_key, anim) {
+          spine_data.iterateAnims(function(anim_key, anim) {
             var anim_ffd = anim.ffds && anim.ffds[skin_key];
             var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
             var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
@@ -310,8 +310,8 @@ RenderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
               if (blend_bone_index_array.indexOf(blend.bone_index) === -1) {
                 blend_bone_index_array.push(blend.bone_index);
               }
-              var bone_key = spine_pose.data.bone_keys[blend.bone_index];
-              var bone = spine_pose.data.bones[bone_key];
+              var bone_key = spine_data.bone_keys[blend.bone_index];
+              var bone = spine_data.bones[bone_key];
               spine.Space.transform(bone.world_space, blend.position, blend_position);
               position_x += blend_position.x * blend.weight;
               position_y += blend_position.y * blend.weight;
@@ -333,7 +333,7 @@ RenderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
           gl_vertex.texcoord = glMakeVertex(gl, vertex_texcoord, 2, gl.ARRAY_BUFFER, gl.STATIC_DRAW);
           gl_vertex.triangle = glMakeVertex(gl, vertex_triangle, 1, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
           var anim_ffd_attachments = attachment_info.anim_ffd_attachments = {};
-          spine_pose.data.iterateAnims(function(anim_key, anim) {
+          spine_data.iterateAnims(function(anim_key, anim) {
             var anim_ffd = anim.ffds && anim.ffds[skin_key];
             var ffd_slot = anim_ffd && anim_ffd.ffd_slots[slot_key];
             var ffd_attachment = ffd_slot && ffd_slot.ffd_attachments[attachment_key];
@@ -453,7 +453,7 @@ RenderWebGL.prototype.loadPose = function(spine_pose, atlas_data, images) {
     });
   } else {
     // load attachment images
-    spine_pose.data.iterateSkins(function(skin_key, skin) {
+    spine_data.iterateSkins(function(skin_key, skin) {
       skin.iterateAttachments(function(slot_key, skin_slot, attachment_key, attachment) {
         if (!attachment) {
           return;
@@ -813,7 +813,7 @@ function vec4ApplyColor(v, color) {
 
 function mat3x3Identity(m) {
   m[1] = m[2] = m[3] =
-    m[5] = m[6] = m[7] = 0.0;
+  m[5] = m[6] = m[7] = 0.0;
   m[0] = m[4] = m[8] = 1.0;
   return m;
 }
@@ -917,8 +917,8 @@ function mat3x3ApplyAtlasSitePosition(m, site) {
 
 function mat4x4Identity(m) {
   m[1] = m[2] = m[3] = m[4] =
-    m[6] = m[7] = m[8] = m[9] =
-    m[11] = m[12] = m[13] = m[14] = 0.0;
+  m[6] = m[7] = m[8] = m[9] =
+  m[11] = m[12] = m[13] = m[14] = 0.0;
   m[0] = m[5] = m[10] = m[15] = 1.0;
   return m;
 }
