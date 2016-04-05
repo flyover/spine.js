@@ -1,17 +1,15 @@
 {
-"skeleton": { "hash": "f5lcL5b0jVx+ukI7ipYwZmtrCVI", "spine": "3.0.04", "width": 319.34, "height": 337.04, "images": "./images/" },
+"skeleton": { "hash": "7gvJeGJCXzZJfoU2RSwnX7UqXps", "spine": "3.1.04", "width": 319.34, "height": 337.04, "images": "./images/" },
 "bones": [
 	{ "name": "root" },
-	{ "name": "R_Ground", "parent": "root", "x": 28.11, "y": 0.26, "color": "ff0000ff" },
-	{ "name": "R_Ankle", "parent": "R_Ground", "y": 31.79, "color": "ff3f00ff" },
-	{ "name": "LookTarget", "parent": "root", "x": 112.83, "y": 218.2, "color": "8a009bff" },
-	{ "name": "LookConstraintGoal", "parent": "LookTarget", "y": -43.82, "color": "ff3f00ff" },
+	{ "name": "Hip", "parent": "root", "y": 94.88 },
 	{ "name": "L_Ground", "parent": "root", "x": -31.28, "y": 0.26, "color": "00ff00ff" },
 	{ "name": "L_Ankle", "parent": "L_Ground", "x": 0.26, "y": 33.05, "color": "ff3f00ff" },
-	{ "name": "Hip", "parent": "root", "y": 94.88 },
+	{ "name": "LookTarget", "parent": "root", "x": 112.83, "y": 218.2, "color": "8a009bff" },
+	{ "name": "LookConstraintGoal", "parent": "LookTarget", "y": -43.82, "color": "ff3f00ff" },
+	{ "name": "R_Ground", "parent": "root", "x": 28.11, "y": 0.26, "color": "ff0000ff" },
+	{ "name": "R_Ankle", "parent": "R_Ground", "y": 31.79, "color": "ff3f00ff" },
 	{ "name": "body", "parent": "Hip", "length": 60.79, "x": 4.09, "y": 3.17, "rotation": 96.39 },
-	{ "name": "mantles", "parent": "body", "x": 48.47, "y": -9, "rotation": -2.25 },
-	{ "name": "head", "parent": "body", "length": 24.35, "x": 74.55, "y": -4.84, "rotation": -92.69 },
 	{ "name": "thigh1", "parent": "Hip", "length": 23.94, "x": -17.51, "y": -5.22, "rotation": -107.07 },
 	{ "name": "shin1", "parent": "thigh1", "length": 28.23, "x": 29.76, "y": -0.91, "rotation": 10.26 },
 	{ "name": "foot1", "parent": "shin1", "length": 27.07, "x": 28.17, "y": -0.48, "rotation": -90.96, "inheritRotation": false },
@@ -20,10 +18,12 @@
 	{ "name": "foot2", "parent": "shin2", "length": 22.28, "x": 25.54, "y": 0.27, "rotation": -90.42, "inheritRotation": false },
 	{ "name": "upperarm1", "parent": "body", "length": 19.35, "x": 52.49, "y": 41.84, "rotation": 130.11 },
 	{ "name": "forearm1", "parent": "upperarm1", "length": 22.06, "x": 23.97, "y": 5.16, "rotation": 30.56 },
-	{ "name": "hand1", "parent": "forearm1", "length": 28.01, "x": 27.54, "y": 0.44, "rotation": 16.24 },
 	{ "name": "upperarm2", "parent": "body", "length": 25.98, "x": 57.94, "y": -38.93, "rotation": -178.95 },
 	{ "name": "forearm2", "parent": "upperarm2", "length": 15.3, "x": 28.74, "y": -0.9, "rotation": 6.79 },
+	{ "name": "hand1", "parent": "forearm1", "length": 28.01, "x": 27.54, "y": 0.44, "rotation": 16.24 },
 	{ "name": "hand2", "parent": "forearm2", "length": 23.76, "x": 22.8, "y": -0.21, "rotation": 1.35 },
+	{ "name": "head", "parent": "body", "length": 24.35, "x": 74.55, "y": -4.84, "rotation": -92.69 },
+	{ "name": "mantles", "parent": "body", "x": 48.47, "y": -9, "rotation": -2.25 },
 	{ "name": "weapon", "parent": "hand2", "length": 157.4, "x": 15.97, "y": 1.43, "rotation": 77.9 }
 ],
 "ik": [
@@ -34,16 +34,16 @@
 		"bendPositive": false
 	},
 	{
-		"name": "R_Leg",
-		"bones": [ "thigh2", "shin2" ],
-		"target": "R_Ankle",
-		"bendPositive": false
-	},
-	{
 		"name": "LookConstraint",
 		"bones": [ "head" ],
 		"target": "LookConstraintGoal",
 		"mix": 0
+	},
+	{
+		"name": "R_Leg",
+		"bones": [ "thigh2", "shin2" ],
+		"target": "R_Ankle",
+		"bendPositive": false
 	}
 ],
 "slots": [

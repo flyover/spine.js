@@ -1,30 +1,18 @@
 {
-"skeleton": { "hash": "SSBry1sod0OwP7LA9CNEjOEltE4", "spine": "3.0.04", "width": 196.03, "height": 305.44, "images": "./images/" },
+"skeleton": { "hash": "7JrD71buggzUD+SmzQ4GTp2/LrY", "spine": "3.1.04", "width": 196.03, "height": 305.44, "images": "./images/" },
 "bones": [
 	{ "name": "root" },
 	{ "name": "hip", "parent": "root", "x": -0.02, "y": 51.91 },
-	{
-		"name": "right foot",
-		"parent": "hip",
-		"length": 53.85,
-		"x": -40.63,
-		"y": -36.39,
-		"scaleX": 1.021,
-		"scaleY": 1.021,
-		"rotation": -13.06
-	},
-	{ "name": "left foot", "parent": "hip", "length": 61.43, "x": 2.45, "y": -37.2, "rotation": -12.11 },
 	{ "name": "torso", "parent": "hip", "length": 76, "y": 29.83, "rotation": 89.46 },
-	{
-		"name": "right hand",
-		"parent": "torso",
-		"length": 40.66,
-		"x": 40.06,
-		"y": 55.49,
-		"scaleX": 1.015,
-		"scaleY": 1.015,
-		"rotation": 152.53
-	},
+	{ "name": "torso_singleton", "parent": "torso", "x": 29.02, "y": 0.47 },
+	{ "name": "belt ends", "parent": "torso_singleton", "x": -26.76, "y": -23.48, "rotation": -7.18 },
+	{ "name": "head", "parent": "torso", "length": 108, "x": 86.98, "y": 1.38, "rotation": 2.72 },
+	{ "name": "head_singleton", "parent": "head", "x": -0.04, "y": 0.17 },
+	{ "name": "hair1", "parent": "head_singleton", "x": 95.03, "y": -24.72, "rotation": -2.15 },
+	{ "name": "hair2", "parent": "head_singleton", "x": 94.44, "y": -33.63 },
+	{ "name": "hood end1", "parent": "head", "x": 55.74, "y": 34.37, "rotation": -1.78 },
+	{ "name": "hood end2", "parent": "head", "x": 61.54, "y": 41.58, "rotation": -16.6 },
+	{ "name": "left foot", "parent": "hip", "length": 61.43, "x": 2.45, "y": -37.2, "rotation": -12.11 },
 	{
 		"name": "left hand",
 		"parent": "torso",
@@ -35,14 +23,26 @@
 		"scaleY": 0.929,
 		"rotation": -122.03
 	},
-	{ "name": "head", "parent": "torso", "length": 108, "x": 86.98, "y": 1.38, "rotation": 2.72 },
-	{ "name": "hood end2", "parent": "head", "x": 61.54, "y": 41.58, "rotation": -16.6 },
-	{ "name": "hood end1", "parent": "head", "x": 55.74, "y": 34.37, "rotation": -1.78 },
-	{ "name": "head_singleton", "parent": "head", "x": -0.04, "y": 0.17 },
-	{ "name": "hair2", "parent": "head_singleton", "x": 94.44, "y": -33.63 },
-	{ "name": "hair1", "parent": "head_singleton", "x": 95.03, "y": -24.72, "rotation": -2.15 },
-	{ "name": "torso_singleton", "parent": "torso", "x": 29.02, "y": 0.47 },
-	{ "name": "belt ends", "parent": "torso_singleton", "x": -26.76, "y": -23.48, "rotation": -7.18 }
+	{
+		"name": "right foot",
+		"parent": "hip",
+		"length": 53.85,
+		"x": -40.63,
+		"y": -36.39,
+		"scaleX": 1.021,
+		"scaleY": 1.021,
+		"rotation": -13.06
+	},
+	{
+		"name": "right hand",
+		"parent": "torso",
+		"length": 40.66,
+		"x": 40.06,
+		"y": 55.49,
+		"scaleX": 1.015,
+		"scaleY": 1.015,
+		"rotation": 152.53
+	}
 ],
 "slots": [
 	{ "name": "left hand", "bone": "left hand", "attachment": "left-hand" },

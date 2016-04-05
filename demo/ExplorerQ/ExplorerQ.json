@@ -1,17 +1,17 @@
 {
-"skeleton": { "hash": "SN8IeDJ8FgoF2cA/azdX1Y/NiBQ", "spine": "3.0.04", "width": 263.64, "height": 310.72, "images": "" },
+"skeleton": { "hash": "hsj6wPW/R+SuAI3novMqxWnJp0k", "spine": "3.1.04", "width": 263.64, "height": 310.72, "images": "" },
 "bones": [
 	{ "name": "Root", "rotation": -0.22 },
 	{ "name": "QChar", "parent": "Root", "y": 123.03 },
-	{ "name": "LegR", "parent": "QChar", "length": 59.89, "x": 35, "y": -66, "rotation": 270 },
-	{ "name": "LegL", "parent": "QChar", "length": 59.89, "x": -35, "y": -66, "rotation": 270 },
+	{ "name": "ArmL", "parent": "QChar", "length": 63.81, "x": -65, "rotation": 180 },
+	{ "name": "ArmR", "parent": "QChar", "length": 63.81, "x": 65 },
 	{ "name": "BodySquish", "parent": "QChar" },
+	{ "name": "Dropshadow", "parent": "Root" },
+	{ "name": "Explorerhat", "parent": "BodySquish", "inheritScale": false },
 	{ "name": "Eyewhite", "parent": "BodySquish" },
 	{ "name": "Eye", "parent": "Eyewhite" },
-	{ "name": "Explorerhat", "parent": "BodySquish", "inheritScale": false },
-	{ "name": "ArmR", "parent": "QChar", "length": 63.81, "x": 65 },
-	{ "name": "ArmL", "parent": "QChar", "length": 63.81, "x": -65, "rotation": 180 },
-	{ "name": "Dropshadow", "parent": "Root" }
+	{ "name": "LegL", "parent": "QChar", "length": 59.89, "x": -35, "y": -66, "rotation": 270 },
+	{ "name": "LegR", "parent": "QChar", "length": 59.89, "x": 35, "y": -66, "rotation": 270 }
 ],
 "slots": [
 	{ "name": "Smalljump/QDropshadow", "bone": "Dropshadow", "attachment": "Smalljump/QDropshadow" },
