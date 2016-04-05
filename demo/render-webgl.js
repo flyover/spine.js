@@ -175,7 +175,7 @@ RenderWebGL.prototype.dropData = function(spine_data, atlas_data) {
               });
             });
             break;
-          case 'skinnedmesh':
+          case 'weightedmesh':
             var gl_vertex = attachment_info.gl_vertex;
             gl.deleteBuffer(gl_vertex.position.buffer);
             gl.deleteBuffer(gl_vertex.blenders.buffer);
@@ -257,7 +257,7 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
             }
           });
           break;
-        case 'skinnedmesh':
+        case 'weightedmesh':
           var slot_info = slot_info_map[slot_key] = slot_info_map[slot_key] || {};
           var attachment_info_map = slot_info.attachment_info_map = slot_info.attachment_info_map || {};
           var attachment_info = attachment_info_map[attachment_key] = {};
@@ -462,7 +462,7 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
         switch (attachment.type) {
           case 'region':
           case 'mesh':
-          case 'skinnedmesh':
+          case 'weightedmesh':
             var image_key = attachment_key;
             var image = images[image_key];
             var gl_texture = render.gl_textures[image_key] = gl.createTexture();
@@ -671,7 +671,7 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
           gl.useProgram(null);
         }
         break;
-      case 'skinnedmesh':
+      case 'weightedmesh':
         var skin_info = render.skin_info_map[spine_pose.skin_key],
           default_skin_info = render.skin_info_map['default'];
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];

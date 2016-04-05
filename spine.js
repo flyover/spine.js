@@ -1255,8 +1255,8 @@ spine.MeshAttachment.prototype.load = function(json) {
  * @constructor
  * @extends {spine.Attachment}
  */
-spine.SkinnedMeshAttachment = function() {
-  goog.base(this, 'skinnedmesh');
+spine.WeightedMeshAttachment = function() {
+  goog.base(this, 'weightedmesh');
   this.color = new spine.Color();
   this.triangles = [];
   this.edges = [];
@@ -1264,43 +1264,43 @@ spine.SkinnedMeshAttachment = function() {
   this.uvs = [];
 }
 
-goog.inherits(spine.SkinnedMeshAttachment, spine.Attachment);
+goog.inherits(spine.WeightedMeshAttachment, spine.Attachment);
 
 /**
  * @type {spine.Color}
  */
-spine.SkinnedMeshAttachment.prototype.color;
+spine.WeightedMeshAttachment.prototype.color;
 
 /**
  * @type {Array.<number>}
  */
-spine.SkinnedMeshAttachment.prototype.triangles;
+spine.WeightedMeshAttachment.prototype.triangles;
 
 /**
  * @type {Array.<number>}
  */
-spine.SkinnedMeshAttachment.prototype.edges;
+spine.WeightedMeshAttachment.prototype.edges;
 
 /**
  * @type {Array.<number>}
  */
-spine.SkinnedMeshAttachment.prototype.vertices;
+spine.WeightedMeshAttachment.prototype.vertices;
 
 /**
  * @type {Array.<number>}
  */
-spine.SkinnedMeshAttachment.prototype.uvs;
+spine.WeightedMeshAttachment.prototype.uvs;
 
 /**
  * @type {number}
  */
-spine.SkinnedMeshAttachment.prototype.hull = 0;
+spine.WeightedMeshAttachment.prototype.hull = 0;
 
 /**
  * @return {spine.Attachment}
  * @param {Object.<string,?>} json
  */
-spine.SkinnedMeshAttachment.prototype.load = function(json) {
+spine.WeightedMeshAttachment.prototype.load = function(json) {
   goog.base(this, 'load', json);
 
   var attachment = this;
@@ -1349,7 +1349,9 @@ spine.SkinSlot.prototype.load = function(json) {
         skin_slot.attachments[attachment_key] = new spine.MeshAttachment().load(json_attachment);
         break;
       case 'skinnedmesh':
-        skin_slot.attachments[attachment_key] = new spine.SkinnedMeshAttachment().load(json_attachment);
+        json_attachment.type = 'weightedmesh';
+      case 'weightedmesh':
+        skin_slot.attachments[attachment_key] = new spine.WeightedMeshAttachment().load(json_attachment);
         break;
     }
   });

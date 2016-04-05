@@ -222,7 +222,7 @@ main.start = function() {
               switch (attachment.type) {
                 case 'region':
                 case 'mesh':
-                case 'skinnedmesh':
+                case 'weightedmesh':
                   var image_key = attachment_key;
                   var image_url = file_path + spine_data.skeleton.images + image_key + ".png";
                   counter_inc();

@@ -54,7 +54,7 @@ RenderCtx2D.prototype.loadData = function(spine_data, atlas_data, images) {
           var vertex_texcoord = attachment_info.vertex_texcoord = new Float32Array(attachment.uvs);
           var vertex_triangle = attachment_info.vertex_triangle = new Uint16Array(attachment.triangles);
           break;
-        case 'skinnedmesh':
+        case 'weightedmesh':
           var slot_info = slot_info_map[slot_key] = slot_info_map[slot_key] || {};
           var attachment_info_map = slot_info.attachment_info_map = slot_info.attachment_info_map || {};
           var attachment_info = attachment_info_map[attachment_key] = {};
@@ -136,7 +136,7 @@ RenderCtx2D.prototype.updatePose = function(spine_pose, atlas_data) {
           }
         }
         break;
-      case 'skinnedmesh':
+      case 'weightedmesh':
         var skin_info = render.skin_info_map[spine_pose.skin_key],
           default_skin_info = render.skin_info_map['default'];
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
@@ -286,7 +286,7 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
         ctxApplyAtlasSitePosition(ctx, site);
         ctxDrawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, attachment_info.vertex_texcoord, image, site, page);
         break;
-      case 'skinnedmesh':
+      case 'weightedmesh':
         var skin_info = render.skin_info_map[spine_pose.skin_key],
           default_skin_info = render.skin_info_map['default'];
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
@@ -359,7 +359,7 @@ RenderCtx2D.prototype.drawDebugPose = function(spine_pose, atlas_data) {
         ctxApplyAtlasSitePosition(ctx, site);
         ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
         break;
-      case 'skinnedmesh':
+      case 'weightedmesh':
         var skin_info = render.skin_info_map[spine_pose.skin_key],
           default_skin_info = render.skin_info_map['default'];
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
@@ -439,7 +439,7 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
         ctxApplyAtlasSitePosition(ctx, site);
         ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
         break;
-      case 'skinnedmesh':
+      case 'weightedmesh':
         var skin_info = render.skin_info_map[spine_pose.skin_key],
           default_skin_info = render.skin_info_map['default'];
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
