@@ -402,7 +402,7 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
 
     switch (attachment.type) {
       case 'region':
-        var bone = spine_pose.bones[slot.bone_key];
+        var bone = spine_pose.data.bones[slot.bone_key];
         ctxApplySpace(ctx, bone.world_space);
         ctxApplySpace(ctx, attachment.local_space);
         ctxApplyAtlasSitePosition(ctx, site);
