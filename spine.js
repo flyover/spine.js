@@ -2393,6 +2393,32 @@ spine.Data.prototype.load = function(json) {
           data.ikcs[ikc.name] = new spine.Ikc().load(ikc);
           data.ikc_keys[ikc_index] = ikc.name;
         });
+        // sort by ancestry
+        data.ikc_keys = data.ikc_keys.sort(function(a, b) {
+          var ikc_a = data.ikcs[a];
+          var ikc_b = data.ikcs[b];
+          for (var ia = 0; ia < ikc_a.bone_keys.length; ++ia) {
+            var bone_a = data.bones[ikc_a.bone_keys[ia]];
+            for (var ib = 0; ib < ikc_b.bone_keys.length; ++ib) {
+              var bone_b = data.bones[ikc_b.bone_keys[ib]];
+              var bone_a_parent = data.bones[bone_a.parent_key];
+              while (bone_a_parent) {
+                if (bone_a_parent === bone_b) {
+                  return 1;
+                }
+                bone_a_parent = data.bones[bone_a_parent.parent_key];
+              }
+              var bone_b_parent = data.bones[bone_b.parent_key];
+              while (bone_b_parent) {
+                if (bone_b_parent === bone_a) {
+                  return -1;
+                }
+                bone_b_parent = data.bones[bone_b_parent.parent_key];
+              }
+            }
+          }
+          return 0;
+        });
         break;
       case 'slots':
         var json_slots = json[key];
