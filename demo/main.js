@@ -287,24 +287,36 @@ main.start = function() {
 
   var loading = false;
 
-  var file = files[file_index];
-  messages.innerHTML = "loading";
-  loading = true;
-  loadFile(file, function() {
-    loading = false;
-    var skin_keys = spine_data.skin_keys;
-    var skin_key = skin_keys[skin_index = 0];
+  function updateFile() {
+    skin_index = 0;
+    updateSkin();
+    anim_index = 0;
+    updateAnim();
+  }
+
+  function updateSkin() {
+    var skin_key = spine_data.skin_keys[skin_index];
     spine_pose.setSkin(skin_key);
     spine_pose_next.setSkin(skin_key);
-    var anim_keys = spine_data.anim_keys;
-    var anim_key = anim_keys[anim_index = 0];
+  }
+
+  function updateAnim() {
+    var anim_key = spine_data.anim_keys[anim_index];
     spine_pose.setAnim(anim_key);
-    var anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
+    var anim_key_next = spine_data.anim_keys[(anim_index + 1) % spine_data.anim_keys.length];
     spine_pose_next.setAnim(anim_key_next);
     spine_pose.setTime(anim_time = 0);
     spine_pose_next.setTime(anim_time);
     anim_length = spine_pose.curAnimLength() || 1000;
     anim_length_next = spine_pose_next.curAnimLength() || 1000;
+  }
+
+  var file = files[file_index];
+  messages.innerHTML = "loading";
+  loading = true;
+  loadFile(file, function() {
+    loading = false;
+    updateFile();
   });
 
   var prev_time = 0;
@@ -315,12 +327,6 @@ main.start = function() {
     var dt = time - (prev_time || time);
     prev_time = time; // ms
 
-    var skin_keys;
-    var skin_key;
-    var anim_keys;
-    var anim_key;
-    var anim_key_next;
-
     if (!loading) {
       spine_pose.update(dt * anim_rate);
       var anim_rate_next = anim_rate * anim_length_next / anim_length;
@@ -329,12 +335,9 @@ main.start = function() {
       anim_time += dt * anim_rate;
 
       if (anim_time >= (anim_length * anim_repeat)) {
-        skin_keys = spine_data.skin_keys;
-        skin_key = skin_keys[skin_index];
-        anim_keys = spine_data.anim_keys;
-        if (++anim_index >= anim_keys.length) {
+        if (++anim_index >= spine_data.anim_keys.length) {
           anim_index = 0;
-          if (++skin_index >= skin_keys.length) {
+          if (++skin_index >= spine_data.skin_keys.length) {
             skin_index = 0;
             if (files.length > 1) {
               if (++file_index >= files.length) {
@@ -345,44 +348,19 @@ main.start = function() {
               loading = true;
               loadFile(file, function() {
                 loading = false;
-                skin_keys = spine_data.skin_keys;
-                skin_key = skin_keys[skin_index = 0];
-                spine_pose.setSkin(skin_key);
-                spine_pose_next.setSkin(skin_key);
-                anim_keys = spine_data.anim_keys;
-                anim_key = anim_keys[anim_index = 0];
-                spine_pose.setAnim(anim_key);
-                anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
-                spine_pose_next.setAnim(anim_key_next);
-                spine_pose.setTime(anim_time = 0);
-                spine_pose_next.setTime(anim_time);
-                anim_length = spine_pose.curAnimLength() || 1000;
-                anim_length_next = spine_pose_next.curAnimLength() || 1000;
+                updateFile();
               });
               return;
             }
           }
-          skin_keys = spine_data.skin_keys;
-          skin_key = skin_keys[skin_index];
-          spine_pose.setSkin(skin_key);
-          spine_pose_next.setSkin(skin_key);
+          updateSkin();
         }
-        anim_keys = spine_data.anim_keys;
-        anim_key = anim_keys[anim_index];
-        spine_pose.setAnim(anim_key);
-        anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
-        spine_pose_next.setAnim(anim_key_next);
-        spine_pose.setTime(anim_time = 0);
-        spine_pose_next.setTime(anim_time);
-        anim_length = spine_pose.curAnimLength() || 1000;
-        anim_length_next = spine_pose_next.curAnimLength() || 1000;
+        updateAnim();
       }
 
-      skin_keys = spine_data.skin_keys;
-      skin_key = skin_keys[skin_index];
-      anim_keys = spine_data.anim_keys;
-      anim_key = anim_keys[anim_index];
-      anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
+      var skin_key = spine_data.skin_keys[skin_index];
+      var anim_key = spine_data.anim_keys[anim_index];
+      var anim_key_next = spine_data.anim_keys[(anim_index + 1) % spine_data.anim_keys.length];
       messages.innerHTML = "skin: " + skin_key + ", anim: " + anim_key + ", next anim: " + anim_key_next + "<br>" + file.path + file.json_url;
     }
 
@@ -402,23 +380,26 @@ main.start = function() {
     }
 
     spine_pose.strike();
-    spine_pose_next.strike();
 
     //spine_pose.events.forEach(function (event) { console.log("event", event.name, event.int_value, event.float_value, event.string_value); });
 
-    // blend next pose bone into pose bone
-    spine_pose.iterateBones(function(bone_key, bone) {
-      var bone_next = spine_pose_next.bones[bone_key];
-      if (!bone_next) {
-        return;
-      }
-      spine.Space.tween(bone.local_space, bone_next.local_space, anim_blend, bone.local_space);
-    });
+    if (anim_blend > 0) {
+      spine_pose_next.strike();
 
-    // compute bone world space
-    spine_pose.iterateBones(function(bone_key, bone) {
-      spine.Bone.flatten(bone, spine_pose.bones);
-    });
+      // blend next pose bone into pose bone
+      spine_pose.iterateBones(function(bone_key, bone) {
+        var bone_next = spine_pose_next.bones[bone_key];
+        if (!bone_next) {
+          return;
+        }
+        spine.Space.tween(bone.local_space, bone_next.local_space, anim_blend, bone.local_space);
+      });
+
+      // compute bone world space
+      spine_pose.iterateBones(function(bone_key, bone) {
+        spine.Bone.flatten(bone, spine_pose.bones);
+      });
+    }
 
     if (ctx) {
       ctx.globalAlpha = alpha;
