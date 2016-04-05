@@ -297,7 +297,7 @@ main.start = function() {
     spine_pose.setSkin(skin_key);
     spine_pose_next.setSkin(skin_key);
     var anim_keys = spine_data.anim_keys;
-    var anim_key = skin_keys[anim_index = 0];
+    var anim_key = anim_keys[anim_index = 0];
     spine_pose.setAnim(anim_key);
     var anim_key_next = anim_keys[(anim_index + 1) % anim_keys.length];
     spine_pose_next.setAnim(anim_key_next);
