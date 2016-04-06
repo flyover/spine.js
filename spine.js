@@ -835,7 +835,11 @@ spine.Space.combine = function(a, b, out) {
   var ty = s * x + c * y;
   out.position.x = tx + a.position.x;
   out.position.y = ty + a.position.y;
-  out.rotation.rad = spine.wrapAngleRadians(b.rotation.rad + a.rotation.rad);
+  if ((a.scale.x * a.scale.y) < 0.0) {
+    out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad - b.rotation.rad);
+  } else {
+    out.rotation.rad = spine.wrapAngleRadians(b.rotation.rad + a.rotation.rad);
+  }
   out.scale.x = b.scale.x * a.scale.x;
   out.scale.y = b.scale.y * a.scale.y;
   return out;
@@ -856,7 +860,11 @@ spine.Space.extract = function(ab, a, out) {
   out = out || new spine.Space();
   out.scale.x = ab.scale.x / a.scale.x;
   out.scale.y = ab.scale.y / a.scale.y;
-  out.rotation.rad = spine.wrapAngleRadians(ab.rotation.rad - a.rotation.rad);
+  if ((a.scale.x * a.scale.y) < 0.0) {
+    out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad + ab.rotation.rad);
+  } else {
+    out.rotation.rad = spine.wrapAngleRadians(ab.rotation.rad - a.rotation.rad);
+  }
   var x = ab.position.x - a.position.x;
   var y = ab.position.y - a.position.y;
   var rad = -a.rotation.rad;
@@ -1003,7 +1011,11 @@ spine.Bone.flatten = function(bone, bones) {
     out.position.y = ty + a.position.y;
 
     if (bone.inherit_rotation) {
-      out.rotation.rad = spine.wrapAngleRadians(b.rotation.rad + a.rotation.rad);
+      if ((a.scale.x * a.scale.y) < 0.0) {
+        out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad - b.rotation.rad);
+      } else {
+        out.rotation.rad = spine.wrapAngleRadians(b.rotation.rad + a.rotation.rad);
+      }
     } else {
       out.rotation.rad = b.rotation.rad;
     }
