@@ -861,7 +861,7 @@ spine.Space.extract = function(ab, a, out) {
   out.scale.x = ab.scale.x / a.scale.x;
   out.scale.y = ab.scale.y / a.scale.y;
   if ((a.scale.x * a.scale.y) < 0.0) {
-    out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad + ab.rotation.rad);
+    out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad - ab.rotation.rad);
   } else {
     out.rotation.rad = spine.wrapAngleRadians(ab.rotation.rad - a.rotation.rad);
   }
