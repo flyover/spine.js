@@ -214,7 +214,7 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
 
   spine_data.iterateBones(function(bone_key, bone) {
     var bone_info = render.bone_info_map[bone_key] = {};
-    bone_info.setup_space = spine.Space.invert(bone.world_space, new spine.Space());
+    bone_info.setup_affine = spine.Affine.invert(bone.world_affine, new spine.Affine());
   });
 
   spine_data.iterateSkins(function(skin_key, skin) {
@@ -312,7 +312,7 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
               }
               var bone_key = spine_data.bone_keys[blend.bone_index];
               var bone = spine_data.bones[bone_key];
-              spine.Space.transform(bone.world_space, blend.position, blend_position);
+              spine.Affine.transform(bone.world_affine, blend.position, blend_position);
               position_x += blend_position.x * blend.weight;
               position_y += blend_position.y * blend.weight;
               // index into gl_skin_shader_modelview_array, not spine_pose.data.bone_keys
@@ -543,7 +543,7 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
     switch (attachment.type) {
       case 'region':
         var bone = spine_pose.bones[slot.bone_key];
-        mat3x3ApplySpace(gl_modelview, bone.world_space);
+        mat3x3ApplyAffine(gl_modelview, bone.world_affine);
         mat3x3ApplySpace(gl_modelview, attachment.local_space);
         mat3x3Scale(gl_modelview, attachment.width / 2, attachment.height / 2);
         mat3x3ApplyAtlasSitePosition(gl_modelview, site);
@@ -580,7 +580,7 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
         var attachment_info = slot_info.attachment_info_map[attachment_key];
         var bone = spine_pose.bones[slot.bone_key];
-        mat3x3ApplySpace(gl_modelview, bone.world_space);
+        mat3x3ApplyAffine(gl_modelview, bone.world_affine);
         mat3x3ApplyAtlasSitePosition(gl_modelview, site);
 
         var anim = spine_pose.data.anims[spine_pose.anim_key];
@@ -686,8 +686,8 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
           if (index < render.gl_skin_shader_modelview_count) {
             var modelview = render.gl_skin_shader_modelview_array.subarray(index * 9, (index + 1) * 9);
             mat3x3Copy(modelview, gl_modelview);
-            mat3x3ApplySpace(modelview, bone.world_space);
-            mat3x3ApplySpace(modelview, bone_info.setup_space);
+            mat3x3ApplyAffine(modelview, bone.world_affine);
+            mat3x3ApplyAffine(modelview, bone_info.setup_affine);
             mat3x3ApplyAtlasSitePosition(modelview, site);
           }
         }
@@ -873,6 +873,25 @@ function mat3x3Transform(m, v, out) {
   out[0] = x * iw;
   out[1] = y * iw;
   return out;
+}
+
+function mat3x3ApplyAffine(m, affine) {
+  if (affine) {
+    var a = affine.matrix.a, b = affine.matrix.b, x = affine.vector.x;
+    var c = affine.matrix.c, d = affine.matrix.d, y = affine.vector.y;
+    var m00 = m[0], m01 = m[1], m02 = m[2];
+    var m10 = m[3], m11 = m[4], m12 = m[5];
+    m[0] = a * m00 + c * m10;
+    m[1] = a * m01 + c * m11;
+    m[2] = a * m02 + c * m12;
+    m[3] = b * m00 + d * m10;
+    m[4] = b * m01 + d * m11;
+    m[5] = b * m02 + d * m12;
+    m[6] += x * m00 + y * m10;
+    m[7] += x * m01 + y * m11;
+    m[8] += x * m02 + y * m12;
+  }
+  return m;
 }
 
 function mat3x3ApplySpace(m, space) {
