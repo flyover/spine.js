@@ -139,17 +139,17 @@ main.start = function() {
   var anim_blend = 0.0;
 
   add_range_control("Anim Rate", anim_rate, -2.0, 2.0, 0.1, function(value) {
-    anim_rate = value;
+    anim_rate = parseFloat(value);
   });
 
   add_range_control("Anim Blend", anim_blend, 0.0, 1.0, 0.01, function(value) {
-    anim_blend = value;
+    anim_blend = parseFloat(value);
   });
 
   var alpha = 1.0;
 
   add_range_control("Alpha", alpha, 0.0, 1.0, 0.01, function(value) {
-    alpha = value;
+    alpha = parseFloat(value);
   });
 
   var loadFile = function(file, callback) {
@@ -442,7 +442,7 @@ main.start = function() {
       }
 
       mat4x4Translate(gl_projection, -camera_x, -camera_y, 0);
-      mat4x4Scale(gl_projection, camera_zoom, camera_zoom, camera_zoom);
+      mat4x4Scale(gl_projection, camera_zoom, camera_zoom, 1);
 
       if (enable_render_webgl) {
         render_webgl.drawPose(spine_pose, atlas_data);
