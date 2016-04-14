@@ -467,6 +467,8 @@ spine.Angle = function(rad) {
   this.rad = rad || 0;
 }
 
+/** @type {number} */
+spine.Angle.prototype.deg;
 Object.defineProperty(spine.Angle.prototype, 'deg', {
   /** @this {spine.Angle} */
   get: function() { return this.rad * 180 / Math.PI; },
@@ -474,11 +476,15 @@ Object.defineProperty(spine.Angle.prototype, 'deg', {
   set: function(value) { this.rad = value * Math.PI / 180; }
 });
 
+/** @type {number} */
+spine.Angle.prototype.cos;
 Object.defineProperty(spine.Angle.prototype, 'cos', {
   /** @this {spine.Angle} */
   get: function() { return Math.cos(this.rad); }
 });
 
+/** @type {number} */
+spine.Angle.prototype.sin;
 Object.defineProperty(spine.Angle.prototype, 'sin', {
   /** @this {spine.Angle} */
   get: function() { return Math.sin(this.rad); }
@@ -813,7 +819,7 @@ spine.Matrix.scale = function(m, x, y, out) {
 }
 
 /**
- * @return {spine.Matrix}
+ * @return {spine.Vector}
  * @param {spine.Matrix} m
  * @param {spine.Vector} v
  * @param {spine.Vector=} out
@@ -827,7 +833,7 @@ spine.Matrix.transform = function(m, v, out) {
 }
 
 /**
- * @return {spine.Matrix}
+ * @return {spine.Vector}
  * @param {spine.Matrix} m
  * @param {spine.Vector} v
  * @param {spine.Vector=} out
@@ -904,7 +910,7 @@ spine.Affine.transform = function(affine, v, out) {
 
 /**
  * @return {spine.Vector}
- * @param {spine.Affine} space
+ * @param {spine.Affine} affine
  * @param {spine.Vector} v
  * @param {spine.Vector=} out
  */
