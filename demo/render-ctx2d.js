@@ -76,7 +76,7 @@ RenderCtx2D.prototype.loadData = function(spine_data, atlas_data, images) {
               var weight = attachment.vertices[index++];
               var bone_key = spine_data.bone_keys[bone_index];
               var bone = spine_data.bones[bone_key];
-              spine.Affine.transform(bone.world_affine, position, position);
+              spine.Space.transform(bone.world_space, position, position);
               setup_position_x += position.x * weight;
               setup_position_y += position.y * weight;
             }
@@ -180,7 +180,7 @@ RenderCtx2D.prototype.updatePose = function(spine_pose, atlas_data) {
               var v1 = ffd_keyframe1.vertices[ffd_index - ffd_keyframe1.offset] || 0;
               position.y += spine.tween(v0, v1, pct);
               ++ffd_index;
-              spine.Affine.transform(bone.world_affine, position, position);
+              spine.Space.transform(bone.world_space, position, position);
               blend_position_x += position.x * weight;
               blend_position_y += position.y * weight;
             }
@@ -204,7 +204,7 @@ RenderCtx2D.prototype.updatePose = function(spine_pose, atlas_data) {
               var weight = attachment.vertices[index++];
               var bone_key = spine_pose.bone_keys[bone_index];
               var bone = spine_pose.bones[bone_key];
-              spine.Affine.transform(bone.world_affine, position, position);
+              spine.Space.transform(bone.world_space, position, position);
               blend_position_x += position.x * weight;
               blend_position_y += position.y * weight;
             }
@@ -270,7 +270,7 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
     switch (attachment.type) {
       case 'region':
         var bone = spine_pose.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctxApplySpace(ctx, attachment.local_space);
         ctxApplyAtlasSitePosition(ctx, site);
         ctx.scale(attachment.width / 2, attachment.height / 2);
@@ -282,7 +282,7 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
         var attachment_info = slot_info.attachment_info_map[attachment_key];
         var bone = spine_pose.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctxApplyAtlasSitePosition(ctx, site);
         ctxDrawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, attachment_info.vertex_texcoord, image, site, page);
         break;
@@ -323,7 +323,7 @@ RenderCtx2D.prototype.drawDebugPose = function(spine_pose, atlas_data) {
     switch (attachment.type) {
       case 'region':
         var bone = spine_pose.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctxApplySpace(ctx, attachment.local_space);
         ctxApplyAtlasSitePosition(ctx, site);
         ctx.beginPath();
@@ -335,7 +335,7 @@ RenderCtx2D.prototype.drawDebugPose = function(spine_pose, atlas_data) {
         break;
       case 'boundingbox':
         var bone = spine_pose.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctx.beginPath();
         var x = 0;
         attachment.vertices.forEach(function(value, index) {
@@ -355,7 +355,7 @@ RenderCtx2D.prototype.drawDebugPose = function(spine_pose, atlas_data) {
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
         var attachment_info = slot_info.attachment_info_map[attachment_key];
         var bone = spine_pose.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctxApplyAtlasSitePosition(ctx, site);
         ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
         break;
@@ -374,7 +374,7 @@ RenderCtx2D.prototype.drawDebugPose = function(spine_pose, atlas_data) {
 
   spine_pose.iterateBones(function(bone_key, bone) {
     ctx.save();
-    ctxApplyAffine(ctx, bone.world_affine);
+    ctxApplySpace(ctx, bone.world_space);
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0.1 * bone.length, -0.1 * bone.length);
@@ -413,7 +413,7 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
     switch (attachment.type) {
       case 'region':
         var bone = spine_pose.data.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctxApplySpace(ctx, attachment.local_space);
         ctxApplyAtlasSitePosition(ctx, site);
         ctx.beginPath();
@@ -425,7 +425,7 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
         break;
       case 'boundingbox':
         var bone = spine_pose.data.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctx.beginPath();
         var x = 0;
         attachment.vertices.forEach(function(value, index) {
@@ -445,7 +445,7 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
         var attachment_info = slot_info.attachment_info_map[attachment_key];
         var bone = spine_pose.data.bones[slot.bone_key];
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctxApplyAtlasSitePosition(ctx, site);
         ctxDrawMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, 'rgba(127,127,127,1.0)', 'rgba(127,127,127,0.25)');
         break;
@@ -464,7 +464,7 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
 
   spine_pose.data.iterateBones(function(bone_key, bone) {
     ctx.save();
-    ctxApplyAffine(ctx, bone.world_affine);
+    ctxApplySpace(ctx, bone.world_space);
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0.1 * bone.length, -0.1 * bone.length);
@@ -482,17 +482,11 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
   ctxDrawIkConstraints(ctx, spine_pose.data, spine_pose.data.bones);
 }
 
-function ctxApplyAffine(ctx, affine) {
-  if (affine) {
-    ctx.transform(affine.matrix.a, affine.matrix.c, affine.matrix.b, affine.matrix.d, affine.vector.x, affine.vector.y);
-  }
-}
-
 function ctxApplySpace(ctx, space) {
   if (space) {
     ctx.translate(space.position.x, space.position.y);
     ctx.rotate(space.rotation.rad);
-    ctx.scale(space.scale.x, space.scale.y);
+    ctx.transform(space.scale.a, space.scale.c, space.scale.b, space.scale.d, 0, 0);
   }
 }
 
@@ -626,18 +620,18 @@ function ctxDrawIkConstraints(ctx, data, bones) {
         var bone = bones[ikc.bone_keys[0]];
 
         ctx.beginPath();
-        ctx.moveTo(target.world_affine.vector.x, target.world_affine.vector.y);
-        ctx.lineTo(bone.world_affine.vector.x, bone.world_affine.vector.y);
+        ctx.moveTo(target.world_space.position.x, target.world_space.position.y);
+        ctx.lineTo(bone.world_space.position.x, bone.world_space.position.y);
         ctx.strokeStyle = 'yellow';
         ctx.stroke();
 
         ctx.save();
-        ctxApplyAffine(ctx, target.world_affine);
+        ctxApplySpace(ctx, target.world_space);
         ctxDrawCircle(ctx, 'yellow', 1.5);
         ctx.restore();
 
         ctx.save();
-        ctxApplyAffine(ctx, bone.world_affine);
+        ctxApplySpace(ctx, bone.world_space);
         ctxDrawCircle(ctx, 'yellow', 0.5);
         ctx.translate(bone.length, 0);
         ctxDrawCircle(ctx, 'yellow', 1.5);
@@ -648,26 +642,26 @@ function ctxDrawIkConstraints(ctx, data, bones) {
         var child = bones[ikc.bone_keys[1]];
 
         ctx.beginPath();
-        ctx.moveTo(target.world_affine.vector.x, target.world_affine.vector.y);
-        ctx.lineTo(child.world_affine.vector.x, child.world_affine.vector.y);
-        ctx.lineTo(parent.world_affine.vector.x, parent.world_affine.vector.y);
+        ctx.moveTo(target.world_space.position.x, target.world_space.position.y);
+        ctx.lineTo(child.world_space.position.x, child.world_space.position.y);
+        ctx.lineTo(parent.world_space.position.x, parent.world_space.position.y);
         ctx.strokeStyle = 'yellow';
         ctx.stroke();
 
         ctx.save();
-        ctxApplyAffine(ctx, target.world_affine);
+        ctxApplySpace(ctx, target.world_space);
         ctxDrawCircle(ctx, 'yellow', 1.5);
         ctx.restore();
 
         ctx.save();
-        ctxApplyAffine(ctx, child.world_affine);
+        ctxApplySpace(ctx, child.world_space);
         ctxDrawCircle(ctx, 'yellow', 0.75);
         ctx.translate(child.length, 0);
         ctxDrawCircle(ctx, 'yellow', 1.5);
         ctx.restore();
 
         ctx.save();
-        ctxApplyAffine(ctx, parent.world_affine);
+        ctxApplySpace(ctx, parent.world_space);
         ctxDrawCircle(ctx, 'yellow', 0.5);
         ctx.restore();
         break;
