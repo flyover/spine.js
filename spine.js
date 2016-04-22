@@ -371,9 +371,7 @@ spine.StepBezierCurve = function(cx1, cy1, cx2, cy2) {
  */
 spine.Curve = function() {}
 
-/**
- * @type {function(number):number}
- */
+/** @type {function(number):number} */
 spine.Curve.prototype.evaluate = function(t) {
   return t;
 };
@@ -528,6 +526,29 @@ spine.Angle.equal = function(a, b, epsilon) {
  */
 spine.Angle.prototype.equal = function(other, epsilon) {
   return spine.Angle.equal(this, other, epsilon);
+}
+
+/**
+ * @return {spine.Angle}
+ * @param {spine.Angle} a
+ * @param {spine.Angle} b
+ * @param {number} pct
+ * @param {spine.Angle=} out
+ */
+spine.Angle.tween = function(a, b, pct, out) {
+  out = out || new spine.Angle();
+  out.rad = spine.tweenAngle(a.rad, b.rad, pct);
+  return out;
+}
+
+/**
+ * @return {spine.Angle}
+ * @param {spine.Angle} other
+ * @param {number} pct
+ * @param {spine.Angle=} out
+ */
+spine.Angle.prototype.tween = function(other, pct, out) {
+  return spine.Angle.tween(this, other, pct, out);
 }
 
 /**
@@ -1328,11 +1349,14 @@ spine.Space.tween = function(a, b, tween, out) {
  */
 spine.Bone = function() {
   var bone = this;
+  bone.color = new spine.Color();
   bone.local_space = new spine.Space();
   bone.world_space = new spine.Space();
   bone.world_affine = new spine.Affine();
 }
 
+/** @type {spine.Color} */
+spine.Bone.prototype.color;
 /** @type {string} */
 spine.Bone.prototype.parent_key = "";
 /** @type {number} */
@@ -1354,6 +1378,7 @@ spine.Bone.prototype.inherit_scale = true;
  */
 spine.Bone.prototype.copy = function(other) {
   var bone = this;
+  bone.color.copy(other.color);
   bone.parent_key = other.parent_key;
   bone.length = other.length;
   bone.local_space.copy(other.local_space);
@@ -1370,6 +1395,7 @@ spine.Bone.prototype.copy = function(other) {
  */
 spine.Bone.prototype.load = function(json) {
   var bone = this;
+  bone.color.load(json.color);
   bone.parent_key = spine.loadString(json, 'parent', "");
   bone.length = spine.loadFloat(json, 'length', 0);
   bone.local_space.load(json);
@@ -1545,11 +1571,14 @@ spine.Attachment.prototype.load = function(json) {
  */
 spine.RegionAttachment = function() {
   goog.base(this, 'region');
+  this.color = new spine.Color();
   this.local_space = new spine.Space();
 }
 
 goog.inherits(spine.RegionAttachment, spine.Attachment);
 
+/** @type {spine.Color} */
+spine.RegionAttachment.prototype.color;
 /** @type {spine.Space} */
 spine.RegionAttachment.prototype.local_space;
 /** @type {number} */
@@ -1565,6 +1594,7 @@ spine.RegionAttachment.prototype.load = function(json) {
   goog.base(this, 'load', json);
 
   var attachment = this;
+  attachment.color.load(json.color);
   attachment.local_space.load(json);
   attachment.width = spine.loadFloat(json, 'width', 0);
   attachment.height = spine.loadFloat(json, 'height', 0);
@@ -1582,9 +1612,7 @@ spine.BoundingBoxAttachment = function() {
 
 goog.inherits(spine.BoundingBoxAttachment, spine.Attachment);
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.BoundingBoxAttachment.prototype.vertices;
 
 /**
@@ -1615,34 +1643,22 @@ spine.MeshAttachment = function() {
 
 goog.inherits(spine.MeshAttachment, spine.Attachment);
 
-/**
- * @type {spine.Color}
- */
+/** @type {spine.Color} */
 spine.MeshAttachment.prototype.color;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.MeshAttachment.prototype.triangles;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.MeshAttachment.prototype.edges;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.MeshAttachment.prototype.vertices;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.MeshAttachment.prototype.uvs;
 
-/**
- * @type {number}
- */
+/** @type {number} */
 spine.MeshAttachment.prototype.hull = 0;
 
 /**
@@ -1677,34 +1693,22 @@ spine.WeightedMeshAttachment = function() {
 
 goog.inherits(spine.WeightedMeshAttachment, spine.Attachment);
 
-/**
- * @type {spine.Color}
- */
+/** @type {spine.Color} */
 spine.WeightedMeshAttachment.prototype.color;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.triangles;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.edges;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.vertices;
 
-/**
- * @type {Array.<number>}
- */
+/** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.uvs;
 
-/**
- * @type {number}
- */
+/** @type {number} */
 spine.WeightedMeshAttachment.prototype.hull = 0;
 
 /**
