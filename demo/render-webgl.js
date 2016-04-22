@@ -526,17 +526,17 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
     gl.enable(gl.BLEND);
     switch (slot.blend) {
       default:
-        case 'normal':
+      case 'normal':
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      break;
+        break;
       case 'additive':
-          gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         break;
       case 'multiply':
-          gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
+        gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
         break;
       case 'screen':
-          gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
         break;
     }
 
@@ -547,6 +547,7 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
         mat3x3ApplySpace(gl_modelview, attachment.local_space);
         mat3x3Scale(gl_modelview, attachment.width / 2, attachment.height / 2);
         mat3x3ApplyAtlasSitePosition(gl_modelview, site);
+        vec4ApplyColor(gl_color, attachment.color);
 
         var gl_shader = render.gl_mesh_shader;
         var gl_vertex = render.gl_region_vertex;
@@ -582,6 +583,7 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
         var bone = spine_pose.bones[slot.bone_key];
         mat3x3ApplySpace(gl_modelview, bone.world_space);
         mat3x3ApplyAtlasSitePosition(gl_modelview, site);
+        vec4ApplyColor(gl_color, attachment.color);
 
         var anim = spine_pose.data.anims[spine_pose.anim_key];
         var anim_ffd = anim && anim.ffds && anim.ffds[spine_pose.skin_key];
@@ -691,6 +693,7 @@ RenderWebGL.prototype.drawPose = function(spine_pose, atlas_data) {
             mat3x3ApplyAtlasSitePosition(modelview, site);
           }
         }
+        vec4ApplyColor(gl_color, attachment.color);
 
         var anim = spine_pose.data.anims[spine_pose.anim_key];
         var anim_ffd = anim && anim.ffds && anim.ffds[spine_pose.skin_key];

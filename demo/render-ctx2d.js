@@ -274,6 +274,8 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
         ctxApplySpace(ctx, attachment.local_space);
         ctxApplyAtlasSitePosition(ctx, site);
         ctx.scale(attachment.width / 2, attachment.height / 2);
+        // TODO: attachment.color.rgb
+        ctx.globalAlpha *= attachment.color.a;
         ctxDrawImageMesh(ctx, render.region_vertex_triangle, render.region_vertex_position, render.region_vertex_texcoord, image, site, page);
         break;
       case 'mesh':
@@ -284,6 +286,8 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
         var bone = spine_pose.bones[slot.bone_key];
         ctxApplySpace(ctx, bone.world_space);
         ctxApplyAtlasSitePosition(ctx, site);
+        // TODO: attachment.color.rgb
+        ctx.globalAlpha *= attachment.color.a;
         ctxDrawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_position, attachment_info.vertex_texcoord, image, site, page);
         break;
       case 'weightedmesh':
@@ -292,6 +296,8 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
         var slot_info = skin_info.slot_info_map[slot_key] || default_skin_info.slot_info_map[slot_key];
         var attachment_info = slot_info.attachment_info_map[attachment_key];
         ctxApplyAtlasSitePosition(ctx, site);
+        // TODO: attachment.color.rgb
+        ctx.globalAlpha *= attachment.color.a;
         ctxDrawImageMesh(ctx, attachment_info.vertex_triangle, attachment_info.vertex_blend_position, attachment_info.vertex_texcoord, image, site, page);
         break;
     }
@@ -383,7 +389,7 @@ RenderCtx2D.prototype.drawDebugPose = function(spine_pose, atlas_data) {
     ctx.closePath();
     ctx.strokeStyle = 'white';
     ctx.stroke();
-    ctxDrawPoint(ctx);
+    ctxDrawPoint(ctx, strColor(bone.color));
     ctx.scale(1, -1);
     ctx.fillText(bone_key, 0, 0);
     ctx.restore();
@@ -473,13 +479,17 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
     ctx.closePath();
     ctx.strokeStyle = 'white';
     ctx.stroke();
-    ctxDrawPoint(ctx);
+    ctxDrawPoint(ctx, strColor(bone.color));
     ctx.scale(1, -1);
     ctx.fillText(bone_key, 0, 0);
     ctx.restore();
   });
 
   ctxDrawIkConstraints(ctx, spine_pose.data, spine_pose.data.bones);
+}
+
+function strColor(color) {
+  return 'rgba(' + (color.r * 255) + ',' + (color.g * 255) + ',' + (color.b * 255) + ',' + color.a + ')';
 }
 
 function ctxApplySpace(ctx, space) {
