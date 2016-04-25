@@ -3330,7 +3330,11 @@ spine.Pose.prototype.strike = function() {
         var bone_parent = pose.bones[bone.parent_key];
         if (bone_parent) {
           spine.Bone.flatten(bone_parent, pose.bones);
-          a1 -= bone_parent.world_space.rotation.rad;
+          if (spine.Matrix.determinant(bone_parent.world_space.scale) < 0) {
+            a1 += bone_parent.world_space.rotation.rad;
+          } else {
+            a1 -= bone_parent.world_space.rotation.rad;
+          }
         }
         bone.local_space.rotation.rad = spine.tweenAngle(bone.local_space.rotation.rad, a1, alpha);
         break;
