@@ -169,15 +169,24 @@ spine.Color.prototype.a = 1;
 
 /**
  * @return {spine.Color}
+ * @param {spine.Color} color
+ * @param {spine.Color=} out
+ */
+spine.Color.copy = function(color, out) {
+  out = out || new spine.Color();
+  out.r = color.r;
+  out.g = color.g;
+  out.b = color.b;
+  out.a = color.a;
+  return out;
+}
+
+/**
+ * @return {spine.Color}
  * @param {spine.Color} other
  */
 spine.Color.prototype.copy = function(other) {
-  var color = this;
-  color.r = other.r;
-  color.g = other.g;
-  color.b = other.b;
-  color.a = other.a;
-  return color;
+  return spine.Color.copy(other, this);
 }
 
 /**
@@ -211,6 +220,32 @@ spine.Color.prototype.load = function(json) {
 spine.Color.prototype.toString = function() {
   var color = this;
   return "rgba(" + (color.r * 255).toFixed(0) + "," + (color.g * 255).toFixed(0) + "," + (color.b * 255).toFixed(0) + "," + color.a + ")";
+}
+
+/**
+ * @return {spine.Color}
+ * @param {spine.Color} a
+ * @param {spine.Color} b
+ * @param {number} pct
+ * @param {spine.Color=} out
+ */
+spine.Color.tween = function(a, b, pct, out) {
+  out = out || new spine.Color();
+  out.r = spine.tween(a.r, b.r, pct);
+  out.g = spine.tween(a.g, b.g, pct);
+  out.b = spine.tween(a.b, b.b, pct);
+  out.a = spine.tween(a.a, b.a, pct);
+  return out;
+}
+
+/**
+ * @return {spine.Color}
+ * @param {spine.Color} other
+ * @param {number} pct
+ * @param {spine.Color=} out
+ */
+spine.Color.prototype.tween = function(other, pct, out) {
+  return spine.Color.tween(this, other, pct, out);
 }
 
 // from: http://github.com/arian/cubic-bezier
@@ -3422,15 +3457,9 @@ spine.Pose.prototype.strike = function() {
         var color_keyframe1 = anim_slot.color_keyframes[keyframe_index + 1];
         if (color_keyframe1) {
           pct = color_keyframe0.curve.evaluate((time - color_keyframe0.time) / (color_keyframe1.time - color_keyframe0.time));
-          pose_slot.color.r = spine.tween(color_keyframe0.color.r, color_keyframe1.color.r, pct);
-          pose_slot.color.g = spine.tween(color_keyframe0.color.g, color_keyframe1.color.g, pct);
-          pose_slot.color.b = spine.tween(color_keyframe0.color.b, color_keyframe1.color.b, pct);
-          pose_slot.color.a = spine.tween(color_keyframe0.color.a, color_keyframe1.color.a, pct);
+          color_keyframe0.color.tween(color_keyframe1.color, pct, pose_slot.color);
         } else {
-          pose_slot.color.r = color_keyframe0.color.r;
-          pose_slot.color.g = color_keyframe0.color.g;
-          pose_slot.color.b = color_keyframe0.color.b;
-          pose_slot.color.a = color_keyframe0.color.a;
+          pose_slot.color.copy(color_keyframe0.color);
         }
       }
 
