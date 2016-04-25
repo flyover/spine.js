@@ -2223,7 +2223,7 @@ spine.AnimSlot.prototype.load = function(json) {
         console.log("TODO: spine.AnimSlot::load", key);
         break;
     }
-  })
+  });
 
   return anim_slot;
 }
