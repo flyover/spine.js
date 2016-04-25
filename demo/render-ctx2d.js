@@ -253,17 +253,17 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
 
     switch (slot.blend) {
       default:
-        case 'normal':
+      case 'normal':
         ctx.globalCompositeOperation = 'source-over';
-      break;
+        break;
       case 'additive':
-          ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = 'lighter';
         break;
       case 'multiply':
-          ctx.globalCompositeOperation = 'multiply';
+        ctx.globalCompositeOperation = 'multiply';
         break;
       case 'screen':
-          ctx.globalCompositeOperation = 'screen';
+        ctx.globalCompositeOperation = 'screen';
         break;
     }
 
@@ -389,7 +389,7 @@ RenderCtx2D.prototype.drawDebugPose = function(spine_pose, atlas_data) {
     ctx.closePath();
     ctx.strokeStyle = 'white';
     ctx.stroke();
-    ctxDrawPoint(ctx, strColor(bone.color));
+    ctxDrawPoint(ctx, bone.color.toString());
     ctx.scale(1, -1);
     ctx.fillText(bone_key, 0, 0);
     ctx.restore();
@@ -479,17 +479,13 @@ RenderCtx2D.prototype.drawDebugData = function(spine_pose, atlas_data) {
     ctx.closePath();
     ctx.strokeStyle = 'white';
     ctx.stroke();
-    ctxDrawPoint(ctx, strColor(bone.color));
+    ctxDrawPoint(ctx, bone.color.toString());
     ctx.scale(1, -1);
     ctx.fillText(bone_key, 0, 0);
     ctx.restore();
   });
 
   ctxDrawIkConstraints(ctx, spine_pose.data, spine_pose.data.bones);
-}
-
-function strColor(color) {
-  return 'rgba(' + (color.r * 255) + ',' + (color.g * 255) + ',' + (color.b * 255) + ',' + color.a + ')';
 }
 
 function ctxApplySpace(ctx, space) {
