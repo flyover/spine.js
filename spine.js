@@ -1961,21 +1961,21 @@ spine.BoneKeyframe.prototype.load = function(json) {
  * @constructor
  * @extends {spine.BoneKeyframe}
  */
-spine.TranslateKeyframe = function() {
+spine.PositionKeyframe = function() {
   goog.base(this);
   this.position = new spine.Position();
 }
 
-goog.inherits(spine.TranslateKeyframe, spine.BoneKeyframe);
+goog.inherits(spine.PositionKeyframe, spine.BoneKeyframe);
 
 /** @type {spine.Position} */
-spine.TranslateKeyframe.prototype.position;
+spine.PositionKeyframe.prototype.position;
 
 /**
- * @return {spine.TranslateKeyframe}
+ * @return {spine.PositionKeyframe}
  * @param {Object.<string,?>} json
  */
-spine.TranslateKeyframe.prototype.load = function(json) {
+spine.PositionKeyframe.prototype.load = function(json) {
   goog.base(this, 'load', json);
   this.position.x = spine.loadFloat(json, 'x', 0);
   this.position.y = spine.loadFloat(json, 'y', 0);
@@ -1986,21 +1986,21 @@ spine.TranslateKeyframe.prototype.load = function(json) {
  * @constructor
  * @extends {spine.BoneKeyframe}
  */
-spine.RotateKeyframe = function() {
+spine.RotationKeyframe = function() {
   goog.base(this);
   this.rotation = new spine.Rotation();
 }
 
-goog.inherits(spine.RotateKeyframe, spine.BoneKeyframe);
+goog.inherits(spine.RotationKeyframe, spine.BoneKeyframe);
 
 /** @type {spine.Rotation} */
-spine.RotateKeyframe.prototype.rotation;
+spine.RotationKeyframe.prototype.rotation;
 
 /**
- * @return {spine.RotateKeyframe}
+ * @return {spine.RotationKeyframe}
  * @param {Object.<string,?>} json
  */
-spine.RotateKeyframe.prototype.load = function(json) {
+spine.RotationKeyframe.prototype.load = function(json) {
   goog.base(this, 'load', json);
   this.rotation.deg = spine.loadFloat(json, 'angle', 0);
   return this;
@@ -2040,10 +2040,10 @@ spine.AnimBone = function() {}
 spine.AnimBone.prototype.min_time = 0;
 /** @type {number} */
 spine.AnimBone.prototype.max_time = 0;
-/** @type {Array.<spine.TranslateKeyframe>} */
-spine.AnimBone.prototype.translate_keyframes = null;
-/** @type {Array.<spine.RotateKeyframe>} */
-spine.AnimBone.prototype.rotate_keyframes = null;
+/** @type {Array.<spine.PositionKeyframe>} */
+spine.AnimBone.prototype.position_keyframes = null;
+/** @type {Array.<spine.RotationKeyframe>} */
+spine.AnimBone.prototype.rotation_keyframes = null;
 /** @type {Array.<spine.ScaleKeyframe>} */
 spine.AnimBone.prototype.scale_keyframes = null;
 
@@ -2055,31 +2055,31 @@ spine.AnimBone.prototype.load = function(json) {
   var anim_bone = this;
   anim_bone.min_time = 0;
   anim_bone.max_time = 0;
-  anim_bone.translate_keyframes = null;
-  anim_bone.rotate_keyframes = null;
+  anim_bone.position_keyframes = null;
+  anim_bone.rotation_keyframes = null;
   anim_bone.scale_keyframes = null;
 
   Object.keys(json || {}).forEach(function(key) {
     switch (key) {
       case 'translate':
-        anim_bone.translate_keyframes = [];
+        anim_bone.position_keyframes = [];
         json.translate.forEach(function(translate_json) {
-          var translate_keyframe = new spine.TranslateKeyframe().load(translate_json);
-          anim_bone.translate_keyframes.push(translate_keyframe);
-          anim_bone.min_time = Math.min(anim_bone.min_time, translate_keyframe.time);
-          anim_bone.max_time = Math.max(anim_bone.max_time, translate_keyframe.time);
+          var position_keyframe = new spine.PositionKeyframe().load(translate_json);
+          anim_bone.position_keyframes.push(position_keyframe);
+          anim_bone.min_time = Math.min(anim_bone.min_time, position_keyframe.time);
+          anim_bone.max_time = Math.max(anim_bone.max_time, position_keyframe.time);
         });
-        anim_bone.translate_keyframes.sort(spine.Keyframe.compare);
+        anim_bone.position_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'rotate':
-        anim_bone.rotate_keyframes = [];
+        anim_bone.rotation_keyframes = [];
         json.rotate.forEach(function(rotate_json) {
-          var rotate_keyframe = new spine.RotateKeyframe().load(rotate_json);
-          anim_bone.rotate_keyframes.push(rotate_keyframe);
-          anim_bone.min_time = Math.min(anim_bone.min_time, rotate_keyframe.time);
-          anim_bone.max_time = Math.max(anim_bone.max_time, rotate_keyframe.time);
+          var rotation_keyframe = new spine.RotationKeyframe().load(rotate_json);
+          anim_bone.rotation_keyframes.push(rotation_keyframe);
+          anim_bone.min_time = Math.min(anim_bone.min_time, rotation_keyframe.time);
+          anim_bone.max_time = Math.max(anim_bone.max_time, rotation_keyframe.time);
         });
-        anim_bone.rotate_keyframes.sort(spine.Keyframe.compare);
+        anim_bone.rotation_keyframes.sort(spine.Keyframe.compare);
         break;
       case 'scale':
         anim_bone.scale_keyframes = [];
@@ -3205,29 +3205,29 @@ spine.Pose.prototype.strike = function() {
     // tween anim bone if keyframes are available
     var anim_bone = anim && anim.bones[bone_key];
     if (anim_bone) {
-      keyframe_index = spine.Keyframe.find(anim_bone.translate_keyframes, time);
+      keyframe_index = spine.Keyframe.find(anim_bone.position_keyframes, time);
       if (keyframe_index !== -1) {
-        var translate_keyframe0 = anim_bone.translate_keyframes[keyframe_index];
-        var translate_keyframe1 = anim_bone.translate_keyframes[keyframe_index + 1];
-        if (translate_keyframe1) {
-          pct = translate_keyframe0.curve.evaluate((time - translate_keyframe0.time) / (translate_keyframe1.time - translate_keyframe0.time));
-          pose_bone.local_space.position.x += spine.tween(translate_keyframe0.position.x, translate_keyframe1.position.x, pct);
-          pose_bone.local_space.position.y += spine.tween(translate_keyframe0.position.y, translate_keyframe1.position.y, pct);
+        var position_keyframe0 = anim_bone.position_keyframes[keyframe_index];
+        var position_keyframe1 = anim_bone.position_keyframes[keyframe_index + 1];
+        if (position_keyframe1) {
+          pct = position_keyframe0.curve.evaluate((time - position_keyframe0.time) / (position_keyframe1.time - position_keyframe0.time));
+          pose_bone.local_space.position.x += spine.tween(position_keyframe0.position.x, position_keyframe1.position.x, pct);
+          pose_bone.local_space.position.y += spine.tween(position_keyframe0.position.y, position_keyframe1.position.y, pct);
         } else {
-          pose_bone.local_space.position.x += translate_keyframe0.position.x;
-          pose_bone.local_space.position.y += translate_keyframe0.position.y;
+          pose_bone.local_space.position.x += position_keyframe0.position.x;
+          pose_bone.local_space.position.y += position_keyframe0.position.y;
         }
       }
 
-      keyframe_index = spine.Keyframe.find(anim_bone.rotate_keyframes, time);
+      keyframe_index = spine.Keyframe.find(anim_bone.rotation_keyframes, time);
       if (keyframe_index !== -1) {
-        var rotate_keyframe0 = anim_bone.rotate_keyframes[keyframe_index];
-        var rotate_keyframe1 = anim_bone.rotate_keyframes[keyframe_index + 1];
-        if (rotate_keyframe1) {
-          pct = rotate_keyframe0.curve.evaluate((time - rotate_keyframe0.time) / (rotate_keyframe1.time - rotate_keyframe0.time));
-          pose_bone.local_space.rotation.rad += spine.tweenAngle(rotate_keyframe0.rotation.rad, rotate_keyframe1.rotation.rad, pct);
+        var rotation_keyframe0 = anim_bone.rotation_keyframes[keyframe_index];
+        var rotation_keyframe1 = anim_bone.rotation_keyframes[keyframe_index + 1];
+        if (rotation_keyframe1) {
+          pct = rotation_keyframe0.curve.evaluate((time - rotation_keyframe0.time) / (rotation_keyframe1.time - rotation_keyframe0.time));
+          pose_bone.local_space.rotation.rad += spine.tweenAngle(rotation_keyframe0.rotation.rad, rotation_keyframe1.rotation.rad, pct);
         } else {
-          pose_bone.local_space.rotation.rad += rotate_keyframe0.rotation.rad;
+          pose_bone.local_space.rotation.rad += rotation_keyframe0.rotation.rad;
         }
       }
 
