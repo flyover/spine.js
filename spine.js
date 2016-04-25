@@ -1250,11 +1250,10 @@ spine.Space.invert = function(space, out) {
   }
   var x = 0 - space.position.x;
   var y = 0 - space.position.y;
-  var rad = -space.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
+  var c = space.rotation.cos;
+  var s = space.rotation.sin;
+  var tx = s * y + c * x;
+  var ty = c * y - s * x;
   out.position.x = tx;
   out.position.y = ty;
   spine.Matrix.untransform(space.scale, out.position, out.position);
@@ -1276,9 +1275,8 @@ spine.Space.combine = function(a, b, out) {
   out = out || new spine.Space();
   var x = a.scale.a * b.position.x + a.scale.b * b.position.y;
   var y = a.scale.c * b.position.x + a.scale.d * b.position.y;
-  var rad = a.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
+  var c = a.rotation.cos;
+  var s = a.rotation.sin;
   var tx = c * x - s * y;
   var ty = s * x + c * y;
   out.position.x = a.position.x + tx;
@@ -1313,11 +1311,10 @@ spine.Space.extract = function(ab, a, out) {
   }
   var x = ab.position.x - a.position.x;
   var y = ab.position.y - a.position.y;
-  var rad = -a.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
+  var c = a.rotation.cos;
+  var s = a.rotation.sin;
+  var tx = s * y + c * x;
+  var ty = c * y - s * x;
   out.position.x = tx;
   out.position.y = ty;
   spine.Matrix.untransform(a.scale, out.position, out.position);
@@ -1334,9 +1331,8 @@ spine.Space.transform = function(space, v, out) {
   out = out || new spine.Vector();
   spine.Matrix.transform(space.scale, v, out);
   var x = out.x, y = out.y;
-  var rad = space.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
+  var c = space.rotation.cos;
+  var s = space.rotation.sin;
   var tx = c * x - s * y;
   var ty = s * x + c * y;
   out.x = space.position.x + tx;
@@ -1354,11 +1350,10 @@ spine.Space.untransform = function(space, v, out) {
   out = out || new spine.Vector();
   var x = v.x - space.position.x;
   var y = v.y - space.position.y;
-  var rad = -space.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
+  var c = space.rotation.cos;
+  var s = space.rotation.sin;
+  var tx = s * y + c * x;
+  var ty = c * y - s * x;
   out.x = tx;
   out.y = ty;
   spine.Matrix.untransform(space.scale, out, out);
