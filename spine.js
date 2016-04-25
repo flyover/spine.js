@@ -1645,19 +1645,14 @@ goog.inherits(spine.MeshAttachment, spine.Attachment);
 
 /** @type {spine.Color} */
 spine.MeshAttachment.prototype.color;
-
 /** @type {Array.<number>} */
 spine.MeshAttachment.prototype.triangles;
-
 /** @type {Array.<number>} */
 spine.MeshAttachment.prototype.edges;
-
 /** @type {Array.<number>} */
 spine.MeshAttachment.prototype.vertices;
-
 /** @type {Array.<number>} */
 spine.MeshAttachment.prototype.uvs;
-
 /** @type {number} */
 spine.MeshAttachment.prototype.hull = 0;
 
@@ -1695,19 +1690,14 @@ goog.inherits(spine.WeightedMeshAttachment, spine.Attachment);
 
 /** @type {spine.Color} */
 spine.WeightedMeshAttachment.prototype.color;
-
 /** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.triangles;
-
 /** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.edges;
-
 /** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.vertices;
-
 /** @type {Array.<number>} */
 spine.WeightedMeshAttachment.prototype.uvs;
-
 /** @type {number} */
 spine.WeightedMeshAttachment.prototype.hull = 0;
 
@@ -1739,7 +1729,6 @@ spine.SkinSlot = function() {
 
 /** @type {Object.<string,spine.Attachment>} */
 spine.SkinSlot.prototype.attachments;
-
 /** @type {Array.<string>} */
 spine.SkinSlot.prototype.attachment_keys;
 
@@ -1784,10 +1773,8 @@ spine.Skin = function() {
 
 /** @type {string} */
 spine.Skin.prototype.name = "";
-
 /** @type {Object.<string,spine.SkinSlot>} */
 spine.Skin.prototype.slots;
-
 /** @type {Array.<string>} */
 spine.Skin.prototype.slot_keys;
 
@@ -2349,10 +2336,8 @@ goog.inherits(spine.IkcKeyframe, spine.Keyframe);
 
 /** @type {spine.Curve} */
 spine.IkcKeyframe.prototype.curve;
-
 /** @type {number} */
 spine.IkcKeyframe.prototype.mix = 1;
-
 /** @type {boolean} */
 spine.IkcKeyframe.prototype.bend_positive = true;
 
@@ -2416,10 +2401,8 @@ goog.inherits(spine.FfdKeyframe, spine.Keyframe);
 
 /** @type {spine.Curve} */
 spine.FfdKeyframe.prototype.curve;
-
 /** @type {number} */
 spine.FfdKeyframe.prototype.offset = 0;
-
 /** @type {Array.<number>} */
 spine.FfdKeyframe.prototype.vertices;
 
@@ -2481,7 +2464,6 @@ spine.FfdSlot = function() {
 
 /** @type {Object.<string,spine.FfdAttachment>} */
 spine.FfdSlot.prototype.ffd_attachments;
-
 /** @type {Array.<string>} */
 spine.FfdSlot.prototype.ffd_attachment_keys;
 
@@ -2584,7 +2566,6 @@ spine.Animation = function() {
 
 /** @type {string} */
 spine.Animation.prototype.name = "";
-
 /** @type {Object.<string,spine.AnimBone>} */
 spine.Animation.prototype.bones;
 /** @type {Object.<string,spine.AnimSlot>} */
@@ -2597,7 +2578,6 @@ spine.Animation.prototype.order_keyframes = null;
 spine.Animation.prototype.ikcs;
 /** @type {Object.<string,spine.AnimFfd>} */
 spine.Animation.prototype.ffds;
-
 /** @type {number} */
 spine.Animation.prototype.min_time = 0;
 /** @type {number} */
@@ -2742,7 +2722,6 @@ spine.Data = function() {
 
 /** @type {string} */
 spine.Data.prototype.name = "";
-
 /** @type {spine.Skeleton} */
 spine.Data.prototype.skeleton;
 /** @type {Object.<string,spine.Bone>} */
@@ -3016,7 +2995,6 @@ spine.Pose = function(data) {
 
 /** @type {spine.Data} */
 spine.Pose.prototype.data;
-
 /** @type {string} */
 spine.Pose.prototype.skin_key = "";
 /** @type {string} */
@@ -3025,22 +3003,16 @@ spine.Pose.prototype.anim_key = "";
 spine.Pose.prototype.time = 0;
 /** @type {number} */
 spine.Pose.prototype.elapsed_time = 0;
-
 /** @type {boolean} */
 spine.Pose.prototype.dirty = true;
-
 /** @type {Object.<string,spine.Bone>} */
 spine.Pose.prototype.bones;
-
 /** @type {Array.<string>} */
 spine.Pose.prototype.bone_keys;
-
 /** @type {Object.<string,spine.Slot>} */
 spine.Pose.prototype.slots;
-
 /** @type {Array.<string>} */
 spine.Pose.prototype.slot_keys;
-
 /** @type {Array.<spine.Event>} */
 spine.Pose.prototype.events;
 
@@ -3590,319 +3562,3 @@ spine.Pose.prototype.iterateAttachments = function(callback) {
     callback(slot_key, pose_slot, skin_slot, attachment_key, attachment);
   });
 }
-
-spine.deprecated = function() {
-  console.log("deprecated");
-}
-
-Object.defineProperty(spine, 'color', {
-  get: function() {
-    spine.deprecated();
-    return spine.Color;
-  }
-});
-
-Object.defineProperty(spine, 'skel_bone', {
-  get: function() {
-    spine.deprecated();
-    return spine.Bone;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'x', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.local_space.position.x;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'y', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.local_space.position.y;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'rotation', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.local_space.rotation.deg;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'scaleX', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.local_space.scale.x;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'scaleY', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.local_space.scale.y;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'parent', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.parent_key;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'inheritRotation', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.inherit_rotation;
-  }
-});
-Object.defineProperty(spine.Bone.prototype, 'inheritScale', {
-  get: /** @this {spine.Bone} */ function() {
-    spine.deprecated();
-    return this.inherit_scale;
-  }
-});
-
-Object.defineProperty(spine, 'skel_slot', {
-  get: function() {
-    spine.deprecated();
-    return spine.Slot;
-  }
-});
-Object.defineProperty(spine.Slot.prototype, 'bone', {
-  get: /** @this {spine.Slot} */ function() {
-    spine.deprecated();
-    return this.bone_key;
-  }
-});
-Object.defineProperty(spine.Slot.prototype, 'attachment', {
-  get: /** @this {spine.Slot} */ function() {
-    spine.deprecated();
-    return this.attachment_key;
-  }
-});
-Object.defineProperty(spine.Slot.prototype, 'additive', {
-  get: /** @this {spine.Slot} */ function() {
-    spine.deprecated();
-    return this.blend === 'additive';
-  }
-});
-
-Object.defineProperty(spine, 'attachment', {
-  get: function() {
-    spine.deprecated();
-    return spine.RegionAttachment;
-  }
-});
-Object.defineProperty(spine.RegionAttachment.prototype, 'x', {
-  get: /** @this {spine.RegionAttachment} */ function() {
-    spine.deprecated();
-    return this.local_space.position.x;
-  }
-});
-Object.defineProperty(spine.RegionAttachment.prototype, 'y', {
-  get: /** @this {spine.RegionAttachment} */ function() {
-    spine.deprecated();
-    return this.local_space.position.y;
-  }
-});
-Object.defineProperty(spine.RegionAttachment.prototype, 'rotation', {
-  get: /** @this {spine.RegionAttachment} */ function() {
-    spine.deprecated();
-    return this.local_space.rotation.deg;
-  }
-});
-Object.defineProperty(spine.RegionAttachment.prototype, 'scaleX', {
-  get: /** @this {spine.RegionAttachment} */ function() {
-    spine.deprecated();
-    return this.local_space.scale.x;
-  }
-});
-Object.defineProperty(spine.RegionAttachment.prototype, 'scaleY', {
-  get: /** @this {spine.RegionAttachment} */ function() {
-    spine.deprecated();
-    return this.local_space.scale.y;
-  }
-});
-
-Object.defineProperty(spine, 'skin_slot', {
-  get: function() {
-    spine.deprecated();
-    return spine.SkinSlot;
-  }
-});
-Object.defineProperty(spine.SkinSlot.prototype, 'skin_attachments', {
-  get: /** @this {spine.SkinSlot} */ function() {
-    spine.deprecated();
-    return this.attachments;
-  }
-});
-
-Object.defineProperty(spine, 'skin', {
-  get: function() {
-    spine.deprecated();
-    return spine.Skin;
-  }
-});
-Object.defineProperty(spine.Skin.prototype, 'skin_slots', {
-  get: /** @this {spine.Skin} */ function() {
-    spine.deprecated();
-    return this.slots;
-  }
-});
-
-Object.defineProperty(spine, 'event', {
-  get: function() {
-    spine.deprecated();
-    return spine.Event;
-  }
-});
-
-Object.defineProperty(spine, 'keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.Keyframe;
-  }
-});
-
-Object.defineProperty(spine, 'bone_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.BoneKeyframe;
-  }
-});
-Object.defineProperty(spine, 'translate_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.TranslateKeyframe;
-  }
-});
-Object.defineProperty(spine, 'rotate_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.RotateKeyframe;
-  }
-});
-Object.defineProperty(spine, 'scale_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.ScaleKeyframe;
-  }
-});
-
-Object.defineProperty(spine, 'anim_bone', {
-  get: function() {
-    spine.deprecated();
-    return spine.AnimBone;
-  }
-});
-
-Object.defineProperty(spine, 'slot_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.SlotKeyframe;
-  }
-});
-Object.defineProperty(spine, 'color_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.ColorKeyframe;
-  }
-});
-Object.defineProperty(spine, 'attachment_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.AttachmentKeyframe;
-  }
-});
-
-Object.defineProperty(spine, 'anim_slot', {
-  get: function() {
-    spine.deprecated();
-    return spine.AnimSlot;
-  }
-});
-
-Object.defineProperty(spine, 'event_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.EventKeyframe;
-  }
-});
-
-Object.defineProperty(spine, 'slot_offset', {
-  get: function() {
-    spine.deprecated();
-    return spine.SlotOffset;
-  }
-});
-Object.defineProperty(spine, 'order_keyframe', {
-  get: function() {
-    spine.deprecated();
-    return spine.OrderKeyframe;
-  }
-});
-
-Object.defineProperty(spine, 'animation', {
-  get: function() {
-    spine.deprecated();
-    return spine.Animation;
-  }
-});
-Object.defineProperty(spine.Animation.prototype, 'anim_bones', {
-  get: /** @this {spine.Animation} */ function() {
-    spine.deprecated();
-    return this.bones;
-  }
-});
-Object.defineProperty(spine.Animation.prototype, 'anim_slots', {
-  get: /** @this {spine.Animation} */ function() {
-    spine.deprecated();
-    return this.slots;
-  }
-});
-
-Object.defineProperty(spine, 'skeleton', {
-  get: function() {
-    spine.deprecated();
-    return spine.Skeleton;
-  }
-});
-
-Object.defineProperty(spine, 'data', {
-  get: function() {
-    spine.deprecated();
-    return spine.Data;
-  }
-});
-Object.defineProperty(spine.Data.prototype, 'animations', {
-  get: /** @this {spine.Data} */ function() {
-    spine.deprecated();
-    return this.anims;
-  }
-});
-
-Object.defineProperty(spine, 'pose', {
-  get: function() {
-    spine.deprecated();
-    return spine.Pose;
-  }
-});
-Object.defineProperty(spine.Pose.prototype, 'tweened_skel_bones', {
-  get: /** @this {spine.Pose} */ function() {
-    spine.deprecated();
-    return this.bones;
-  }
-});
-Object.defineProperty(spine.Pose.prototype, 'tweened_skel_slots', {
-  get: /** @this {spine.Pose} */ function() {
-    spine.deprecated();
-    return this.slots;
-  }
-});
-Object.defineProperty(spine.Pose.prototype, 'tweened_skel_slot_keys', {
-  get: /** @this {spine.Pose} */ function() {
-    spine.deprecated();
-    return this.slot_keys;
-  }
-});
-Object.defineProperty(spine.Pose.prototype, 'tweened_events', {
-  get: /** @this {spine.Pose} */ function() {
-    spine.deprecated();
-    return this.events;
-  }
-});
