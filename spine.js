@@ -501,6 +501,30 @@ spine.Angle = function(rad) {
 }
 
 /** @type {number} */
+spine.Angle.prototype._rad = 0;
+
+/** @type {number} */
+spine.Angle.prototype._cos = 1;
+
+/** @type {number} */
+spine.Angle.prototype._sin = 0;
+
+/** @type {number} */
+spine.Angle.prototype.rad;
+Object.defineProperty(spine.Angle.prototype, 'rad', {
+  /** @this {spine.Angle} */
+  get: function() { return this._rad; },
+  /** @this {spine.Angle} */
+  set: function(value) {
+    if (this._rad !== value) {
+      this._rad = value;
+      this._cos = Math.cos(value);
+      this._sin = Math.sin(value);
+    }
+  }
+});
+
+/** @type {number} */
 spine.Angle.prototype.deg;
 Object.defineProperty(spine.Angle.prototype, 'deg', {
   /** @this {spine.Angle} */
@@ -513,14 +537,14 @@ Object.defineProperty(spine.Angle.prototype, 'deg', {
 spine.Angle.prototype.cos;
 Object.defineProperty(spine.Angle.prototype, 'cos', {
   /** @this {spine.Angle} */
-  get: function() { return Math.cos(this.rad); }
+  get: function() { return this._cos; }
 });
 
 /** @type {number} */
 spine.Angle.prototype.sin;
 Object.defineProperty(spine.Angle.prototype, 'sin', {
   /** @this {spine.Angle} */
-  get: function() { return Math.sin(this.rad); }
+  get: function() { return this._sin; }
 });
 
 /**
@@ -530,7 +554,9 @@ Object.defineProperty(spine.Angle.prototype, 'sin', {
  */
 spine.Angle.copy = function(angle, out) {
   out = out || new spine.Angle();
-  out.rad = angle.rad;
+  out._rad = angle._rad;
+  out._cos = angle._cos;
+  out._sin = angle._sin;
   return out;
 }
 
