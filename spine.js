@@ -3256,10 +3256,6 @@ spine.Pose.prototype.strike = function() {
   // ik constraints
 
   data.ikc_keys.forEach(function(ikc_key) {
-    function clamp(n, lo, hi) {
-      return (n < lo) ? (lo) : ((n > hi) ? (hi) : (n));
-    }
-
     var ikc = data.ikcs[ikc_key];
     var ikc_mix = ikc.mix;
     var ikc_bend_positive = ikc.bend_positive;
