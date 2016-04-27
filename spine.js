@@ -2384,14 +2384,10 @@ spine.OrderKeyframe.prototype.load = function(json) {
  */
 spine.IkcKeyframe = function() {
   goog.base(this);
-
-  this.curve = new spine.Curve();
 }
 
 goog.inherits(spine.IkcKeyframe, spine.Keyframe);
 
-/** @type {spine.Curve} */
-spine.IkcKeyframe.prototype.curve;
 /** @type {number} */
 spine.IkcKeyframe.prototype.mix = 1;
 /** @type {boolean} */
@@ -2403,7 +2399,6 @@ spine.IkcKeyframe.prototype.bend_positive = true;
  */
 spine.IkcKeyframe.prototype.load = function(json) {
   goog.base(this, 'load', json);
-  this.curve.load(json);
   this.mix = spine.loadFloat(json, 'mix', 1);
   this.bend_positive = spine.loadBool(json, 'bendPositive', true);
   return this;
@@ -3323,7 +3318,7 @@ spine.Pose.prototype.strike = function() {
         var ikc_keyframe0 = anim_ikc.ikc_keyframes[keyframe_index];
         var ikc_keyframe1 = anim_ikc.ikc_keyframes[keyframe_index + 1];
         if (ikc_keyframe1) {
-          pct = ikc_keyframe0.curve.evaluate((time - ikc_keyframe0.time) / (ikc_keyframe1.time - ikc_keyframe0.time));
+          pct = (time - ikc_keyframe0.time) / (ikc_keyframe1.time - ikc_keyframe0.time);
           ikc_mix = spine.tween(ikc_keyframe0.mix, ikc_keyframe1.mix, pct);
         } else {
           ikc_mix = ikc_keyframe0.mix;
