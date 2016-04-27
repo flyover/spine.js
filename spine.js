@@ -1451,7 +1451,7 @@ spine.Bone.prototype.copy = function(other) {
  */
 spine.Bone.prototype.load = function(json) {
   var bone = this;
-  bone.color.load(json.color);
+  bone.color.load(json.color || 0x9b9b9bff);
   bone.parent_key = spine.loadString(json, 'parent', "");
   bone.length = spine.loadFloat(json, 'length', 0);
   bone.local_space.load(json);
