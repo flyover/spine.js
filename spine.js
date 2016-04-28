@@ -3319,7 +3319,7 @@ spine.Pose.prototype.strike = function() {
         var ikc_keyframe0 = anim_ikc.ikc_keyframes[keyframe_index];
         var ikc_keyframe1 = anim_ikc.ikc_keyframes[keyframe_index + 1];
         if (ikc_keyframe1) {
-          pct = (time - ikc_keyframe0.time) / (ikc_keyframe1.time - ikc_keyframe0.time);
+          pct = ikc_keyframe0.curve.evaluate((time - ikc_keyframe0.time) / (ikc_keyframe1.time - ikc_keyframe0.time));
           ikc_mix = spine.tween(ikc_keyframe0.mix, ikc_keyframe1.mix, pct);
         } else {
           ikc_mix = ikc_keyframe0.mix;
