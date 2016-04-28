@@ -2181,17 +2181,16 @@ spine.SlotKeyframe.prototype.load = function(json) {
  */
 spine.ColorKeyframe = function() {
   goog.base(this);
-
-  this.color = new spine.Color();
   this.curve = new spine.Curve();
+  this.color = new spine.Color();
 }
 
 goog.inherits(spine.ColorKeyframe, spine.SlotKeyframe);
 
-/** @type {spine.Color} */
-spine.ColorKeyframe.prototype.color;
 /** @type {spine.Curve} */
 spine.ColorKeyframe.prototype.curve;
+/** @type {spine.Color} */
+spine.ColorKeyframe.prototype.color;
 
 /**
  * @return {spine.ColorKeyframe}
@@ -2199,8 +2198,8 @@ spine.ColorKeyframe.prototype.curve;
  */
 spine.ColorKeyframe.prototype.load = function(json) {
   goog.base(this, 'load', json);
-  this.color.load(json.color);
   this.curve.load(json.curve);
+  this.color.load(json.color);
   return this;
 }
 
@@ -2348,7 +2347,6 @@ spine.SlotOffset.prototype.load = function(json) {
  */
 spine.OrderKeyframe = function() {
   goog.base(this);
-
   this.slot_offsets = [];
 }
 
@@ -2384,10 +2382,13 @@ spine.OrderKeyframe.prototype.load = function(json) {
  */
 spine.IkcKeyframe = function() {
   goog.base(this);
+  this.curve = new spine.Curve();
 }
 
 goog.inherits(spine.IkcKeyframe, spine.Keyframe);
 
+/** @type {spine.Curve} */
+spine.IkcKeyframe.prototype.curve;
 /** @type {number} */
 spine.IkcKeyframe.prototype.mix = 1;
 /** @type {boolean} */
@@ -2399,6 +2400,7 @@ spine.IkcKeyframe.prototype.bend_positive = true;
  */
 spine.IkcKeyframe.prototype.load = function(json) {
   goog.base(this, 'load', json);
+  this.curve.load(json.curve);
   this.mix = spine.loadFloat(json, 'mix', 1);
   this.bend_positive = spine.loadBool(json, 'bendPositive', true);
   return this;
@@ -2443,7 +2445,6 @@ spine.AnimIkc.prototype.load = function(json) {
  */
 spine.FfdKeyframe = function() {
   goog.base(this);
-
   this.curve = new spine.Curve();
   this.vertices = [];
 }
@@ -2463,7 +2464,7 @@ spine.FfdKeyframe.prototype.vertices;
  */
 spine.FfdKeyframe.prototype.load = function(json) {
   goog.base(this, 'load', json);
-  this.curve.load(json);
+  this.curve.load(json.curve);
   this.offset = spine.loadInt(json, 'offset', 0);
   this.vertices = json.vertices || [];
   return this;
