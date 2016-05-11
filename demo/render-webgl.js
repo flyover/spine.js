@@ -324,7 +324,7 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
             vertex_position[vertex_position_offset++] = position_y;
 
             if (blend_bone_index_array.length > render.gl_skin_shader_modelview_count) {
-              console.log("blend bone index array length for", attachmentPkey, "is", blend_bone_index_array.length, "greater than", render.gl_skin_shader_modelview_count);
+              console.log("blend bone index array length for", attachment_key, "is", blend_bone_index_array.length, "greater than", render.gl_skin_shader_modelview_count);
             }
           }
           var gl_vertex = attachment_info.gl_vertex = {};
@@ -855,10 +855,8 @@ function mat3x3Translate(m, x, y) {
 }
 
 function mat3x3RotateCosSin(m, c, s) {
-  var m0 = m[0],
-    m1 = m[1];
-  var m3 = m[3],
-    m4 = m[4];
+  var m0 = m[0], m1 = m[1];
+  var m3 = m[3], m4 = m[4];
   m[0] = m0 * c + m3 * s;
   m[1] = m1 * c + m4 * s;
   m[3] = m3 * c - m0 * s;
