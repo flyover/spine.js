@@ -629,13 +629,13 @@ spine.Vector.prototype.y = 0;
 
 /**
  * @return {spine.Vector}
- * @param {spine.Vector} m
+ * @param {spine.Vector} v
  * @param {spine.Vector=} out
  */
-spine.Vector.copy = function(m, out) {
+spine.Vector.copy = function(v, out) {
   out = out || new spine.Vector();
-  out.x = m.x;
-  out.y = m.y;
+  out.x = v.x;
+  out.y = v.y;
   return out;
 }
 
