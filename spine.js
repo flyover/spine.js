@@ -1045,6 +1045,18 @@ spine.Affine.prototype.equal = function(other, epsilon) {
 
 /**
  * @return {spine.Affine}
+ * @param {spine.Affine=} out
+ */
+spine.Affine.identity = function(out) {
+  out = out || new spine.Affine();
+  spine.Matrix.identity(out.matrix);
+  out.vector.x = 0;
+  out.vector.y = 0;
+  return out;
+}
+
+/**
+ * @return {spine.Affine}
  * @param {spine.Affine} affine
  * @param {spine.Affine=} out
  */
@@ -1053,6 +1065,32 @@ spine.Affine.invert = function(affine, out) {
   spine.Matrix.invert(affine.matrix, out.matrix);
   spine.Vector.negate(affine.vector, out.vector);
   spine.Matrix.transform(out.matrix, out.vector, out.vector);
+  return out;
+}
+
+/**
+ * @return {spine.Affine}
+ * @param {spine.Affine} a
+ * @param {spine.Affine} b
+ * @param {spine.Affine=} out
+ */
+spine.Affine.combine = function(a, b, out) {
+  out = out || new spine.Affine();
+  spine.Affine.transform(a, b.vector, out.vector);
+  spine.Matrix.combine(a.matrix, b.matrix, out.matrix);
+  return out;
+}
+
+/**
+ * @return {spine.Affine}
+ * @param {spine.Affine} ab
+ * @param {spine.Affine} a
+ * @param {spine.Affine=} out
+ */
+spine.Affine.extract = function(ab, a, out) {
+  out = out || new spine.Affine();
+  spine.Matrix.extract(ab.matrix, a.matrix, out.matrix);
+  spine.Affine.untransform(a, ab.vector, out.vector);
   return out;
 }
 
@@ -1098,9 +1136,25 @@ goog.inherits(spine.Position, spine.Vector);
  */
 spine.Rotation = function() {
   goog.base(this, 0);
+  this.matrix = new spine.Matrix();
 }
 
 goog.inherits(spine.Rotation, spine.Angle);
+
+/** @type {spine.Matrix} */
+spine.Rotation.prototype.matrix;
+
+/**
+ * @return {spine.Matrix}
+ * @param {spine.Matrix=} m
+ */
+spine.Rotation.prototype.updateMatrix = function(m) {
+  var rotation = this;
+  m = m || this.matrix;
+  m.a = rotation.cos; m.b = -rotation.sin;
+  m.c = rotation.sin; m.d = rotation.cos;
+  return m;
+}
 
 /**
  * @constructor
@@ -1135,11 +1189,119 @@ Object.defineProperty(spine.Scale.prototype, 'y', {
 /**
  * @constructor
  */
+spine.Shear = function() {
+  this.x = new spine.Angle();
+  this.y = new spine.Angle();
+  this.matrix = new spine.Matrix();
+}
+
+/** @type {spine.Angle} */
+spine.Shear.prototype.x;
+/** @type {spine.Angle} */
+spine.Shear.prototype.y;
+/** @type {spine.Matrix} */
+spine.Shear.prototype.matrix;
+
+/**
+ * @return {spine.Matrix}
+ * @param {spine.Matrix=} m
+ */
+spine.Shear.prototype.updateMatrix = function(m) {
+  var shear = this;
+  m = m || this.matrix;
+  m.a = shear.x.cos; m.b = -shear.y.sin;
+  m.c = shear.x.sin; m.d = shear.y.cos;
+  return m;
+}
+
+/**
+ * @return {spine.Shear}
+ * @param {spine.Shear} shear
+ * @param {spine.Shear=} out
+ */
+spine.Shear.copy = function(shear, out) {
+  out = out || new spine.Shear();
+  out.x.copy(shear.x);
+  out.y.copy(shear.y);
+  return out;
+}
+
+/**
+ * @return {spine.Shear}
+ * @param {spine.Shear} other
+ */
+spine.Shear.prototype.copy = function(other) {
+  return spine.Shear.copy(other, this);
+}
+
+/**
+ * @return {boolean}
+ * @param {spine.Shear} a
+ * @param {spine.Shear} b
+ * @param {number=} epsilon
+ */
+spine.Shear.equal = function(a, b, epsilon) {
+  if (!a.x.equal(b.x, epsilon)) { return false; }
+  if (!a.y.equal(b.y, epsilon)) { return false; }
+  return true;
+}
+
+/**
+ * @return {boolean}
+ * @param {spine.Shear} other
+ * @param {number=} epsilon
+ */
+spine.Shear.prototype.equal = function(other, epsilon) {
+  return spine.Shear.equal(this, other, epsilon);
+}
+
+/**
+ * @return {spine.Shear}
+ * @param {spine.Shear} a
+ * @param {spine.Shear} b
+ * @param {number} pct
+ * @param {spine.Shear=} out
+ */
+spine.Shear.tween = function(a, b, pct, out) {
+  out = out || new spine.Shear();
+  spine.Angle.tween(a.x, b.x, pct, out.x);
+  spine.Angle.tween(a.y, b.y, pct, out.y);
+  return out;
+}
+
+/**
+ * @return {spine.Shear}
+ * @param {spine.Shear} other
+ * @param {number} pct
+ * @param {spine.Shear=} out
+ */
+spine.Shear.prototype.tween = function(other, pct, out) {
+  return spine.Shear.tween(this, other, pct, out);
+}
+
+/**
+ * @constructor
+ */
 spine.Space = function() {
   var space = this;
   space.position = new spine.Position();
   space.rotation = new spine.Rotation();
   space.scale = new spine.Scale();
+  space.shear = new spine.Shear();
+  space.affine = new spine.Affine();
+}
+
+/**
+ * @return {spine.Affine}
+ * @param {spine.Affine=} affine
+ */
+spine.Space.prototype.updateAffine = function(affine) {
+  affine = affine || this.affine;
+  spine.Vector.copy(this.position, affine.vector);
+  spine.Matrix.copy(this.rotation.updateMatrix(), affine.matrix);
+  spine.Matrix.multiply(affine.matrix, this.shear.updateMatrix(), affine.matrix);
+  spine.Matrix.multiply(affine.matrix, this.scale, affine.matrix);
+  return affine;
 }
 
 /** @type {spine.Position} */
@@ -1148,17 +1310,31 @@ spine.Space.prototype.position;
 spine.Space.prototype.rotation;
 /** @type {spine.Scale} */
 spine.Space.prototype.scale;
+/** @type {spine.Shear} */
+spine.Space.prototype.shear;
+/** @type {spine.Affine} */
+spine.Space.prototype.affine;
+
+/**
+ * @return {spine.Space}
+ * @param {spine.Space} space
+ * @param {spine.Space=} out
+ */
+spine.Space.copy = function(space, out) {
+  out = out || new spine.Space();
+  out.position.copy(space.position);
+  out.rotation.copy(space.rotation);
+  out.scale.copy(space.scale);
+  out.shear.copy(space.shear);
+  return out;
+}
 
 /**
  * @return {spine.Space}
  * @param {spine.Space} other
  */
 spine.Space.prototype.copy = function(other) {
-  var space = this;
-  space.position.copy(other.position);
-  space.rotation.copy(other.rotation);
-  space.scale.copy(other.scale);
-  return space;
+  return spine.Space.copy(other, this);
 }
 
 /**
@@ -1172,6 +1348,8 @@ spine.Space.prototype.load = function(json) {
   space.rotation.deg = spine.loadFloat(json, 'rotation', 0);
   space.scale.x = spine.loadFloat(json, 'scaleX', 1);
   space.scale.y = spine.loadFloat(json, 'scaleY', 1);
+  space.shear.x.deg = spine.loadFloat(json, 'shearX', 0);
+  space.shear.y.deg = spine.loadFloat(json, 'shearY', 0);
   return space;
 }
 
@@ -1186,6 +1364,7 @@ spine.Space.equal = function(a, b, epsilon) {
   if (!a.position.equal(b.position, epsilon)) { return false; }
   if (!a.rotation.equal(b.rotation, epsilon)) { return false; }
   if (!a.scale.equal(b.scale, epsilon)) { return false; }
+  if (!a.shear.equal(b.shear, epsilon)) { return false; }
   return true;
 }
 
@@ -1209,6 +1388,8 @@ spine.Space.identity = function(out) {
   out.rotation.rad = 0;
   out.scale.x = 1;
   out.scale.y = 1;
+  out.shear.x.rad = 0;
+  out.shear.y.rad = 0;
   return out;
 }
 
@@ -1219,15 +1400,7 @@ spine.Space.identity = function(out) {
  * @param {number} y
  */
 spine.Space.translate = function(space, x, y) {
-  var tx = space.scale.a * x + space.scale.b * y;
-  var ty = space.scale.c * x + space.scale.d * y;
-  x = tx; y = ty;
-  var c = space.rotation.cos;
-  var s = space.rotation.sin;
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  space.position.x += tx;
-  space.position.y += ty;
+  spine.Space.transform(space, new spine.Vector(x, y), space.position);
   return space;
 }
 
@@ -1262,27 +1435,16 @@ spine.Space.scale = function(space, x, y) {
  * @param {spine.Space=} out
  */
 spine.Space.invert = function(space, out) {
-  // invert
-  // out.sca = space.sca.inv();
-  // out.rot = space.rot.inv();
-  // out.pos = space.pos.neg().rotate(space.rot.inv()).mul(space.sca.inv());
-
   out = out || new spine.Space();
-  spine.Matrix.invert(space.scale, out.scale);
-  if (spine.Matrix.determinant(space.scale) < 0.0) {
-    out.rotation.rad = spine.wrapAngleRadians(space.rotation.rad - 0);
-  } else {
-    out.rotation.rad = spine.wrapAngleRadians(0 - space.rotation.rad);
-  }
-  var x = 0 - space.position.x;
-  var y = 0 - space.position.y;
-  var c = space.rotation.cos;
-  var s = space.rotation.sin;
-  var tx = s * y + c * x;
-  var ty = c * y - s * x;
-  out.position.x = tx;
-  out.position.y = ty;
-  spine.Matrix.untransform(space.scale, out.position, out.position);
+  if (space === out) { space = spine.Space.copy(space, new spine.Space()); }
+  spine.Affine.invert(space.updateAffine(), out.affine);
+  out.position.copy(out.affine.vector);
+  out.shear.x.rad = -space.shear.x.rad;
+  out.shear.y.rad = -space.shear.y.rad;
+  var x_axis_rad = Math.atan2(out.affine.matrix.c, out.affine.matrix.a);
+  out.rotation.rad = spine.wrapAngleRadians(x_axis_rad - out.shear.x.rad);
+  spine.Matrix.combine(out.rotation.updateMatrix(), out.shear.updateMatrix(), out.scale);
+  spine.Matrix.extract(out.affine.matrix, out.scale, out.scale);
   return out;
 }
 
@@ -1293,26 +1455,17 @@ spine.Space.invert = function(space, out) {
  * @param {spine.Space=} out
  */
 spine.Space.combine = function(a, b, out) {
-  // combine
-  // out.pos = b.pos.mul(a.sca).rotate(a.rot).add(a.pos);
-  // out.rot = b.rot.mul(a.rot);
-  // out.sca = b.sca.mul(a.sca);
-
   out = out || new spine.Space();
-  var x = a.scale.a * b.position.x + a.scale.b * b.position.y;
-  var y = a.scale.c * b.position.x + a.scale.d * b.position.y;
-  var c = a.rotation.cos;
-  var s = a.rotation.sin;
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  out.position.x = a.position.x + tx;
-  out.position.y = a.position.y + ty;
-  if (spine.Matrix.determinant(a.scale) < 0.0) {
-    out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad - b.rotation.rad);
-  } else {
-    out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad + b.rotation.rad);
-  }
-  spine.Matrix.multiply(a.scale, b.scale, out.scale);
+  if (a === out) { a = spine.Space.copy(a, new spine.Space()); }
+  if (b === out) { b = spine.Space.copy(b, new spine.Space()); }
+  spine.Affine.combine(a.updateAffine(), b.updateAffine(), out.affine);
+  out.position.copy(out.affine.vector);
+  out.shear.x.rad = spine.wrapAngleRadians(a.shear.x.rad + b.shear.x.rad);
+  out.shear.y.rad = spine.wrapAngleRadians(a.shear.y.rad + b.shear.y.rad);
+  var x_axis_rad = Math.atan2(out.affine.matrix.c, out.affine.matrix.a);
+  out.rotation.rad = spine.wrapAngleRadians(x_axis_rad - out.shear.x.rad);
+  spine.Matrix.combine(out.rotation.updateMatrix(), out.shear.updateMatrix(), out.scale);
+  spine.Matrix.extract(out.affine.matrix, out.scale, out.scale);
   return out;
 }
 
@@ -1323,27 +1476,17 @@ spine.Space.combine = function(a, b, out) {
  * @param {spine.Space=} out
  */
 spine.Space.extract = function(ab, a, out) {
-  // extract
-  // out.sca = ab.sca.mul(a.sca.inv());
-  // out.rot = ab.rot.mul(a.rot.inv());
-  // out.pos = ab.pos.add(a.pos.neg()).rotate(a.rot.inv()).mul(a.sca.inv());
-
   out = out || new spine.Space();
-  spine.Matrix.extract(ab.scale, a.scale, out.scale);
-  if (spine.Matrix.determinant(a.scale) < 0.0) {
-    out.rotation.rad = spine.wrapAngleRadians(a.rotation.rad - ab.rotation.rad);
-  } else {
-    out.rotation.rad = spine.wrapAngleRadians(ab.rotation.rad - a.rotation.rad);
-  }
-  var x = ab.position.x - a.position.x;
-  var y = ab.position.y - a.position.y;
-  var c = a.rotation.cos;
-  var s = a.rotation.sin;
-  var tx = s * y + c * x;
-  var ty = c * y - s * x;
-  out.position.x = tx;
-  out.position.y = ty;
-  spine.Matrix.untransform(a.scale, out.position, out.position);
+  if (ab === out) { ab = spine.Space.copy(ab, new spine.Space()); }
+  if (a === out) { a = spine.Space.copy(a, new spine.Space()); }
+  spine.Affine.extract(ab.updateAffine(), a.updateAffine(), out.affine);
+  out.position.copy(out.affine.vector);
+  out.shear.x.rad = spine.wrapAngleRadians(ab.shear.x.rad - a.shear.x.rad);
+  out.shear.y.rad = spine.wrapAngleRadians(ab.shear.y.rad - a.shear.y.rad);
+  var x_axis_rad = Math.atan2(out.affine.matrix.c, out.affine.matrix.a);
+  out.rotation.rad = spine.wrapAngleRadians(x_axis_rad - out.shear.x.rad);
+  spine.Matrix.combine(out.rotation.updateMatrix(), out.shear.updateMatrix(), out.scale);
+  spine.Matrix.extract(out.affine.matrix, out.scale, out.scale);
   return out;
 }
 
@@ -1354,16 +1497,7 @@ spine.Space.extract = function(ab, a, out) {
  * @param {spine.Vector=} out
  */
 spine.Space.transform = function(space, v, out) {
-  out = out || new spine.Vector();
-  spine.Matrix.transform(space.scale, v, out);
-  var x = out.x, y = out.y;
-  var c = space.rotation.cos;
-  var s = space.rotation.sin;
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  out.x = space.position.x + tx;
-  out.y = space.position.y + ty;
-  return out;
+  return spine.Affine.transform(space.updateAffine(), v, out);
 }
 
 /**
@@ -1373,17 +1507,7 @@ spine.Space.transform = function(space, v, out) {
  * @param {spine.Vector=} out
  */
 spine.Space.untransform = function(space, v, out) {
-  out = out || new spine.Vector();
-  var x = v.x - space.position.x;
-  var y = v.y - space.position.y;
-  var c = space.rotation.cos;
-  var s = space.rotation.sin;
-  var tx = s * y + c * x;
-  var ty = c * y - s * x;
-  out.x = tx;
-  out.y = ty;
-  spine.Matrix.untransform(space.scale, out, out);
-  return out;
+  return spine.Affine.untransform(space.updateAffine(), v, out);
 }
 
 /**
@@ -1394,9 +1518,11 @@ spine.Space.untransform = function(space, v, out) {
  * @param {spine.Space=} out
  */
 spine.Space.tween = function(a, b, tween, out) {
+  out = out || new spine.Space();
   a.position.tween(b.position, tween, out.position);
   a.rotation.tween(b.rotation, tween, out.rotation);
   a.scale.tween(b.scale, tween, out.scale);
+  a.shear.tween(b.shear, tween, out.shear);
   return out;
 }
 
@@ -1408,7 +1534,6 @@ spine.Bone = function() {
   bone.color = new spine.Color();
   bone.local_space = new spine.Space();
   bone.world_space = new spine.Space();
-  bone.world_affine = new spine.Affine();
 }
 
 /** @type {spine.Color} */
@@ -1421,8 +1546,6 @@ spine.Bone.prototype.length = 0;
 spine.Bone.prototype.local_space;
 /** @type {spine.Space} */
 spine.Bone.prototype.world_space;
-/** @type {spine.Affine} */
-spine.Bone.prototype.world_affine;
 /** @type {boolean} */
 spine.Bone.prototype.inherit_rotation = true;
 /** @type {boolean} */
@@ -1439,7 +1562,6 @@ spine.Bone.prototype.copy = function(other) {
   bone.length = other.length;
   bone.local_space.copy(other.local_space);
   bone.world_space.copy(other.world_space);
-  bone.world_affine.copy(other.world_affine);
   bone.inherit_rotation = other.inherit_rotation;
   bone.inherit_scale = other.inherit_scale;
   return bone;
@@ -1468,50 +1590,50 @@ spine.Bone.prototype.load = function(json) {
 spine.Bone.flatten = function(bone, bones) {
   var bls = bone.local_space;
   var bws = bone.world_space;
-  var bwa = bone.world_affine;
   var parent = bones[bone.parent_key];
   if (!parent) {
-    spine.Vector.copy(bls.position, bwa.vector);
-    spine.Matrix.identity(bwa.matrix);
+    bws.copy(bls);
+    bws.updateAffine();
   } else {
     spine.Bone.flatten(parent, bones);
-    var pwa = parent.world_affine;
-    // compute bone world affine position vector
-    spine.Affine.transform(pwa, bls.position, bwa.vector);
+    var pws = parent.world_space;
+    // compute bone world space position vector
+    spine.Space.transform(pws, bls.position, bws.position);
     // compute bone world affine rotation/scale matrix based in inheritance
     if (bone.inherit_rotation && bone.inherit_scale) {
-      spine.Matrix.copy(pwa.matrix, bwa.matrix);
+      spine.Matrix.copy(pws.affine.matrix, bws.affine.matrix);
     } else if (bone.inherit_rotation) {
-      spine.Matrix.identity(bwa.matrix);
+      spine.Matrix.identity(bws.affine.matrix);
       while (parent && parent.inherit_rotation) {
         var pls = parent.local_space;
-        spine.Matrix.rotate(bwa.matrix, pls.rotation.cos, pls.rotation.sin, bwa.matrix);
+        spine.Matrix.rotate(bws.affine.matrix, pls.rotation.cos, pls.rotation.sin, bws.affine.matrix);
         parent = bones[parent.parent_key];
       }
     } else if (bone.inherit_scale) {
-      spine.Matrix.identity(bwa.matrix);
+      spine.Matrix.identity(bws.affine.matrix);
       while (parent && parent.inherit_scale) {
         var pls = parent.local_space;
         var cos = pls.rotation.cos, sin = pls.rotation.sin;
-        spine.Matrix.rotate(bwa.matrix, cos, sin, bwa.matrix);
-        spine.Matrix.multiply(bwa.matrix, pls.scale, bwa.matrix);
+        spine.Matrix.rotate(bws.affine.matrix, cos, sin, bws.affine.matrix);
+        spine.Matrix.multiply(bws.affine.matrix, pls.scale, bws.affine.matrix);
         if (pls.scale.x >= 0) { sin = -sin; }
-        spine.Matrix.rotate(bwa.matrix, cos, sin, bwa.matrix);
+        spine.Matrix.rotate(bws.affine.matrix, cos, sin, bws.affine.matrix);
         parent = bones[parent.parent_key];
       }
     } else {
-      spine.Matrix.identity(bwa.matrix);
+      spine.Matrix.identity(bws.affine.matrix);
     }
+    // apply bone local space
+    bls.updateAffine();
+    spine.Matrix.multiply(bws.affine.matrix, bls.affine.matrix, bws.affine.matrix);
+    // update bone world space
+    bws.shear.x.rad = spine.wrapAngleRadians(pws.shear.x.rad + bls.shear.x.rad);
+    bws.shear.y.rad = spine.wrapAngleRadians(pws.shear.y.rad + bls.shear.y.rad);
+    var x_axis_rad = Math.atan2(bws.affine.matrix.c, bws.affine.matrix.a);
+    bws.rotation.rad = spine.wrapAngleRadians(x_axis_rad - bws.shear.x.rad);
+    spine.Matrix.combine(bws.rotation.updateMatrix(), bws.shear.updateMatrix(), bws.scale);
+    spine.Matrix.extract(bws.affine.matrix, bws.scale, bws.scale);
   }
-  spine.Matrix.rotate(bwa.matrix, bls.rotation.cos, bls.rotation.sin, bwa.matrix);
-  spine.Matrix.multiply(bwa.matrix, bls.scale, bwa.matrix);
-  // update bone world space
-  spine.Vector.copy(bwa.vector, bws.position);
-  bws.rotation.rad = Math.atan2(bwa.matrix.c, bwa.matrix.a); // x axis rotation
-  spine.Matrix.identity(bws.scale);
-  spine.Matrix.rotate(bws.scale, bws.rotation.cos, bws.rotation.sin, bws.scale);
-  spine.Matrix.invert(bws.scale, bws.scale);
-  spine.Matrix.multiply(bws.scale, bwa.matrix, bws.scale);
   return bone;
 }
 
@@ -2089,6 +2211,31 @@ spine.ScaleKeyframe.prototype.load = function(json) {
 
 /**
  * @constructor
+ * @extends {spine.BoneKeyframe}
+ */
+spine.ShearKeyframe = function() {
+  goog.base(this);
+  this.shear = new spine.Shear();
+}
+
+goog.inherits(spine.ShearKeyframe, spine.BoneKeyframe);
+
+/** @type {spine.Shear} */
+spine.ShearKeyframe.prototype.shear;
+
+/**
+ * @return {spine.ShearKeyframe}
+ * @param {Object.<string,?>} json
+ */
+spine.ShearKeyframe.prototype.load = function(json) {
+  goog.base(this, 'load', json);
+  this.shear.x.deg = spine.loadFloat(json, 'x', 0);
+  this.shear.y.deg = spine.loadFloat(json, 'y', 0);
+  return this;
+}
+
+/**
+ * @constructor
  */
 spine.AnimBone = function() {}
 
@@ -2102,6 +2249,8 @@ spine.AnimBone.prototype.position_keyframes = null;
 spine.AnimBone.prototype.rotation_keyframes = null;
 /** @type {Array.<spine.ScaleKeyframe>} */
 spine.AnimBone.prototype.scale_keyframes = null;
+/** @type {Array.<spine.ShearKeyframe>} */
+spine.AnimBone.prototype.shear_keyframes = null;
 
 /**
  * @return {spine.AnimBone}
@@ -2114,6 +2263,7 @@ spine.AnimBone.prototype.load = function(json) {
   anim_bone.position_keyframes = null;
   anim_bone.rotation_keyframes = null;
   anim_bone.scale_keyframes = null;
+  anim_bone.shear_keyframes = null;
 
   Object.keys(json || {}).forEach(function(key) {
     switch (key) {
@@ -2146,6 +2296,16 @@ spine.AnimBone.prototype.load = function(json) {
           anim_bone.max_time = Math.max(anim_bone.max_time, scale_keyframe.time);
         });
         anim_bone.scale_keyframes.sort(spine.Keyframe.compare);
+        break;
+      case 'shear':
+        anim_bone.shear_keyframes = [];
+        json.shear.forEach(function(shear_json) {
+          var shear_keyframe = new spine.ShearKeyframe().load(shear_json);
+          anim_bone.shear_keyframes.push(shear_keyframe);
+          anim_bone.min_time = Math.min(anim_bone.min_time, shear_keyframe.time);
+          anim_bone.max_time = Math.max(anim_bone.max_time, shear_keyframe.time);
+        });
+        anim_bone.shear_keyframes.sort(spine.Keyframe.compare);
         break;
       default:
         console.log("TODO: spine.AnimBone::load", key);
@@ -3290,14 +3450,24 @@ spine.Pose.prototype.strike = function() {
         if (scale_keyframe1) {
           pct = scale_keyframe0.curve.evaluate((time - scale_keyframe0.time) / (scale_keyframe1.time - scale_keyframe0.time));
           pose_bone.local_space.scale.a *= spine.tween(scale_keyframe0.scale.a, scale_keyframe1.scale.a, pct);
-          pose_bone.local_space.scale.b *= spine.tween(scale_keyframe0.scale.b, scale_keyframe1.scale.b, pct);
-          pose_bone.local_space.scale.c *= spine.tween(scale_keyframe0.scale.c, scale_keyframe1.scale.c, pct);
           pose_bone.local_space.scale.d *= spine.tween(scale_keyframe0.scale.d, scale_keyframe1.scale.d, pct);
         } else {
           pose_bone.local_space.scale.a *= scale_keyframe0.scale.a;
-          pose_bone.local_space.scale.b *= scale_keyframe0.scale.b;
-          pose_bone.local_space.scale.c *= scale_keyframe0.scale.c;
           pose_bone.local_space.scale.d *= scale_keyframe0.scale.d;
+        }
+      }
+
+      keyframe_index = spine.Keyframe.find(anim_bone.shear_keyframes, time);
+      if (keyframe_index !== -1) {
+        var shear_keyframe0 = anim_bone.shear_keyframes[keyframe_index];
+        var shear_keyframe1 = anim_bone.shear_keyframes[keyframe_index + 1];
+        if (shear_keyframe1) {
+          pct = shear_keyframe0.curve.evaluate((time - shear_keyframe0.time) / (shear_keyframe1.time - shear_keyframe0.time));
+          pose_bone.local_space.shear.x.rad += spine.tweenAngle(shear_keyframe0.shear.x.rad, shear_keyframe1.shear.x.rad, pct);
+          pose_bone.local_space.shear.y.rad += spine.tweenAngle(shear_keyframe0.shear.y.rad, shear_keyframe1.shear.y.rad, pct);
+        } else {
+          pose_bone.local_space.shear.x.rad += shear_keyframe0.shear.x.rad;
+          pose_bone.local_space.shear.y.rad += shear_keyframe0.shear.y.rad;
         }
       }
     }

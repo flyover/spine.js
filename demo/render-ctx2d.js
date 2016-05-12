@@ -470,6 +470,7 @@ function ctxApplySpace(ctx, space) {
   if (space) {
     ctx.translate(space.position.x, space.position.y);
     ctx.rotate(space.rotation.rad);
+    ctx.transform(space.shear.x.cos, space.shear.x.sin, -space.shear.y.sin, space.shear.y.cos, 0, 0);
     ctx.transform(space.scale.a, space.scale.c, space.scale.b, space.scale.d, 0, 0);
   }
 }

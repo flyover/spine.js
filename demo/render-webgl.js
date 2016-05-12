@@ -892,6 +892,7 @@ function mat3x3ApplySpace(m, space) {
   if (space) {
     mat3x3Translate(m, space.position.x, space.position.y);
     mat3x3RotateCosSin(m, space.rotation.cos, space.rotation.sin);
+    mat3x3Multiply2x2(m, space.shear.x.cos, -space.shear.y.sin, space.shear.x.sin, space.shear.y.cos);
     mat3x3Multiply2x2(m, space.scale.a, space.scale.b, space.scale.c, space.scale.d);
   }
   return m;
