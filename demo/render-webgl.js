@@ -891,7 +891,7 @@ function mat3x3Transform(m, v, out) {
 function mat3x3ApplySpace(m, space) {
   if (space) {
     mat3x3Translate(m, space.position.x, space.position.y);
-    mat3x3Rotate(m, space.rotation.rad);
+    mat3x3RotateCosSin(m, space.rotation.cos, space.rotation.sin);
     mat3x3Multiply2x2(m, space.scale.a, space.scale.b, space.scale.c, space.scale.d);
   }
   return m;
