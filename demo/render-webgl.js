@@ -284,7 +284,7 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
             }
 
             // sort the blender array descending by weight
-            blender_array = blender_array.sort(function(a, b) {
+            blender_array.sort(function(a, b) {
               return b.weight - a.weight;
             });
 
@@ -292,14 +292,15 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
             if (blender_array.length > render.gl_skin_shader_blenders_count) {
               console.log("blend array length for", attachment_key, "is", blender_array.length, "so clamp to", render.gl_skin_shader_blenders_count);
               blender_array.length = render.gl_skin_shader_blenders_count;
-              var weight_sum = 0;
-              blender_array.forEach(function(blend) {
-                weight_sum += blend.weight;
-              });
-              blender_array.forEach(function(blend) {
-                blend.weight /= weight_sum;
-              });
             }
+
+            var weight_sum = 0;
+            blender_array.forEach(function(blend) {
+              weight_sum += blend.weight;
+            });
+            blender_array.forEach(function(blend) {
+              blend.weight /= weight_sum;
+            });
 
             var position_x = 0;
             var position_y = 0;
