@@ -1172,7 +1172,7 @@ spine.signum = function(n) { return (n < 0)?(-1):(n > 0)?(1):(n); }
 spine.Scale.prototype.x;
 Object.defineProperty(spine.Scale.prototype, 'x', {
   /** @this {spine.Scale} */
-  get: function() { return (this.c == 0)?(this.a):(spine.signum(this.a) * Math.sqrt(this.a * this.a + this.c * this.c)); },
+  get: function() { return (this.c === 0)?(this.a):(spine.signum(this.a) * Math.sqrt(this.a * this.a + this.c * this.c)); },
   /** @this {spine.Scale} */
   set: function(value) { this.a = value; this.c = 0; }
 });
@@ -1181,7 +1181,7 @@ Object.defineProperty(spine.Scale.prototype, 'x', {
 spine.Scale.prototype.y;
 Object.defineProperty(spine.Scale.prototype, 'y', {
   /** @this {spine.Scale} */
-  get: function() { return (this.b == 0)?(this.d):(spine.signum(this.d) * Math.sqrt(this.b * this.b + this.d * this.d)); },
+  get: function() { return (this.b === 0)?(this.d):(spine.signum(this.d) * Math.sqrt(this.b * this.b + this.d * this.d)); },
   /** @this {spine.Scale} */
   set: function(value) { this.b = 0; this.d = value; }
 });
@@ -1550,6 +1550,8 @@ spine.Bone.prototype.world_space;
 spine.Bone.prototype.inherit_rotation = true;
 /** @type {boolean} */
 spine.Bone.prototype.inherit_scale = true;
+/** @type {string} */
+spine.Bone.prototype.transform = "normal";
 
 /**
  * @return {spine.Bone}
@@ -1564,6 +1566,7 @@ spine.Bone.prototype.copy = function(other) {
   bone.world_space.copy(other.world_space);
   bone.inherit_rotation = other.inherit_rotation;
   bone.inherit_scale = other.inherit_scale;
+  bone.transform = other.transform;
   return bone;
 }
 
@@ -1579,6 +1582,17 @@ spine.Bone.prototype.load = function(json) {
   bone.local_space.load(json);
   bone.inherit_rotation = spine.loadBool(json, 'inheritRotation', true);
   bone.inherit_scale = spine.loadBool(json, 'inheritScale', true);
+  bone.transform = spine.loadString(json, 'transform', "normal");
+  if (json.transform) {
+    switch (json.transform) {
+      case "normal": bone.inherit_rotation = bone.inherit_scale = true; break;
+      case "onlyTranslation": bone.inherit_rotation = bone.inherit_scale = false; break;
+      case "noRotationOrReflection": bone.inherit_rotation = false; break;
+      case "noScale": bone.inherit_scale = false; break;
+      case "noScaleOrReflection": bone.inherit_scale = false; break;
+      default: console.log("TODO: spine.Space.transform", json.transform); break;
+    }
+  }
   return bone;
 }
 
@@ -1647,6 +1661,8 @@ spine.Ikc = function() {
 
 /** @type {string} */
 spine.Ikc.prototype.name = "";
+/** @type {number} */
+spine.Ikc.prototype.order = 0;
 /** @type {Array.<string>} */
 spine.Ikc.prototype.bone_keys;
 /** @type {string} */
@@ -1663,6 +1679,7 @@ spine.Ikc.prototype.bend_positive = true;
 spine.Ikc.prototype.load = function(json) {
   var ikc = this;
   ikc.name = spine.loadString(json, 'name', "");
+  ikc.order = spine.loadInt(json, 'order', 0);
   ikc.bone_keys = json['bones'] || [];
   ikc.target_key = spine.loadString(json, 'target', "");
   ikc.mix = spine.loadFloat(json, 'mix', 1);
@@ -1675,7 +1692,6 @@ spine.Ikc.prototype.load = function(json) {
  */
 spine.Xfc = function() {
   var xfc = this;
-  xfc.bone_keys = [];
   xfc.position = new spine.Position();
   xfc.rotation = new spine.Rotation();
   xfc.scale = new spine.Scale();
@@ -1684,8 +1700,10 @@ spine.Xfc = function() {
 
 /** @type {string} */
 spine.Xfc.prototype.name = "";
-/** @type {Array.<string>} */
-spine.Xfc.prototype.bone_keys;
+/** @type {number} */
+spine.Xfc.prototype.order = 0;
+/** @type {string} */
+spine.Xfc.prototype.bone_key = "";
 /** @type {string} */
 spine.Xfc.prototype.target_key = "";
 /** @type {number} */
@@ -1712,7 +1730,8 @@ spine.Xfc.prototype.shear;
 spine.Xfc.prototype.load = function(json) {
   var xfc = this;
   xfc.name = spine.loadString(json, 'name', "");
-  xfc.bone_keys = json['bones'] || [];
+  xfc.order = spine.loadInt(json, 'order', 0);
+  xfc.bone_key = spine.loadString(json, 'bone', "");
   xfc.target_key = spine.loadString(json, 'target', "");
   xfc.position_mix = spine.loadFloat(json, 'translateMix', 1);
   xfc.position.x = spine.loadFloat(json, 'x', 0);
@@ -1739,6 +1758,8 @@ spine.Ptc = function() {
 
 /** @type {string} */
 spine.Ptc.prototype.name = "";
+/** @type {number} */
+spine.Ptc.prototype.order = 0;
 /** @type {Array.<string>} */
 spine.Ptc.prototype.bone_keys;
 /** @type {string} */
@@ -1767,6 +1788,7 @@ spine.Ptc.prototype.rotation;
 spine.Ptc.prototype.load = function(json) {
   var ptc = this;
   ptc.name = spine.loadString(json, 'name', "");
+  ptc.order = spine.loadInt(json, 'order', 0);
   ptc.bone_keys = json['bones'] || [];
   ptc.target_key = spine.loadString(json, 'target', "");
   ptc.spacing_mode = spine.loadString(json, 'spacingMode', "length");
@@ -1979,7 +2001,7 @@ spine.LinkedMeshAttachment.prototype.skin_key = "";
 /** @type {string} */
 spine.LinkedMeshAttachment.prototype.parent_key = "";
 /** @type {boolean} */
-spine.LinkedMeshAttachment.prototype.inherit_ffd = true;
+spine.LinkedMeshAttachment.prototype.inherit_deform = true;
 /** @type {number} */
 spine.LinkedMeshAttachment.prototype.width = 0;
 /** @type {number} */
@@ -1996,7 +2018,7 @@ spine.LinkedMeshAttachment.prototype.load = function(json) {
   attachment.color.load(json.color);
   attachment.skin_key = spine.loadString(json, 'skin', "");
   attachment.parent_key = spine.loadString(json, 'parent', "");
-  attachment.inherit_ffd = spine.loadBool(json, 'ffd', true);
+  attachment.inherit_deform = spine.loadBool(json, 'deform', true);
   attachment.width = spine.loadInt(json, 'width', 0);
   attachment.height = spine.loadInt(json, 'height', 0);
   return attachment;
@@ -2064,7 +2086,7 @@ spine.WeightedLinkedMeshAttachment.prototype.skin_key = "";
 /** @type {string} */
 spine.WeightedLinkedMeshAttachment.prototype.parent_key = "";
 /** @type {boolean} */
-spine.WeightedLinkedMeshAttachment.prototype.inherit_ffd = true;
+spine.WeightedLinkedMeshAttachment.prototype.inherit_deform = true;
 /** @type {number} */
 spine.WeightedLinkedMeshAttachment.prototype.width = 0;
 /** @type {number} */
@@ -2080,7 +2102,7 @@ spine.WeightedLinkedMeshAttachment.prototype.load = function(json) {
   var attachment = this;
   attachment.skin_key = spine.loadString(json, 'skin', "");
   attachment.parent_key = spine.loadString(json, 'parent', "");
-  attachment.inherit_ffd = spine.loadBool(json, 'ffd', true);
+  attachment.inherit_deform = spine.loadBool(json, 'ffd', true);
   attachment.width = spine.loadInt(json, 'width', 0);
   attachment.height = spine.loadInt(json, 'height', 0);
   return attachment;
@@ -3524,31 +3546,11 @@ spine.Data.prototype.load = function(json) {
           data.ikcs[ikc.name] = new spine.Ikc().load(ikc);
           data.ikc_keys[ikc_index] = ikc.name;
         });
-        // sort by ancestry
-        data.ikc_keys = data.ikc_keys.sort(function(a, b) {
+        // sort by order
+        data.ikc_keys.sort(function(a, b) {
           var ikc_a = data.ikcs[a];
           var ikc_b = data.ikcs[b];
-          for (var ia = 0; ia < ikc_a.bone_keys.length; ++ia) {
-            var bone_a = data.bones[ikc_a.bone_keys[ia]];
-            for (var ib = 0; ib < ikc_b.bone_keys.length; ++ib) {
-              var bone_b = data.bones[ikc_b.bone_keys[ib]];
-              var bone_a_parent = data.bones[bone_a.parent_key];
-              while (bone_a_parent) {
-                if (bone_a_parent === bone_b) {
-                  return 1;
-                }
-                bone_a_parent = data.bones[bone_a_parent.parent_key];
-              }
-              var bone_b_parent = data.bones[bone_b.parent_key];
-              while (bone_b_parent) {
-                if (bone_b_parent === bone_a) {
-                  return -1;
-                }
-                bone_b_parent = data.bones[bone_b_parent.parent_key];
-              }
-            }
-          }
-          return 0;
+          return ikc_a.order - ikc_b.order;
         });
         break;
       case 'transform':
@@ -3557,31 +3559,11 @@ spine.Data.prototype.load = function(json) {
           data.xfcs[xfc.name] = new spine.Xfc().load(xfc);
           data.xfc_keys[xfc_index] = xfc.name;
         });
-        // TODO: sort by ancestry?
-        data.xfc_keys = data.xfc_keys.sort(function(a, b) {
+        // sort by order
+        data.xfc_keys.sort(function(a, b) {
           var xfc_a = data.xfcs[a];
           var xfc_b = data.xfcs[b];
-          for (var ia = 0; ia < xfc_a.bone_keys.length; ++ia) {
-            var bone_a = data.bones[xfc_a.bone_keys[ia]];
-            for (var ib = 0; ib < xfc_b.bone_keys.length; ++ib) {
-              var bone_b = data.bones[xfc_b.bone_keys[ib]];
-              var bone_a_parent = data.bones[bone_a.parent_key];
-              while (bone_a_parent) {
-                if (bone_a_parent === bone_b) {
-                  return 1;
-                }
-                bone_a_parent = data.bones[bone_a_parent.parent_key];
-              }
-              var bone_b_parent = data.bones[bone_b.parent_key];
-              while (bone_b_parent) {
-                if (bone_b_parent === bone_a) {
-                  return -1;
-                }
-                bone_b_parent = data.bones[bone_b_parent.parent_key];
-              }
-            }
-          }
-          return 0;
+          return xfc_a.order - xfc_b.order;
         });
         break;
       case 'path':
@@ -4233,17 +4215,15 @@ spine.Pose.prototype.strike = function() {
       }
     }
 
+    var xfc_bone = pose.bones[xfc.bone_key];
     var xfc_target = pose.bones[xfc.target_key];
     var xfc_position = xfc.position;
     var xfc_rotation = xfc.rotation;
     var xfc_scale = xfc.scale;
     var xfc_shear = xfc.shear;
     var xfc_world_position = spine.Space.transform(xfc_target.world_space, xfc_position, new spine.Vector());
-    xfc.bone_keys.forEach(function(bone_key) {
-      var xfc_bone = pose.bones[bone_key];
-      // TODO
-      xfc_bone.world_space.position.tween(xfc_world_position, xfc_position_mix, xfc_bone.world_space.position);
-    });
+    // TODO
+    xfc_bone.world_space.position.tween(xfc_world_position, xfc_position_mix, xfc_bone.world_space.position);
   });
 
   // slots
