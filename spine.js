@@ -2252,7 +2252,7 @@ spine.Skin.prototype.iterateAttachments = function(callback) {
     var skin_slot = skin.slots[slot_key];
     skin_slot.attachment_keys.forEach(function(attachment_key) {
       var attachment = skin_slot.attachments[attachment_key];
-      callback(slot_key, skin_slot, attachment.path || attachment.name || attachment_key, attachment);
+      callback(slot_key, skin_slot, attachment.name || attachment_key, attachment);
     });
   });
 }
@@ -3697,9 +3697,9 @@ spine.Data.prototype.iterateAttachments = function(skin_key, callback) {
     var data_slot = data.slots[slot_key];
     var skin_slot = skin && (skin.slots[slot_key] || default_skin.slots[slot_key]);
     var attachment = skin_slot && skin_slot.attachments[data_slot.attachment_key];
-    var attachment_key = (attachment && (attachment.path || attachment.name)) || data_slot.attachment_key;
+    var attachment_key = (attachment && attachment.name) || data_slot.attachment_key;
     if (attachment && ((attachment.type === 'linkedmesh') || (attachment.type === 'weightedlinkedmesh'))) {
-      attachment_key = attachment && (attachment.path || attachment.parent_key);
+      attachment_key = attachment && attachment.parent_key;
       attachment = skin_slot && skin_slot.attachments[attachment_key];
     }
     callback(slot_key, data_slot, skin_slot, attachment_key, attachment);
@@ -4441,9 +4441,9 @@ spine.Pose.prototype.iterateAttachments = function(callback) {
     var pose_slot = pose.slots[slot_key];
     var skin_slot = skin && (skin.slots[slot_key] || default_skin.slots[slot_key]);
     var attachment = skin_slot && skin_slot.attachments[pose_slot.attachment_key];
-    var attachment_key = (attachment && (attachment.path || attachment.name)) || pose_slot.attachment_key;
+    var attachment_key = (attachment && attachment.name) || pose_slot.attachment_key;
     if (attachment && ((attachment.type === 'linkedmesh') || (attachment.type === 'weightedlinkedmesh'))) {
-      attachment_key = attachment && (attachment.path || attachment.parent_key);
+      attachment_key = attachment && attachment.parent_key;
       attachment = skin_slot && skin_slot.attachments[attachment_key];
     }
     callback(slot_key, pose_slot, skin_slot, attachment_key, attachment);

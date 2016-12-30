@@ -237,9 +237,9 @@ RenderCtx2D.prototype.drawPose = function(spine_pose, atlas_data) {
       return;
     }
 
-    var site = atlas_data && atlas_data.sites[attachment_key];
+    var site = atlas_data && atlas_data.sites[attachment.path || attachment.name || attachment_key];
     var page = site && site.page;
-    var image_key = (page && page.name) || attachment_key;
+    var image_key = (page && page.name) || attachment.path || attachment.name || attachment_key;
     var image = render.images[image_key];
 
     if (!image || !image.complete) {
