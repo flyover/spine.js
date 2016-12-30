@@ -348,17 +348,21 @@ RenderWebGL.prototype.loadData = function(spine_data, atlas_data, images) {
                   var blender_count = attachment.vertices[index++];
                   var vertex_x = 0;
                   var vertex_y = 0;
+                  var morph_position = new spine.Vector();
                   for (var blender_index = 0; blender_index < blender_count; ++blender_index) {
                     var bone_index = attachment.vertices[index++];
                     var x = attachment.vertices[index++];
                     var y = attachment.vertices[index++];
                     var weight = attachment.vertices[index++];
-                    var morph_position_x = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0;
+                    morph_position.x = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0;
                     ++ffd_index;
-                    var morph_position_y = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0;
+                    morph_position.y = ffd_keyframe.vertices[ffd_index - ffd_keyframe.offset] || 0;
                     ++ffd_index;
-                    vertex_x += morph_position_x * weight;
-                    vertex_y += morph_position_y * weight;
+                    var bone_key = spine_data.bone_keys[bone_index];
+                    var bone = spine_data.bones[bone_key];
+                    spine.Matrix.transform(bone.world_space.updateAffine().matrix, morph_position, morph_position);
+                    vertex_x += morph_position.x * weight;
+                    vertex_y += morph_position.y * weight;
                   }
                   var vertex_offset = vertex_index * 2;
                   vertex[vertex_offset++] = vertex_x;
